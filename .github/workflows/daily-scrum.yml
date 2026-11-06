@@ -30,8 +30,24 @@ jobs:
             exit 1
           fi
 
-          BODY=$'## 어제 한 일\n\n## 오늘 할 일\n\n## 막힌 점\n'
+          BODY=$(cat <<'EOF'
+          오늘의 스크럼을 댓글에 작성해주세요.
 
+          예시
+
+          ```
+          ## 어제 한 일
+          - useState 훅 구현
+
+          ## 오늘 할 일
+          - useEffect 구현 시작
+
+          ## 막힌 점
+          - 리렌더링 시 상태 초기화 문제 원인 파악 중
+          ```
+          EOF
+          )
+          
           gh api graphql \
             -f query='mutation($r:ID!,$c:ID!,$t:String!,$b:String!){createDiscussion(input:{repositoryId:$r,categoryId:$c,title:$t,body:$b}){discussion{url}}}' \
             -f r="$REPO_ID" -f c="$CAT_ID" \
