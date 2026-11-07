@@ -10,10 +10,13 @@ on:
 
 jobs:
   claude:
+    # 팀원(OWNER, MEMBER, COLLABORATOR)이 쓴 글에서만 실행한다.
     if: |
       (github.event_name == 'discussion' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.discussion.author_association) &&
         (contains(github.event.discussion.body, '@claude') || contains(github.event.discussion.title, '@claude'))) ||
       (github.event_name == 'discussion_comment' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
         contains(github.event.comment.body, '@claude') &&
         github.event.comment.user.type != 'Bot')
     runs-on: ubuntu-latest
