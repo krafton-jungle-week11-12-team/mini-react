@@ -1,0 +1,57 @@
+name: Claude Discussions
+
+# Discussion 본문이나 댓글에 @claude가 있으면 Claude가 답글을 단다.
+# discussion 이벤트는 기본 브랜치(main)에 있는 워크플로만 실행된다.
+on:
+  discussion:
+    types: [created]
+  discussion_comment:
+    types: [created]
+
+jobs:
+  claude:
+    # 팀원(OWNER, MEMBER, COLLABORATOR)이 쓴 글에서만 실행한다.
+    if: |
+      (github.event_name == 'discussion' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.discussion.author_association) &&
+        (contains(github.event.discussion.body, '@claude') || contains(github.event.discussion.title, '@claude'))) ||
+      (github.event_name == 'discussion_comment' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+        contains(github.event.comment.body, '@claude') &&
+        github.event.comment.user.type != 'Bot')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      discussions: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            이 레포의 GitHub Discussion에서 누군가 @claude로 너를 불렀다.
+
+            - Discussion 제목: ${{ github.event.discussion.title }}
+            - Discussion 본문:
+            ${{ github.event.discussion.body }}
+            - 너를 부른 댓글 (비어 있으면 본문에서 부른 것):
+            ${{ github.event.comment.body }}
+
+            할 일
+            1. 요청을 읽고 답한다. 필요하면 레포 파일(docs/ 등)을 Read, Glob, Grep으로 읽고 근거로 쓴다.
+            2. 답은 한국어로, 짧고 분명하게 쓴다. 답변 안에 "@claude"라는 글자를 쓰지 않는다.
+            3. 답변을 reply.md 파일로 저장한 뒤, 아래 명령 하나로 Discussion에 댓글을 단다.
+
+            gh api graphql -f query='mutation($id: ID!, $body: String!) { addDiscussionComment(input: {discussionId: $id, body: $body}) { comment { url } } }' -f id=${{ github.event.discussion.node_id }} -F body=@reply.md
+
+            레포 파일은 수정하지 않는다.
+          claude_args: '--allowedTools "Read,Glob,Grep,Write,Bash(gh api graphql:*)"'
