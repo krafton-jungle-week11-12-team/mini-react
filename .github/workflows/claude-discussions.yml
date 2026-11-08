@@ -10,13 +10,14 @@ on:
 
 jobs:
   claude:
-    # 팀원(OWNER, MEMBER, COLLABORATOR)이 쓴 글에서만 실행한다.
+    # 팀원(OWNER, MEMBER, COLLABORATOR)과 커밋이 머지된 적 있는 사람(CONTRIBUTOR)이 쓴 글에서만 실행한다.
+    # org 멤버십이 비공개면 멤버도 CONTRIBUTOR로 표시된다.
     if: |
       (github.event_name == 'discussion' &&
-        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.discussion.author_association) &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR","CONTRIBUTOR"]'), github.event.discussion.author_association) &&
         (contains(github.event.discussion.body, '@claude') || contains(github.event.discussion.title, '@claude'))) ||
       (github.event_name == 'discussion_comment' &&
-        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR","CONTRIBUTOR"]'), github.event.comment.author_association) &&
         contains(github.event.comment.body, '@claude') &&
         github.event.comment.user.type != 'Bot')
     runs-on: ubuntu-latest
