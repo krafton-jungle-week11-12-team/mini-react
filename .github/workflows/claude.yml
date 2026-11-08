@@ -22,6 +22,7 @@ jobs:
       contents: read
       pull-requests: read
       issues: read
+      discussions: read # 디스커션 내용을 읽기 위해 필요
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
     steps:
@@ -33,6 +34,9 @@ jobs:
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
+        env:
+          # gh CLI로 디스커션을 조회할 때 쓰는 토큰 (discussions: read 권한)
+          GH_TOKEN: ${{ github.token }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
@@ -47,4 +51,10 @@ jobs:
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
           # claude_args: '--allowed-tools Bash(gh pr *)'
+
+          # 디스커션(#번호)을 읽을 수 있게 GraphQL 조회를 허용한다.
+          claude_args: |
+            --allowedTools "Bash(gh api graphql:*)"
+            --append-system-prompt "댓글에서 디스커션(github.com/orgs/krafton-jungle-week11-12-team/discussions/번호 또는 디스커션 #번호)을 언급하면, 다음 명령으로 내용을 읽는다: gh api graphql -f query='{ repository(owner: \"krafton-jungle-week11-12-team\", name: \"mini-react\") { discussion(number: 번호) { title body comments(first: 50) { nodes { author { login } body } } } } }'"
+
 
