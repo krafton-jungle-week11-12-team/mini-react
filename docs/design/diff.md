@@ -29,9 +29,9 @@ Diff 결과는 Virtual DOM 트리와 같은 모양이에요. 자식 목록의 *i
 
 ```ts
 type Patch =
-  | { type: 'CREATE'; node: VNode }
+  | { type: 'CREATE'; vnode: VNode }
   | { type: 'REMOVE' }
-  | { type: 'REPLACE'; node: VNode }
+  | { type: 'REPLACE'; vnode: VNode }
   | { type: 'TEXT'; text: string }
   | { type: 'UPDATE'; props: PropsPatch; children: (Patch | null)[] };
 
@@ -49,7 +49,7 @@ type PropsPatch = {
   - `'REPLACE'`: 노드 종류, 태그, 네임스페이스 중 하나가 달라 통째로 바꾸는 노드(교체). (예: `<p>A</p>` → `<div>A</div>`)
   - `'TEXT'`: 텍스트나 주석의 내용만 바뀐 노드(텍스트 변경). (예: `<li>A</li>` 안의 `A` → `B`)
   - `'UPDATE'`: 같은 요소인데 속성이나 자식 중 바뀐 게 있는 노드(속성 변경, 또는 자식 안의 변경). (예: `<h1 class="a">` → `<h1 class="b">`)
-- `node: VNode` — `CREATE`, `REPLACE`에서 새로 넣을 노드. 새 트리의 노드를 그대로 담아요. Patch가 [`toDOM`](vdom.md)으로 DOM을 만들어요. (예: `{ kind: 'element', tag: 'li', props: {}, children: [{ kind: 'text', text: 'B' }] }`)
+- `vnode: VNode` — `CREATE`, `REPLACE`에서 새로 넣을 노드. Patch 코드에서 `node`는 DOM 노드를 뜻해서 이름을 구분해요. 새 트리의 노드를 그대로 담아요. Patch가 [`toDOM`](vdom.md)으로 DOM을 만들어요. (예: `{ kind: 'element', tag: 'li', props: {}, children: [{ kind: 'text', text: 'B' }] }`)
 - `text: string` — `TEXT`에서 바뀐 뒤의 내용. (예: `'운동하기'`)
 - `props: PropsPatch` — `UPDATE`에서 바뀐 속성. 속성이 그대로면 `set`은 `{}`, `remove`는 `[]`예요.
   - `set: Record<string, string>` — 새로 생기거나 값이 바뀐 속성의 새 값. (예: `{ class: 'b' }`)
@@ -86,11 +86,11 @@ function diff(oldRoots: VNode[], newRoots: VNode[]): (Patch | null)[];
 
 아래 순서로 검사하고, 해당하는 단계에서 그 노드의 비교를 끝내요.
 
-1. 이전 노드가 없으면 `{ type: 'CREATE', node: newNode }`
+1. 이전 노드가 없으면 `{ type: 'CREATE', vnode: newNode }`
 2. 새 노드가 없으면 `{ type: 'REMOVE' }`
-3. `kind`가 다르면 `{ type: 'REPLACE', node: newNode }`
+3. `kind`가 다르면 `{ type: 'REPLACE', vnode: newNode }`
 4. 둘 다 요소면
-   1. `tag`나 `ns`가 다르면 `{ type: 'REPLACE', node: newNode }`
+   1. `tag`나 `ns`가 다르면 `{ type: 'REPLACE', vnode: newNode }`
    2. 같으면 `props`를 비교하고, 자식은 `diffChildren`으로 재귀 비교해요.
    3. 속성이나 자식 중 하나라도 바뀌었으면 `{ type: 'UPDATE', props, children }`, 아니면 `null`
 5. 둘 다 텍스트이거나 둘 다 주석이면, `text`가 다르면 `{ type: 'TEXT', text: newNode.text }`, 같으면 `null`
@@ -168,7 +168,6 @@ function diff(oldRoots: VNode[], newRoots: VNode[]): (Patch | null)[];
 
 ## 정하지 않은 것
 
-- 한 부모에서 `REMOVE`가 여러 개일 때 Patch가 적용하는 순서: 앞에서부터 지우면 뒤 인덱스가 당겨져요. [Patch 설계](patch.md)에서 정해요(예: 뒤에서부터 적용).
 - 변경 개수(FR-W30)를 셀 때 자식만 바뀐 `UPDATE`를 셀지: 위 예시에서는 `div`, `ul`, `li`가 모두 `UPDATE`지만 실제 변경은 `TEXT` 1개예요. [변경 표시 설계](change-highlight.md)에서 정해요.
 - 순서가 바뀌거나 앞에 끼워 넣은 경우를 더 적은 변경으로 찾는 방법(key 비교): Phase 2에서 검토해요.
 
