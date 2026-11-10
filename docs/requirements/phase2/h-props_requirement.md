@@ -4,7 +4,7 @@
 | --------- | ------------------------------------------------------------------------------------------------------- |
 | 문서 상태 | 초안 v0.1                                                                                               |
 | 작성일    | 2026-11-10                                                                                              |
-| 수정일    | 2026-11-10 (임동호 요구사항 병합)                                                                                                       |
+| 수정일    | 2026-11-11 (임동호 요구사항 병합)                                                                                                       |
 | 작성자    | 오동환, 임동호                                                                                                  |
 | 근거      | Discussions #103 (h 함수 · 이벤트 props · attribute vs property), #105 (App이 return한 VNode는 어디로 가는가) |
 | 선행 문서 | [phase1_requirement.md](../phase1/phase1_requirement.md)                                                |
@@ -98,7 +98,7 @@
 | FR-H04 | 항상 (Ubiquitous) | 시스템은 h에 넘긴 자식 중 `null`, `undefined`, `true`, `false`를 자식으로 넣지 않아야 한다.                                       | `h('div', null, false, null, undefined, true, 'A')`의 자식이 텍스트 `'A'` 하나인지 확인                              | 조건부 렌더링 대응      |
 | FR-H05 | 항상 (Ubiquitous) | 시스템은 h에 넘긴 문자열과 숫자 자식을 텍스트 VNode로 바꿔야 한다.                                                                | `h('span', null, 0)`의 자식이 텍스트 `'0'` 하나인지 확인                                                            | 엣지 케이스: 숫자 `0`도 넣는다 |
 | FR-H06 | 이벤트 (When)     | 함수를 `tag`로 넘겨 h가 호출되면, 시스템은 그 함수를 props와 `children`을 합친 객체로 바로 실행하고 그 결과 VNode를 돌려줘야 한다. | `h(TodoList, { todos })`의 결과가 `TodoList`가 돌려준 `ul` VNode와 같고, 트리에 `TodoList`를 나타내는 노드가 없는지 확인 |                         |
-| FR-H07 | 항상 (Ubiquitous) | 시스템은 h에 넘긴 자식을 넘긴 순서대로 `children`에 넣어야 한다.                                                                  | `h('div', null, A(), B())`의 `children`이 A, B 순서이고, 두 호출 순서를 바꾸면 `children` 순서도 바뀌는지 확인        | 자식 VNode의 위치는 어느 h의 몇 번째 인자인지로 정해진다. 임동호 요구사항에서 추가 |
+| FR-H07 | 항상 (Ubiquitous) | 시스템은 h에 넘긴 자식을 넘긴 순서대로 `children`에 넣어야 한다.                                                                  | `h('div', null, h(A), h(B))`의 `children`이 A, B가 돌려준 VNode 순서이고, 두 인자 순서를 바꾸면 `children` 순서도 바뀌는지 확인        | 자식 VNode의 위치는 어느 h의 몇 번째 인자인지로 정해진다. 임동호 요구사항에서 추가 |
 
 ### 5.2 이벤트 props
 
