@@ -76,29 +76,16 @@ function diff(oldRoots: VNode[], newRoots: VNode[]): (Patch | null)[];
 
 ## 동작 방식
 
-`diff`는 재귀 대신 반복문과 명시적 스택으로 트리를 내려가요([ADR-003](../adr/ADR-003.md)). 내부 함수 세 개를 써요.
+`diff`는 재귀로 트리를 내려가요([ADR-009](../adr/ADR-009.md)). 내부 함수 세 개를 써요.
 
 - `pairChildren`: 자식 목록 두 개를 노드 쌍으로 짝지어요. Phase 2에서 key 기반 비교로 바꿀 때 Diff 안에서는 이 함수만 바꿔요([ADR-002](../adr/ADR-002.md)).
-- `diffChildren`: 짝지은 쌍마다 `diffNode`를 부르고, 결과를 기록하고, 자식 비교를 스택에 넣어요.
-- `diffNode`: 노드 한 쌍을 비교해요. 자식으로 내려가지 않아요.
-
-스택 항목은 노드 하나가 아니라 비교할 자식 목록 한 쌍과 결과를 담을 배열을 함께 담아요. ADR-003의 "처리할 것과 붙을 곳"을 목록 단위로 담는 거예요. 한 목록을 한 번에 처리해야 `out`의 인덱스를 차례로 채울 수 있어요.
-
-```ts
-type DiffTask = {
-  oldList: VNode[];
-  newList: VNode[];
-  out: (Patch | null)[]; // 결과를 담을 배열. 루트 목록이면 반환값, 아니면 부모 UPDATE의 children
-};
-```
+- `diffChildren`: 짝지은 쌍마다 `diffNode`를 불러 결과 배열을 만들어요.
+- `diffNode`: 노드 한 쌍을 비교해요. 둘 다 같은 요소면 `diffChildren`을 재귀로 불러 자식을 비교해요.
 
 ### `diff(oldRoots, newRoots)`
 
 1. 컨테이너를 비교하지 않고, 컨테이너의 자식 목록(`VNode[]`)끼리 비교해요.
-2. 반환할 배열 `result`와 빈 "확인할 `UPDATE` 목록"을 만들고, 스택에 `{ oldList: oldRoots, newList: newRoots, out: result }`를 넣어요.
-3. 스택에서 하나 꺼내 `diffChildren`으로 처리해요. 스택이 빌 때까지 반복해요.
-4. 확인할 `UPDATE` 목록을 정리해요(아래 "`UPDATE` 정리").
-5. `result`를 돌려줘요.
+2. `diffChildren(oldRoots, newRoots)`의 결과를 그대로 돌려줘요.
 
 ### `pairChildren(oldList, newList)`
 
@@ -108,15 +95,13 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 
 1. 두 목록 중 긴 쪽의 길이만큼 돌아요.
 2. 같은 인덱스의 두 노드를 한 쌍 `[oldList[i], newList[i]]`로 만들어요. 한쪽 목록이 짧으면 그 칸은 없는 노드(`undefined`)예요.
-3. 쌍 목록을 돌려줘요. *i*번째 쌍의 결과가 `out[i]`에 들어가요.
+3. 쌍 목록을 돌려줘요. *i*번째 쌍의 결과가 결과 배열의 *i*번째 칸에 들어가요.
 
-### `diffChildren(task)`
+### `diffChildren(oldList, newList)`
 
 1. `pairChildren(oldList, newList)`로 쌍 목록을 받아요.
-2. 쌍마다 두 노드를 `diffNode`로 비교해요.
-3. 결과를 `out`의 같은 인덱스에 바로 담아요. 바뀌지 않은 자리는 `null`이에요.
-4. 결과가 `UPDATE`면 두 요소의 자식 목록을 비교할 항목 `{ oldList: 이전 요소의 children, newList: 새 요소의 children, out: 그 UPDATE의 children }`을 모아 둬요. 그리고 `{ update, out, index }`를 확인할 `UPDATE` 목록에 넣어요.
-5. 모아 둔 항목을 **뒤에서부터** 스택에 넣어요. 그래야 앞 자식부터 꺼내져요.
+2. 쌍마다 두 노드를 `diffNode`로 비교해 결과를 같은 인덱스에 담아요. 바뀌지 않은 자리는 `null`이에요. 쌍은 `for` 반복문으로 돌아요. `map` 같은 콜백으로 돌면 재귀 한 단계마다 호출이 더 쌓여 버틸 수 있는 깊이가 줄어요([ADR-009](../adr/ADR-009.md) 결정 5번).
+3. 결과 배열을 돌려줘요.
 
 ### `diffNode(oldNode, newNode)`
 
@@ -127,20 +112,14 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 3. `kind`가 다르면 `{ type: 'REPLACE', vnode: newNode }`
 4. 둘 다 요소면
    1. `tag`가 다르면 `{ type: 'REPLACE', vnode: newNode }`
-   2. 같으면 `props`를 비교해 `{ type: 'UPDATE', props, children: [] }`를 돌려줘요. 자식은 비교하지 않고 비워 둬요. `diffChildren`이 스택으로 채워요.
+   2. 같으면 `props`를 비교하고, 자식은 `diffChildren`으로 재귀 비교해요.
+   3. 속성이나 자식 중 하나라도 바뀌었으면 `{ type: 'UPDATE', props, children }`, 아니면 `null`. `diffChildren`이 돌아온 시점에는 자식 결과가 모두 나와 있어서 바로 정할 수 있어요.
 5. 둘 다 텍스트이거나 둘 다 주석이면, `text`가 다르면 `{ type: 'TEXT', text: newNode.text }`, 같으면 `null`
 6. 마지막의 `return null`은 도달하지 않는 안전장치예요. 3단계에서 `kind`가 같다는 게 보장되므로 4, 5단계가 모든 경우를 덮어요.
 
 `props` 비교는 두 객체의 속성 이름을 합쳐서 봐요. 새 쪽에만 있거나 값이 다르면 `set`에, 이전 쪽에만 있으면 `remove`에 넣어요.
 
-### `UPDATE` 정리
-
-같은 요소는 자식을 비교하기 전에 `UPDATE`로 만들어 두므로, 속성도 자식도 바뀌지 않은 요소가 `UPDATE`로 남아요. 스택이 빈 뒤에 이것들을 `null`로 바꿔요.
-
-1. 확인할 `UPDATE` 목록을 **뒤에서부터** 봐요. 자식은 부모보다 늦게 목록에 들어가므로, 뒤에서부터 보면 자식을 먼저 정리해요.
-2. `props.set`이 비었고 `props.remove`도 비었고 `children`이 모두 `null`이면, `out[index]`를 `null`로 바꿔요.
-
-그래서 바뀐 곳이 없는 하위 트리는 맨 위 요소 한 칸이 `null`이 돼요.
+바뀐 곳이 없는 하위 트리는 맨 위 요소가 `null`을 돌려주므로 결과에서 `null` 한 칸이 돼요.
 
 예시 (샘플 HTML 코드에서 두 번째 `li`의 텍스트만 바꿈):
 
@@ -182,10 +161,8 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 | 두 루트 목록(`VNode[]`)을 `diffChildren`으로 비교한다        | [Virtual DOM 변환](vdom.md)이 컨테이너를 빼고 자식 목록을 돌려줘요            | [ADR-005](../adr/ADR-005.md) |
 | 자식은 같은 인덱스끼리 비교한다                              | key가 없는 Phase 1에서 가장 단순하고, 결과 위치가 곧 노드 위치가 돼요         | [ADR-002](../adr/ADR-002.md) |
 | `kind`나 `tag`가 다르면 교체로 본다                          | 다른 종류의 노드는 고쳐 쓸 수 없어요                                          | [ADR-002](../adr/ADR-002.md) |
-| 재귀 대신 반복문과 명시적 스택으로 내려간다                  | 사용자가 깊게 중첩한 HTML을 넣어도 콜 스택이 넘치지 않아요                    | [ADR-003](../adr/ADR-003.md) |
-| 스택 항목에 노드 하나가 아니라 자식 목록 한 쌍과 `out`을 담는다 | 한 목록을 한 번에 처리해 `out`의 인덱스를 차례로 채워요                        | [ADR-003](../adr/ADR-003.md) |
+| 재귀로 내려가고, 자식 쌍은 `for` 반복문으로 돈다             | 함수가 돌아올 때 자식 결과로 `UPDATE`인지 `null`인지 바로 정해요. 파서가 깊이를 512단계로 제한해 콜 스택이 넘치지 않아요 | [ADR-009](../adr/ADR-009.md) |
 | 자식 목록을 짝짓는 부분을 `pairChildren`으로 나눈다          | Phase 2에서 key 기반 비교로 바꿀 때 Diff 안에서는 이 함수만 바꿔요            | [ADR-002](../adr/ADR-002.md) |
-| 같은 요소는 먼저 `UPDATE`로 만들고, 스택이 빈 뒤 바뀐 게 없으면 `null`로 바꾼다 | 위에서부터 내려가며 결과를 바로 붙여도, 바뀌지 않은 하위 트리는 `null` 한 칸으로 남아요 | [ADR-003](../adr/ADR-003.md) |
 | 결과를 트리와 같은 모양으로 만든다                           | 경로를 따로 적지 않아도 Patch가 같은 모양으로 내려가며 위치를 찾아요          | -                            |
 | 텍스트와 주석의 내용 변경은 모두 `TEXT`로 본다               | 두 타입 모두 내용이 `text` 필드에 있어 같은 비교를 써요                       | -                            |
 
@@ -198,14 +175,14 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 | 교체 (태그가 다름)      | `<p>A</p>` → `<div>A</div>`                     | `REPLACE` 1개. 자식은 비교하지 않아요                  | FR-E03        |
 | 교체 (노드 종류가 다름) | `A` → `<b>A</b>`                                | `REPLACE` 1개                                          | FR-E03        |
 | 교체 (텍스트 → 주석)    | `A` → `<!--A-->`                                | `REPLACE` 1개                                          | FR-E03        |
-| 속성 변경               | `<h1 class="a">` → `<h1 class="b">`             | `UPDATE`, `props.set`이 `{ class: 'b' }`. 자식이 그대로라 `children`은 모두 `null`이지만, 정리 후에도 `UPDATE`로 남아요 | FR-E03        |
+| 속성 변경               | `<h1 class="a">` → `<h1 class="b">`             | `UPDATE`, `props.set`이 `{ class: 'b' }`. 자식이 그대로라 `children`은 모두 `null`이지만, 속성이 바뀌어 `UPDATE`예요 | FR-E03        |
 | 속성 삭제               | `<button disabled>` → `<button>`                | `UPDATE`, `props.remove`가 `['disabled']`              | FR-E03        |
 | 텍스트 변경             | `<li>A</li>` → `<li>B</li>`                     | `li`가 `UPDATE`, 그 자식이 `TEXT`                      | FR-E03        |
 | 주석 내용 변경          | `<!-- a -->` → `<!-- b -->`                     | `TEXT` 1개                                             | FR-E03, W26   |
 | 공백만 변경             | `<li>A</li>` → `<li> A</li>`                    | `TEXT` 1개                                             | FR-W25        |
 | 순서 바뀜               | `<li>A</li><li>B</li>` → `<li>B</li><li>A</li>` | 인덱스끼리 비교해 두 `li` 안이 각각 `TEXT`             | FR-W13 ([ADR-002](../adr/ADR-002.md)) |
 | 앞에 노드 끼워 넣기     | `<li>A</li>` → `<li>Z</li><li>A</li>`           | 첫 칸 `TEXT`(A → Z), 두 번째 칸 `CREATE`(A)            | FR-W13 ([ADR-002](../adr/ADR-002.md)) |
-| 깊게 중첩된 요소        | `<div>`를 10,000번 중첩 → 맨 안쪽 텍스트만 바꿈 | 오류 없이 끝나요. 조상 `div`는 모두 `UPDATE`, 맨 안쪽 칸은 `TEXT` | FR-E03 ([ADR-003](../adr/ADR-003.md)) |
+| 깊게 중첩된 요소        | `<div>`를 512번 중첩(Chromium 파서 상한) → 맨 안쪽 텍스트만 바꿈 | 오류 없이 끝나요. 조상 `div`는 모두 `UPDATE`, 맨 안쪽 칸은 `TEXT` | FR-E03 ([ADR-009](../adr/ADR-009.md)) |
 | 모두 삭제               | 샘플 HTML 코드 → 빈 문자열                      | 루트 칸이 모두 `REMOVE`                                | FR-E09        |
 | 빈 문자열 → 내용 추가   | 빈 문자열 → `<p>A</p>`                          | `[CREATE]`                                             | FR-E08        |
 | 바뀐 내용 없음          | 같은 트리                                       | 모든 칸이 `null`                                       | FR-W10, W28   |
@@ -213,7 +190,7 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 ## 검증 방법
 
 - 단위 테스트: 위 경계 케이스마다 테스트 케이스를 두고, 결과가 기대 동작과 같은지 확인해요. 특히 다섯 가지 변경(추가, 삭제, 교체, 속성 변경, 텍스트 변경)마다 해당 변경만 담기는지 확인해요(FR-E03).
-- `UPDATE` 정리 단위 테스트: 정리를 빠뜨리거나 순서를 틀려도 위 테스트는 통과할 수 있어서 따로 확인해요.
+- `UPDATE` 판단 단위 테스트: 자식 결과로 부모를 `UPDATE`나 `null`로 정하는 부분을 따로 확인해요.
   - 바뀐 게 없는 중첩 트리(`<div><p>A</p></div>` → 같은 HTML)의 결과가 `[null]`인지 (FR-W10, W28)
   - 속성만 바뀌고 자식이 그대로인 요소가 `UPDATE`로 남고, `children`이 모두 `null`인지
   - 형제 중 하나만 바뀌었을 때(`<ul><li>A</li><li>B</li></ul>` → 두 번째 `li`만 `C`) 첫 번째 `li` 칸이 `null`인지
@@ -227,5 +204,5 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 
 - [요구사항 명세서](../requirements/phase1_requirement.md)
 - [ADR-002](../adr/ADR-002.md): Diff는 Phase 1에서 같은 자리, Phase 2에서 key로 노드를 짝짓는다. key 규칙은 Phase 2 설계에서 정해요.
-- [ADR-003](../adr/ADR-003.md): 트리 순회는 반복문과 명시적 스택으로 한다
+- [ADR-009](../adr/ADR-009.md): 트리 순회는 재귀로 한다
 - [Virtual DOM 변환 설계](vdom.md), [Patch 설계](patch.md), [변경 표시 설계](change-highlight.md)

@@ -123,7 +123,7 @@ describe('toVNode (DOM → Virtual DOM)', () => {
     expect(div.props).toEqual({ id: 'x' });
   });
 
-  it('V13 자식이 셋 이상이어도 형제 순서가 뒤집히지 않는다 (ADR-003)', () => {
+  it('V13 자식이 셋 이상이어도 형제 순서가 뒤집히지 않는다 (ADR-009)', () => {
     const ul = asElement(toVNode(render('<ul><li>1</li><li>2</li><li>3</li></ul>'))[0]);
     const texts = ul.children.map((li) => asElement(li).children[0]);
     expect(texts).toEqual([
@@ -161,7 +161,7 @@ describe('toDOM (Virtual DOM → DOM)', () => {
     expect((node as Element).outerHTML).toBe('<li>B</li>');
   });
 
-  it('D5 자식이 셋 이상이어도 형제 순서가 뒤집히지 않는다 (ADR-003)', () => {
+  it('D5 자식이 셋 이상이어도 형제 순서가 뒤집히지 않는다 (ADR-009)', () => {
     const ulVNode = toVNode(render('<ul><li>1</li><li>2</li><li>3</li></ul>'))[0];
     const ul = toDOM(ulVNode) as Element;
     expect(Array.from(ul.childNodes, (li) => li.textContent)).toEqual(['1', '2', '3']);
