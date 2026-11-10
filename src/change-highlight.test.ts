@@ -230,18 +230,97 @@ describe('Diff·Patch와 함께 (경계 케이스)', () => {
     expect(summary.hidden).toBe(0);
   });
 
-  it('강조 표시 전후로 실제 영역의 속성이 그대로예요 (FR-W27)', () => {
-    const real = container(SAMPLE);
+  it('기본 강조 표시는 animate만 부르고 속성을 바꾸지 않아요 (FR-W27)', () => {
+    // jsdom에는 animate가 없어요. 가짜를 넣어 기본 highlight가 실제로 animate를 부르는 경로를 태워요
+    const animate = vi.fn();
+    Element.prototype.animate = animate as unknown as Element['animate'];
+    try {
+      const real = container(SAMPLE);
+      const old = toVNode(real);
+      const result = diff(old, toVNode(container(SAMPLE.replace('운동하기', '공부하기').replace('class="todo"', 'class="done"'))));
+      const records = fromDiffResult(result, old);
+      const readText = (el: Element) => el.textContent ?? '';
+      const before = captureBefore(real, records, { readText });
+      patch(real, result);
+
+      const attrs = () => Array.from(real.querySelectorAll('*')).map((el) => el.outerHTML.split('>')[0]);
+      const snapshot = attrs();
+      const setAttribute = vi.spyOn(Element.prototype, 'setAttribute');
+      const removeAttribute = vi.spyOn(Element.prototype, 'removeAttribute');
+      const summary = showChanges(real, records, before, { readText }); // 기본 highlight
+
+      expect(summary.highlighted.length).toBeGreaterThan(0);
+      expect(animate).toHaveBeenCalledTimes(summary.highlighted.length);
+      expect(setAttribute).not.toHaveBeenCalled();
+      expect(removeAttribute).not.toHaveBeenCalled();
+      expect(attrs()).toEqual(snapshot);
+      setAttribute.mockRestore();
+      removeAttribute.mockRestore();
+    } finally {
+      delete (Element.prototype as { animate?: unknown }).animate;
+    }
+  });
+
+  it('요소 노드 삭제: 부모 ul을 강조 표시해요', () => {
+    const { real, records, summary } = run('<ul><li>A</li><li>B</li></ul>', '<ul><li>A</li></ul>');
+    expect(records).toHaveLength(1);
+    expect(records[0]).toMatchObject({ kind: 'remove', oldPath: [0, 1], oldNodeKind: 'element' });
+    expect(summary.highlighted).toEqual([real.firstChild]);
+  });
+
+  it('요소 노드 → 텍스트 노드 교체: 부모 요소 노드를 강조 표시해요', () => {
+    const { real, records, summary } = run('<p><b>A</b></p>', '<p>A</p>');
+    expect(records[0]).toMatchObject({ kind: 'replace', oldNodeKind: 'element', newNodeKind: 'text' });
+    expect(summary.highlighted).toEqual([real.firstChild]);
+    expect(summary.hidden).toBe(0);
+  });
+
+  it('텍스트 노드 → 요소 노드 교체: 새 요소 노드를 강조 표시해요', () => {
+    const { real, records, summary } = run('<p>A</p>', '<p><b>A</b></p>');
+    expect(records[0]).toMatchObject({ kind: 'replace', oldNodeKind: 'text', newNodeKind: 'element' });
+    expect(summary.highlighted).toEqual([real.querySelector('b')]);
+  });
+
+  it('텍스트 노드 create: 부모 innerText가 바뀌면 보여요', () => {
+    const { real, records, summary } = run('<p><b>A</b></p>', '<p><b>A</b>B</p>');
+    expect(records[0]).toMatchObject({ kind: 'create', newNodeKind: 'text' });
+    expect(summary.highlighted).toEqual([real.firstChild]);
+  });
+
+  it('텍스트 노드 remove: 부모 innerText가 바뀌면 보여요', () => {
+    const { real, records, summary } = run('<p><b>A</b>B</p>', '<p><b>A</b></p>');
+    expect(records[0]).toMatchObject({ kind: 'remove', oldNodeKind: 'text' });
+    expect(summary.highlighted).toEqual([real.firstChild]);
+  });
+
+  it('텍스트 노드 create/remove: 부모 innerText가 그대로면 안 보여요', () => {
+    // readText가 Patch 전후 같은 값을 돌려주는 경우 (예: 공백만 더한 경우의 innerText)
+    const real = container('<p>A</p>');
     const old = toVNode(real);
-    const result = diff(old, toVNode(container(SAMPLE.replace('운동하기', '공부하기'))));
+    const result = diff(old, toVNode(container('<p>A</p> ')));
     const records = fromDiffResult(result, old);
-    const opts = options();
+    const opts = { readText: () => 'A', highlight: vi.fn() };
     const before = captureBefore(real, records, opts);
     patch(real, result);
-    const attrs = () => Array.from(real.querySelectorAll('*')).map((el) => el.outerHTML.split('>')[0]);
-    const snapshot = attrs();
-    showChanges(real, records, before, { readText: opts.readText }); // 기본 highlight (jsdom에서는 아무것도 안 함)
-    expect(attrs()).toEqual(snapshot);
+    const summary = showChanges(real, records, before, opts);
+    expect(records[0]).toMatchObject({ kind: 'create', newNodeKind: 'text', parentNewPath: [] });
+    expect(summary.hidden).toBe(1);
+    expect(opts.highlight).not.toHaveBeenCalled();
+  });
+});
+
+describe('captureBefore', () => {
+  it('같은 부모는 한 번만 읽고, before는 records와 같은 순서·개수예요', () => {
+    // p 안의 텍스트 2개(같은 부모)와 속성 변경 1개
+    const real = container('<p class="a">A<b>B</b>C</p>');
+    const old = toVNode(real);
+    const records = fromDiffResult(diff(old, toVNode(container('<p class="b">X<b>B</b>Y</p>'))), old);
+    expect(records.map((r) => r.kind)).toEqual(['props', 'text', 'text']);
+
+    const readText = vi.fn((el: Element) => el.textContent ?? '');
+    const before = captureBefore(real, records, { readText });
+    expect(before).toEqual([null, 'ABC', 'ABC']);
+    expect(readText).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -221,6 +221,7 @@ export function captureBefore(container: Element, records: ChangeRecord[], optio
     const key = r.parentOldPath.join(',');
     if (!cache.has(key)) {
       const parent = findElement(container, r.parentOldPath);
+      // 부모를 못 찾으면 Patch 전 구조가 이전 트리와 다른 경우예요. null을 넣으면 showChanges에서 보이는 변경으로 세요
       cache.set(key, parent === null ? null : readText(parent));
     }
     before.push(cache.get(key) ?? null);
@@ -242,6 +243,7 @@ export function showChanges(
   const highlight = options?.highlight ?? defaultHighlight;
   const afterCache = new Map<string, string>();
   const highlighted: Element[] = [];
+  const seen = new Set<Element>(); // 같은 요소 노드를 한 번만 담아요. 순서는 highlighted 배열이 지켜요
   const items: ChangeSummary['items'] = [];
 
   for (let i = 0; i < records.length; i++) {
@@ -251,8 +253,10 @@ export function showChanges(
     let target: Element | null = null;
 
     if (rule.type === 'element') {
-      visible = true;
       target = findElement(container, rule.target === 'new' ? r.newPath : r.parentNewPath);
+      // 대상을 못 찾으면 Patch 후 구조가 새 트리와 다른 경우예요(FR-W15 전제가 깨짐).
+      // 강조 표시도 못 하니 보이는 변경으로 세지 않아요. 구조가 다른 것은 검증 페이지 9단계 확인이 오류로 알려 줘요
+      visible = target !== null;
     } else if (rule.type === 'text') {
       target = findElement(container, r.parentNewPath);
       if (target !== null) {
@@ -263,7 +267,10 @@ export function showChanges(
     }
 
     items.push({ record: r, visible });
-    if (visible && target !== null && !highlighted.includes(target)) highlighted.push(target);
+    if (visible && target !== null && !seen.has(target)) {
+      seen.add(target);
+      highlighted.push(target);
+    }
   }
 
   for (let i = 0; i < highlighted.length; i++) highlight(highlighted[i]);
