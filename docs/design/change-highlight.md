@@ -86,7 +86,7 @@ type ChangeSummary = {
   - `total: number` — 변경 개수. `ChangeRecord[]`의 길이예요. (예: `2`)
   - `hidden: number` — 그중 화면에 안 보이는 변경의 개수. (예: `1`)
   - `message: string` — 요약 문구. "변경 N개 (화면에 안 보이는 변경 M개)" 형식이고, M이 0이면 괄호 부분을 빼요(FR-W30). (예: `'변경 2개 (화면에 안 보이는 변경 1개)'`)
-  - `highlighted: Element[]` — 강조 표시한 요소 노드. 같은 요소 노드는 한 번만 담고, 부모라서 칠하는 요소 노드가 다른 강조 대상을 품으면 빼요. (예: `[h1]`)
+  - `highlighted: Element[]` — 강조 표시한 요소 노드. 같은 요소 노드는 한 번만 담아요. (예: `[h1]`)
   - `items: { record: ChangeRecord; visible: boolean }[]` — 변경마다 화면에 보이는지 판단한 결과. 순서와 개수가 `records`와 같아요. 검증 페이지의 Diff 결과 패널(FR-X04)이 써요. (예: `[{ record: text 변경, visible: true }, { record: create 변경, visible: false }]`)
 
 ## 인터페이스
@@ -94,7 +94,7 @@ type ChangeSummary = {
 ```ts
 type HighlightOptions = {
   readText?: (el: Element) => string;
-  highlight?: (el: Element, kinds: ChangeRecord['kind'][]) => void;
+  highlight?: (el: Element) => void;
 };
 
 function fromDiffResult(result: (Patch | null)[], oldRoots: VNode[]): ChangeRecord[];
@@ -117,7 +117,7 @@ function showChanges(
 - `records: ChangeRecord[]` — `fromDiffResult`가 돌려준 변경 목록. 변경 하나가 한 칸이에요. (예: `[{ kind: 'text', oldPath: [0,1,0], newPath: [0,1,0], … }, { kind: 'create', oldPath: null, newPath: [0,3,5], … }]`)
 - `before: TextBefore` — `captureBefore`가 Patch 전에 돌려준 값. 순서와 개수가 `records`와 같아 같은 자리끼리 짝이에요. *i*번째 값은 `records[i]`의 부모 요소 노드의 `innerText`이고, 텍스트 노드 규칙이 아닌 변경은 `null`이에요. (예: 위 `records`에 대해 `['할 일 목록', null]`)
 - `options.readText: (el: Element) => string` — 요소 노드의 `innerText`를 읽는 함수. 기본값은 HTML 요소 노드면 `innerText`, 아니면(SVG 요소 노드 등) `textContent`를 읽어요. SVG 요소 노드에는 `innerText`가 없기 때문이에요. 단위 테스트에서 바꿔 넣어요. (예: `el => el.textContent ?? ''`)
-- `options.highlight: (el: Element, kinds: ChangeRecord['kind'][]) => void` — 요소 노드 하나를 강조 표시하는 함수. `kinds`는 그 요소 노드 때문에 보이는 변경의 종류로, 겹치지 않게 처음 나온 순서로 담아요. 검증 페이지는 이 값으로 변경 종류 라벨을 붙여요. (예: 속성과 텍스트가 함께 바뀐 `li`면 `['props', 'text']`) 기본값은 `element.animate()`로 배경색을 1.2초 동안 바꿨다가 되돌리는 함수예요. 검증 페이지는 기본값을 쓰지 않고, [화면 스타일 설계](style.md#강조-표시-모양)대로 다음 Patch까지 남는 모양을 정해 넘겨요. 변경 표시는 강조 표시를 지우지 않아요. 지우는 일은 [검증 페이지](page.md#patch)가 해요. jsdom에서는 `animate`가 없어 아무것도 하지 않아요. (예: `el => el.animate([{ backgroundColor: '#EDE7FF', boxShadow: '0 0 0 4px #EDE7FF' }, {}], 800)`)
+- `options.highlight: (el: Element) => void` — 요소 노드 하나를 강조 표시하는 함수. 기본값은 `element.animate()`로 배경색을 1.2초 동안 바꿨다가 되돌리는 함수예요. 검증 페이지는 기본값을 쓰지 않고, [화면 스타일 설계](style.md#강조-표시-모양)대로 다음 Patch까지 남는 모양을 정해 넘겨요. 변경 표시는 강조 표시를 지우지 않아요. 지우는 일은 [검증 페이지](page.md#patch)가 해요. jsdom에서는 `animate`가 없어 아무것도 하지 않아요. (예: `el => el.animate([{ backgroundColor: '#EDE7FF', boxShadow: '0 0 0 4px #EDE7FF' }, {}], 800)`)
 - `fromDiffResult`
   - 반환값: 변경으로 세는 칸의 목록. 한 자식 목록의 칸을 앞에서부터 처리한 뒤 그 아래 자식 목록으로 내려간 순서예요. 순서는 Diff 결과 패널에만 쓰고 판단에는 영향이 없어요. 바뀐 내용이 없으면 `[]`예요.
   - 부수 효과: 없음. **Diff 결과의 형식을 아는 함수는 이것 하나예요.**
@@ -126,7 +126,7 @@ function showChanges(
   - 부수 효과: DOM을 바꾸지 않아요. `innerText`를 읽을 때 레이아웃을 다시 계산해야 하면 Reflow가 일어날 수 있어요.
 - `showChanges`
   - 반환값: 요약 결과.
-  - 부수 효과: `highlighted`의 요소 노드마다 `options.highlight(요소 노드, 변경 종류)`를 호출해요.
+  - 부수 효과: `highlighted`의 요소 노드마다 `options.highlight`를 호출해요.
 
 ## 동작 방식
 
@@ -173,7 +173,7 @@ function showChanges(
 1. 변경마다 위 규칙으로 보이는지 판단해요.
 2. 강조 표시할 요소 노드를 `newPath`나 `parentNewPath`로 실제 영역에서 찾아요. Patch 후 실제 영역은 새 트리와 같은 구조예요(FR-W15).
 3. 텍스트 노드 규칙이면, 부모 요소 노드를 다시 읽어 `before`의 값과 비교해요.
-4. 보이는 변경의 요소 노드를 모아요. 같은 요소 노드는 한 번만 담아요. 모은 요소 노드 중 부모라서 칠하는 것(텍스트 노드 규칙, 삭제·교체된 요소 노드의 부모)이 다른 강조 대상을 품으면 빼요. 그 요소 노드 자신이 바뀐 경우(속성 변경, 추가·교체된 요소 노드)는 빼지 않아요. 조상을 칠하면 자손까지 통째로 덮여 어디가 바뀌었는지 안 보여요. 보이는지 판단(`items`, `hidden`)은 그대로예요.
+4. 보이는 변경의 요소 노드를 모아요. 같은 요소 노드는 한 번만 담아요.
 5. 모은 요소 노드마다 `options.highlight`를 호출해요.
 6. 안 보이는 변경의 개수로 `message`를 만들어요(FR-W30).
 
@@ -230,7 +230,7 @@ patch 후 showChanges:
 | 한 부모 안의 보이는 변경과 공백 변경 | `<p>A<b>B</b> </p>` → `<p>C<b>B</b>  </p>`                          | `text` 2개로 "변경 2개". 부모 `p`의 `innerText`가 바뀌어 둘 다 보이는 변경으로 세요   | FR-W30        |
 | 화면에 렌더링되지 않은 요소 노드     | `display: none` 요소 노드 안의 텍스트 변경                          | `innerText`가 `textContent`와 같은 값을 돌려줘 공백 변경도 보이는 변경으로 세요       | FR-W16        |
 
-마지막 두 행은 부모 `innerText`로 판단하는 ADR-008 규칙의 한계예요. 같은 부모 요소 노드 아래(자손 포함)에서 보이는 변경이 함께 일어나면, 그 부모의 `innerText`가 바뀌어 공백 변경도 보이는 변경으로 세요. 예를 들어 샘플에서 `h1` 텍스트와 들여쓰기를 함께 바꾸면, 들여쓰기 변경도 보이는 변경이 돼요. 다만 `div#app`은 `h1`을 품은 조상이라 강조 표시는 `h1`에만 해요. 기대 동작은 이 한계를 그대로 따른 결과예요.
+마지막 두 행은 부모 `innerText`로 판단하는 ADR-008 규칙의 한계예요. 같은 부모 요소 노드 아래(자손 포함)에서 보이는 변경이 함께 일어나면, 그 부모의 `innerText`가 바뀌어 공백 변경도 보이는 변경으로 세요. 예를 들어 샘플에서 `h1` 텍스트와 들여쓰기를 함께 바꾸면, 들여쓰기 변경도 보이는 변경이 되고 `div#app`을 강조 표시해요. 기대 동작은 이 한계를 그대로 따른 결과예요.
 
 ## 검증 방법
 

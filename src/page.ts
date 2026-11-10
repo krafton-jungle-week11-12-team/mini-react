@@ -46,8 +46,6 @@ export type PageElementsX = PageElements & {
   vdomView: HTMLElement;
   diffView: HTMLElement;
   historyView: HTMLElement;
-  /** 실제 영역 렌더링 결과 위에 변경 종류 라벨을 띄우는 층. realRoot 밖(형제)이라 비교에 섞이지 않아요 */
-  realMarks: HTMLElement;
 };
 
 export type Page = {
@@ -81,7 +79,6 @@ export function getElements(doc: Document): PageElements & Partial<PageElementsX
     vdomView: maybe('vdom-view'),
     diffView: maybe('diff-view'),
     historyView: maybe('history-view'),
-    realMarks: maybe('real-marks'),
   };
 }
 
@@ -98,16 +95,6 @@ export function createPage<R>(
   // 기록 목록 패널의 설명. 기록과 같은 순서예요. State History는 내용을 읽지 않으니 페이지가 따로 들고 있어요
   const notes: string[] = ['샘플 HTML 코드로 로드'];
   let lastSummary: ChangeSummary | null = null;
-  // 강조 표시한 요소 노드와 그 변경 종류. 라벨을 그리고 스크롤 때 다시 그릴 때 써요
-  let marks: { target: Element; kinds: ChangeRecord['kind'][] }[] = [];
-  // 변경 표시에 넘기는 옵션. 강조 표시를 그대로 하면서, 라벨용으로 요소 노드와 변경 종류를 모아요
-  const engineOptions: HighlightOptions = {
-    ...options,
-    highlight: (target, kinds) => {
-      options?.highlight?.(target, kinds);
-      marks.push({ target, kinds });
-    },
-  };
 
   // ── 로드 ────────────────────────────────────────────────
   setRealCode(sample); // 1 (FR-W02)
@@ -133,13 +120,12 @@ export function createPage<R>(
     const records = engine.fromDiffResult(result, old); // 5
     if (records.length === 0) return; // FR-W28: 실제 영역, State History, 요약 문구를 바꾸지 않아요
     clearHighlights(); // 지난 Patch의 강조 표시를 지우고 이번 변경만 표시해요
-    clearMarks();
 
     let summary: ChangeSummary;
     try {
-      const before = engine.captureBefore(el.realRoot, records, engineOptions); // 6
+      const before = engine.captureBefore(el.realRoot, records, options); // 6
       engine.patch(el.realRoot, result); // 7 (FR-W14)
-      summary = engine.showChanges(el.realRoot, records, before, engineOptions); // 8 (FR-W16, W30)
+      summary = engine.showChanges(el.realRoot, records, before, options); // 8 (FR-W16, W30)
     } catch (error) {
       fail(`Patch 중 오류가 났어요: ${error instanceof Error ? error.message : String(error)}`);
       return;
@@ -156,68 +142,31 @@ export function createPage<R>(
     addNote(`Patch, ${summary.message}`);
     lastSummary = summary;
     showMessage(summary.message, false);
-    drawMarks();
     setRealCode(html); // 11
     updateButtons();
     renderPanels();
   }
 
   function onBack(): void {
-    const fromIndex = history.index;
-    const fromVdom = history.current().vdom; // back()이 위치를 옮기기 전에 읽어 둬요
-    move(fromIndex, fromVdom, history.back());
+    move(history.back());
   }
 
   function onForward(): void {
-    const fromIndex = history.index;
-    const fromVdom = history.current().vdom;
-    move(fromIndex, fromVdom, history.forward());
+    move(history.forward());
   }
 
   // ── 단계 ────────────────────────────────────────────────
-  /**
-   * 기록 이동: 두 영역을 기록의 상태 전체로 바꿔요 (FR-W19, W20, ADR-010).
-   * 실제 영역은 Patch를 거치지 않아요. 대신 이동 전 기록과 이동한 기록의 vdom을 비교해
-   * 무엇이 바뀌었는지 강조 표시, 요약 문구, Diff 패널로 보여 줘요. 이 비교 결과는 보여 주기만 해요.
-   */
-  function move(fromIndex: number, fromVdom: VNode[], entry: HistoryEntry | null): void {
+  /** 기록 이동: 두 영역을 기록의 상태 전체로 바꿔요 (FR-W19, W20, ADR-010). */
+  function move(entry: HistoryEntry | null): void {
     if (entry === null) return; // 1
+    setTestCode(entry.html); // 2
+    setRealCode(entry.html); // 2
+    el.testRoot.innerHTML = entry.html; // 3
+    el.realRoot.innerHTML = entry.html; // 3
     clearHighlights();
-    clearMarks();
-
-    // 2. 이동 전 기록과 이동한 기록을 비교해요. 실제 영역이 아직 이동 전 기록과 같은 구조라 지금 읽어요
-    let records: ChangeRecord[] = [];
-    let before: TextBefore = [];
-    try {
-      records = engine.fromDiffResult(engine.diff(fromVdom, entry.vdom), fromVdom);
-      before = engine.captureBefore(el.realRoot, records, engineOptions);
-    } catch {
-      records = []; // 비교에 실패해도 이동은 해요. 변경 표시만 하지 않아요
-    }
-
-    setTestCode(entry.html); // 3
-    setRealCode(entry.html); // 3
-    el.testRoot.innerHTML = entry.html; // 4
-    el.realRoot.innerHTML = entry.html; // 4
-
-    // 5. innerHTML로 바꾼 실제 영역은 이동한 기록과 같은 구조라 강조할 요소 노드를 찾을 수 있어요
+    showMessage('', false); // 4
     lastSummary = null;
-    let text = `기록 ${fromIndex + 1} → ${history.index + 1}`;
-    if (records.length > 0) {
-      try {
-        const summary = engine.showChanges(el.realRoot, records, before, engineOptions);
-        lastSummary = summary;
-        text += `: ${summary.message}`;
-      } catch {
-        clearHighlights();
-        clearMarks();
-      }
-    } else {
-      text += ': 바뀐 내용 없음';
-    }
-    showMessage(text, false);
-    drawMarks();
-    updateButtons(); // 6
+    updateButtons();
     renderPanels();
   }
 
@@ -225,7 +174,6 @@ export function createPage<R>(
   function fail(text: string): void {
     const { html } = history.current();
     clearHighlights();
-    clearMarks();
     el.testRoot.innerHTML = html;
     el.realRoot.innerHTML = html;
     showMessage(text, true);
@@ -260,66 +208,6 @@ export function createPage<R>(
     if (typeof el.realRoot.getAnimations !== 'function') return;
     const animations = el.realRoot.getAnimations({ subtree: true });
     for (let i = 0; i < animations.length; i++) animations[i].cancel();
-  }
-
-  /** 지난 Patch의 강조 표시와 변경 종류 라벨을 지워요. */
-  function clearMarks(): void {
-    marks = [];
-    el.realMarks?.replaceChildren();
-  }
-
-  /**
-   * 강조 표시한 요소 노드마다 변경 종류 라벨(text, create 등)을 그 글자 끝 옆에 띄워요.
-   * 라벨은 realRoot 밖의 층(realMarks)에 그려서 실제 영역의 DOM을 바꾸지 않아요 (FR-W27).
-   */
-  function drawMarks(): void {
-    const layer = el.realMarks;
-    if (layer === undefined) return;
-    layer.replaceChildren();
-    const doc = layer.ownerDocument;
-    const box = layer.getBoundingClientRect();
-    for (const { target, kinds } of marks) {
-      const label = doc.createElement('span');
-      label.className = 'mark';
-      for (const kind of kinds) {
-        const chip = doc.createElement('span');
-        chip.className = `chip chip-${kind}`;
-        chip.textContent = kind;
-        label.append(chip);
-      }
-      layer.append(label);
-
-      if (target === el.realRoot) {
-        // 영역 컨테이너 자체는 오른쪽 위 구석에 붙여요
-        label.style.top = '8px';
-        label.style.right = '8px';
-        continue;
-      }
-      let left: number;
-      let top: number;
-      if (target.firstElementChild !== null) {
-        // 자식 요소 노드가 있는 묶음(ul 등)은 요소 노드의 오른쪽 위 안쪽에 붙여요. 자식의 라벨과 겹치지 않게 해요
-        const rect = target.getBoundingClientRect();
-        left = rect.right - box.left - label.offsetWidth - 4;
-        top = rect.top - box.top + 2;
-      } else {
-        // 글자만 가진 요소 노드는 글자의 마지막 줄 끝 옆에 놓아요
-        const range = doc.createRange();
-        range.selectNodeContents(target);
-        // jsdom에는 Range의 getClientRects가 없어요. 그때는 요소 노드 자리를 써요
-        const lines = typeof range.getClientRects === 'function' ? range.getClientRects() : [];
-        const rect = lines.length > 0 ? lines[lines.length - 1] : target.getBoundingClientRect();
-        left = rect.right - box.left + 8;
-        top = rect.top - box.top + (rect.height - label.offsetHeight) / 2;
-        if (left + label.offsetWidth > box.width - 4) {
-          // 글자가 줄 끝까지 가 옆에 자리가 없으면 그 줄 위로 올려 글자와 겹치지 않게 해요
-          top = rect.top - box.top - label.offsetHeight - 2;
-        }
-      }
-      left = Math.max(4, Math.min(left, box.width - label.offsetWidth - 4));
-      label.style.left = `${left}px`;
-      label.style.top = `${top}px`;
-    }
   }
 
   /** 입력창 값이 현재 위치 기록과 같은 동안 Patch 버튼을 비활성화해요 (FR-W10, W25, W26). */
@@ -357,8 +245,6 @@ export function createPage<R>(
   }
 
   connectScroll(el);
-  el.realRoot.addEventListener('scroll', drawMarks); // 스크롤하면 라벨 위치를 다시 맞춰요
-  el.realRoot.ownerDocument.defaultView?.addEventListener('resize', drawMarks);
 
   el.testCode.addEventListener('input', onInput);
   el.patchButton.addEventListener('click', onPatch);

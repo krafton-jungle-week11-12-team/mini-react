@@ -217,7 +217,6 @@ describe('Diff·Patch와 함께 (경계 케이스)', () => {
     expect(summary.message).toBe('변경 2개');
     expect(summary.highlighted).toEqual([real.firstChild]);
     expect(opts.highlight).toHaveBeenCalledTimes(1);
-    expect(opts.highlight).toHaveBeenCalledWith(real.firstChild, ['props', 'text']); // 변경 종류를 함께 넘겨요
   });
 
   it('요소 노드를 주석으로 교체하면 영역 컨테이너를 강조 표시해요', () => {
@@ -307,25 +306,6 @@ describe('Diff·Patch와 함께 (경계 케이스)', () => {
     expect(records[0]).toMatchObject({ kind: 'create', newNodeKind: 'text', parentNewPath: [] });
     expect(summary.hidden).toBe(1);
     expect(opts.highlight).not.toHaveBeenCalled();
-  });
-});
-
-describe('강조 대상 줄이기', () => {
-  it('다른 강조 대상을 품은 조상 요소 노드는 칠하지 않아요', () => {
-    // h1 텍스트와 div#app 들여쓰기를 함께 바꿔요. div#app도 보이는 변경으로 세지만 칠하는 건 h1뿐이에요
-    const { real, summary } = run(SAMPLE, SAMPLE.replace('할 일 목록', '오늘 할 일').replace('\n  <h1', '\n    <h1'));
-    expect(summary.hidden).toBe(0);
-    expect(summary.highlighted).toEqual([real.querySelector('h1')]);
-  });
-
-  it('조상 자신이 바뀐 경우(속성 변경)는 자손이 있어도 칠해요', () => {
-    const { real, summary } = run('<ul class="a"><li>A</li></ul>', '<ul class="b"><li>B</li></ul>');
-    expect(summary.highlighted).toEqual([real.firstChild, real.querySelector('li')]);
-  });
-
-  it('조상만 있으면 그대로 칠해요', () => {
-    const { real, summary } = run('<ul><li>A</li><li>B</li></ul>', '<ul><li>A</li></ul>');
-    expect(summary.highlighted).toEqual([real.firstChild]);
   });
 });
 

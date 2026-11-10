@@ -127,7 +127,7 @@ describe('Patch', () => {
     expect(el.message.textContent).toBe('변경 1개');
     expect(el.patchButton.disabled).toBe(true);
     expect(el.backButton.disabled).toBe(false);
-    expect(options.highlight).toHaveBeenCalledWith(el.realRoot.querySelector('h1'), ['text']);
+    expect(options.highlight).toHaveBeenCalledWith(el.realRoot.querySelector('h1'));
   });
 
   it('바뀐 내용 없이 부르면 아무것도 바꾸지 않아요 (FR-W28)', () => {
@@ -213,9 +213,7 @@ describe('기록 이동', () => {
     expect(sameTree(toVNode(el.testRoot), page.history.current().vdom)).toBe(true);
     expect(el.backButton.disabled).toBe(true);
     expect(el.forwardButton.disabled).toBe(false);
-    // 이동 전 기록(2)과 이동한 기록(1)을 비교한 결과를 보여 줘요
-    expect(el.message.textContent).toBe('기록 2 → 1: 변경 1개');
-    expect(options.highlight).toHaveBeenLastCalledWith(el.realRoot.querySelectorAll('li')[1], ['text']);
+    expect(el.message.textContent).toBe('');
 
     page.onForward();
     expect(el.testCode.value).toBe(next);
@@ -238,18 +236,6 @@ describe('기록 이동', () => {
     expect(page.history.length).toBe(2);
     expect(el.forwardButton.disabled).toBe(true);
     expect(sameAreas(el)).toBe(true);
-  });
-
-  it('기록 이동은 Patch를 거치지 않아요 (비교 결과는 보여 주기만 해요)', () => {
-    const fakePatch = vi.fn(patch);
-    const { el, page, type } = setup({ patch: fakePatch });
-    type(SAMPLE_HTML.replace('장보기', 'A'));
-    page.onPatch();
-    fakePatch.mockClear();
-    page.onBack();
-    page.onForward();
-    expect(fakePatch).not.toHaveBeenCalled();
-    expect(el.message.textContent).toBe('기록 1 → 2: 변경 1개');
   });
 
   it('수정 중에 뒤로 가면 입력창이 그 기록의 html로 덮어써져요', () => {
@@ -278,8 +264,6 @@ describe('2차 패널 (FR-X01, X03, X04)', () => {
 
     page.onBack();
     expect(el.historyLabel?.textContent).toBe('기록 1 / 2');
-    // 기록 2 → 1 비교: 텍스트 되돌림과 주석 삭제
-    const kinds = Array.from(el.diffView?.querySelectorAll('.chip') ?? []).map((c) => c.textContent);
-    expect(kinds).toEqual(['remove', 'text']);
+    expect(el.diffView?.children.length).toBe(0);
   });
 });

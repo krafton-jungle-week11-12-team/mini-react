@@ -33,8 +33,7 @@ export type ChangeSummary = {
 
 export type HighlightOptions = {
   readText?: (el: Element) => string;
-  /** 요소 노드 하나를 강조 표시해요. kinds는 그 요소 노드 때문에 보이는 변경의 종류예요(겹치지 않게, 처음 나온 순서). */
-  highlight?: (el: Element, kinds: ChangeRecord['kind'][]) => void;
+  highlight?: (el: Element) => void;
 };
 
 // ---------------------------------------------------------------------------
@@ -244,10 +243,7 @@ export function showChanges(
   const highlight = options?.highlight ?? defaultHighlight;
   const afterCache = new Map<string, string>();
   const highlighted: Element[] = [];
-  // 같은 요소 노드를 한 번만 담아요. 순서는 highlighted 배열이 지키고, Map에는 그 요소 노드의 변경 종류를 모아요
-  const kindsOf = new Map<Element, ChangeRecord['kind'][]>();
-  // 그 요소 노드 자신이 바뀐 경우(속성 변경, 추가·교체된 요소 노드). 부모라서 칠하는 경우와 구분해요
-  const self = new Set<Element>();
+  const seen = new Set<Element>(); // 같은 요소 노드를 한 번만 담아요. 순서는 highlighted 배열이 지켜요
   const items: ChangeSummary['items'] = [];
 
   for (let i = 0; i < records.length; i++) {
@@ -271,26 +267,13 @@ export function showChanges(
     }
 
     items.push({ record: r, visible });
-    if (visible && target !== null) {
-      if (rule.type === 'element' && rule.target === 'new') self.add(target);
-      const kinds = kindsOf.get(target);
-      if (kinds === undefined) {
-        kindsOf.set(target, [r.kind]);
-        highlighted.push(target);
-      } else if (!kinds.includes(r.kind)) {
-        kinds.push(r.kind);
-      }
+    if (visible && target !== null && !seen.has(target)) {
+      seen.add(target);
+      highlighted.push(target);
     }
   }
 
-  // 부모라서 칠하는 요소 노드(텍스트 노드 규칙, 삭제된 요소 노드의 부모)가 다른 강조 대상을 품으면 칠하지 않아요.
-  // 칠하면 자손까지 통째로 덮여 어디가 바뀌었는지 안 보여요. 그 요소 노드 자신이 바뀐 경우(속성 변경 등)는 그대로 칠해요
-  // 예: h1 텍스트와 div#app의 들여쓰기를 함께 바꾸면 div#app도 보이는 변경이 되지만, 강조 표시는 h1에만 해요
-  // 보이는지 판단(items, hidden)은 그대로예요. 강조 표시할 요소 노드만 줄여요
-  const innermost = highlighted.filter((a) => self.has(a) || !highlighted.some((b) => b !== a && a.contains(b)));
-  highlighted.length = 0;
-  highlighted.push(...innermost);
-  for (let i = 0; i < highlighted.length; i++) highlight(highlighted[i], kindsOf.get(highlighted[i]) ?? []);
+  for (let i = 0; i < highlighted.length; i++) highlight(highlighted[i]);
 
   const total = records.length;
   const hidden = items.filter((item) => !item.visible).length;

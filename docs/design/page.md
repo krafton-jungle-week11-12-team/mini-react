@@ -219,20 +219,12 @@ createPage(getElements(document), SAMPLE_HTML, {
 
 ### 기록 이동 (뒤로가기, 앞으로가기)
 
-`from`은 이동 전 위치 기록이에요. `back()`·`forward()`가 위치를 옮기기 전에 읽어 둬요.
-
 1. `history.back()` 또는 `history.forward()`를 호출해요. `null`이면 아무것도 하지 않아요.
-2. 지난 강조 표시를 지우고, `records = engine.fromDiffResult(engine.diff(from.vdom, 이동한 기록.vdom), from.vdom)`로 두 기록을 비교해요. 실제 영역이 아직 이동 전 기록과 같은 구조라 이때 `before = engine.captureBefore(realRoot, records, options)`도 읽어요.
-3. 이동한 기록의 `html`을 `testCode.value`, `realCode.textContent`에 넣어요(FR-W19, W20).
-4. `testRoot.innerHTML`과 `realRoot.innerHTML`에 `html`을 넣어 두 영역을 렌더링해요.
-5. `records`가 있으면 `engine.showChanges(realRoot, records, before, options)`로 강조 표시하고 Diff 결과 패널에 보여 줘요. 요약 문구는 "기록 (이동 전 위치 + 1) → (이동한 위치 + 1): 변경 N개 …", 바뀐 내용이 없으면 "…: 바뀐 내용 없음"이에요.
-6. 버튼 상태를 갱신해요.
-
-2단계나 5단계에서 오류가 나도 이동은 그대로 해요. 강조 표시와 Diff 결과만 보여 주지 않아요.
+2. 이동한 기록의 `html`을 `testCode.value`, `realCode.textContent`에 넣어요(FR-W19, W20).
+3. `testRoot.innerHTML`과 `realRoot.innerHTML`에 `html`을 넣어 두 영역을 렌더링해요.
+4. 요약 문구를 지우고 버튼 상태를 갱신해요.
 
 실제 영역은 Patch를 거치지 않고 기록의 상태 전체로 바꿔요([요구사항 4.3](../requirements/phase1_requirement.md#43-뒤로가기-앞으로가기), [ADR-010](../adr/ADR-010.md)(제안됨)). 같은 HTML 코드를 같은 파서로 파싱하므로, 실제 영역의 DOM은 이동한 기록의 `vdom`과 같은 구조가 돼요. 그래서 다음 Patch도 맞게 동작해요.
-
-2·5단계의 비교는 화면에 보여 주기만 해요. 실제 영역을 고치는 데 쓰지 않아요. 뒤로 가면 방향이 거꾸로라, Patch 때 추가된 노드는 `remove`로 보여요.
 
 ### 버튼 상태
 
@@ -257,7 +249,6 @@ Patch 직후와 기록 이동 직후에는 입력창 값이 현재 위치 기록
 | 버튼 판단용 파싱은 `createHTMLDocument`로 만든 별도 문서의 `div`에서 한다                                                                                        | 화면의 문서에서 파싱하면 문서에 붙이지 않은 `div`에서도 이벤트 속성(`onerror` 등)이 입력 중에 실행돼요. `<template>`은 최상위 `<tr>`을 남겨 테스트 영역의 `div`와 결과가 달라요                                                                            | -                                     |
 | 변경 목록이 비면 Patch, 변경 표시, State History 저장을 하지 않고 끝낸다                                                                                         | 바뀐 내용 없이 Patch가 실행돼도 실제 영역과 State History가 바뀌지 않아요(FR-W28)                                                                                                                                                                          | -                                     |
 | Patch 후 두 영역이 같은지 페이지에서 확인한다. Patch 중 오류가 나거나 확인에 실패하면 두 영역을 현재 위치 기록의 `html`로 다시 렌더링하고 기록을 저장하지 않는다 | 요구사항 4.2의 6단계예요. 엔진 버그를 화면에서 바로 알 수 있고, 어긋난 상태가 기록으로 남지 않아요(요구사항 6절)                                                                                                                                           | -                                     |
-| 기록 이동 때도 이동 전 기록과 이동한 기록의 `vdom`을 비교해 강조 표시와 Diff 결과를 보여 준다. 비교 결과로 실제 영역을 고치지는 않는다                           | 이동해도 무엇이 바뀌었는지 볼 수 있어요. `innerHTML` 전후의 실제 영역이 두 기록과 같은 구조라 변경 표시를 Patch 때와 똑같이 쓸 수 있어요                                                                                                                   | [ADR-010](../adr/ADR-010.md) (제안됨) |
 | 기록 이동 때 실제 영역은 기록의 `html`을 `innerHTML`로 넣어 바꾼다                                                                                               | 요구사항 4.3이 "기록의 상태 전체로 바꾼다"고 정했어요. 이동한 기록의 `vdom`과 같은 구조가 돼요                                                                                                                                                             | [ADR-010](../adr/ADR-010.md) (제안됨) |
 | HTML 코드 입력은 기본 입력창(textarea) 수준으로 한다                                                                                                             | 에디터 구현은 범위에서 제외했어요(요구사항 2.2)                                                                                                                                                                                                            | -                                     |
 | 실제 영역의 HTML 코드 칸에는 바뀐 줄을 표시하지 않는다                                                                                                           | 엔진은 바뀐 노드만 알고 바뀐 줄은 몰라요. 줄 단위 비교를 따로 만들지 않고, 강조 표시와 Diff 결과 패널로 바뀐 부분을 보여 줘요                                                                                                                              | -                                     |
@@ -294,7 +285,6 @@ Patch 직후와 기록 이동 직후에는 입력창 값이 현재 위치 기록
   - FR-W15: Patch 경계 케이스마다 두 영역을 `toVNode`로 변환해 변경 목록이 비는지 확인해요.
   - 오류 처리: 오류를 던지는 가짜 `patch`를 넣고 `onPatch()`를 호출해, 두 영역이 현재 위치 기록의 `html`로 돌아가고 `history.length`가 그대로인지 확인해요.
   - FR-W19, W20: `onBack()`, `onForward()` 뒤 `testCode.value`가 `history.current().html` 원문과 같고, 두 영역을 변환한 트리가 `history.current().vdom`과 같은지 확인해요.
-  - 기록 이동 비교: 이동 뒤 요약 문구가 "기록 2 → 1: 변경 N개" 형식이고, 가짜 `patch`가 호출되지 않는지 확인해요.
 - 검증 페이지 (실제 브라우저)
   - FR-W01, W05, W06: 로드 직후 두 영역이 나란히 보이고, 두 영역의 HTML 코드 문자열과 렌더링 결과가 같은지 확인해요.
   - FR-W24: 실제 영역의 HTML 코드를 고칠 수 없는지 확인해요.
@@ -313,27 +303,24 @@ type PageElementsX = PageElements & {
   vdomView: HTMLElement;
   diffView: HTMLElement;
   historyView: HTMLElement;
-  realMarks: HTMLElement;
 };
 ```
 
 - `historyLabel: HTMLElement` — 머리글에서 현재 위치를 보여 주는 요소 노드. "기록 (현재 위치 + 1) / (기록 개수)"를 넣어요. (예: `<span id="history-label">기록 2 / 3</span>`)
 - `vdomView: HTMLElement` — 현재 위치 기록의 Virtual DOM 트리를 보여 주는 패널(FR-X03). (예: `<pre id="vdom-view">`)
 - `diffView: HTMLElement` — 마지막 Patch의 변경 목록을 보여 주는 패널(FR-X04). (예: `<ol id="diff-view">`)
-- `realMarks: HTMLElement` — 실제 영역 렌더링 결과 위에 변경 종류 라벨을 띄우는 층. `realRoot`의 형제라 비교에 섞이지 않아요. (예: `<div id="real-marks" aria-hidden="true">`)
 - `historyView: HTMLElement` — 기록 목록과 현재 위치를 보여 주는 패널(FR-X01). (예: `<ol id="history-view">`)
 
 ### 패널 갱신
 
-| 패널             | 언제 갱신하나                     | 보여 주는 것                                                                                                                                                                                                                    |
-| ---------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `historyLabel`   | 로드, Patch 저장 뒤, 기록 이동 뒤 | "기록 (`history.index` + 1) / (`history.length`)"                                                                                                                                                                               |
-| Virtual DOM 트리 | 로드, Patch 저장 뒤, 기록 이동 뒤 | `history.current().vdom`. 요소 노드는 `<태그 속성>`, 텍스트 노드는 `"내용"`(공백은 `·`, 줄바꿈은 `\n`으로 보이게), 주석 노드는 `<!-- 내용 -->`으로 한 줄씩 써요                                                                 |
-| Diff 결과        | Patch 저장 뒤                     | `summary.items`를 한 줄씩. 형식은 `kind 경로 detail`이에요(예: `text [0,1,0] '오늘 할 일'`). `visible`이 `false`인 줄은 화면에 안 보이는 변경으로 구분해요. 기록 이동 뒤에는 이동 전 기록과 이동한 기록의 비교 결과를 보여 줘요 |
-| 기록 목록        | 로드, Patch 저장 뒤, 기록 이동 뒤 | 기록마다 한 줄. 현재 위치 기록을 구분해 보여 줘요                                                                                                                                                                               |
+| 패널             | 언제 갱신하나                     | 보여 주는 것                                                                                                                                                                     |
+| ---------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `historyLabel`   | 로드, Patch 저장 뒤, 기록 이동 뒤 | "기록 (`history.index` + 1) / (`history.length`)"                                                                                                                                |
+| Virtual DOM 트리 | 로드, Patch 저장 뒤, 기록 이동 뒤 | `history.current().vdom`. 요소 노드는 `<태그 속성>`, 텍스트 노드는 `"내용"`(공백은 `·`, 줄바꿈은 `\n`으로 보이게), 주석 노드는 `<!-- 내용 -->`으로 한 줄씩 써요                  |
+| Diff 결과        | Patch 저장 뒤                     | `summary.items`를 한 줄씩. 형식은 `kind 경로 detail`이에요(예: `text [0,1,0] '오늘 할 일'`). `visible`이 `false`인 줄은 화면에 안 보이는 변경으로 구분해요. 기록 이동하면 비워요 |
+| 기록 목록        | 로드, Patch 저장 뒤, 기록 이동 뒤 | 기록마다 한 줄. 현재 위치 기록을 구분해 보여 줘요                                                                                                                                |
 
-- 변경 종류 라벨(`realMarks`): Patch 뒤와 기록 이동 뒤에 강조 표시한 요소 노드마다 그 변경 종류(`text`, `create` 등)를 칩으로 띄워요. 변경 표시가 `options.highlight(요소 노드, 변경 종류)`로 넘겨주는 값을 모아 그려요. 강조 표시를 지울 때 함께 지우고, `realRoot`를 스크롤하거나 창 크기가 바뀌면 다시 그려요.
-- 패널 갱신은 기본 흐름의 각 단계 끝(로드 5단계, Patch 11단계, 기록 이동 6단계)에서 호출해요. Patch 오류 처리 뒤에는 Diff 결과 패널을 비워요.
+- 패널 갱신은 기본 흐름의 각 단계 끝(로드 5단계, Patch 11단계, 기록 이동 4단계)에서 호출해요. Patch 오류 처리 뒤에는 Diff 결과 패널을 비워요.
 - 패널은 화면에 보여 주기만 해요. 엔진 모듈의 결과를 바꾸지 않아요.
 - 패널은 Diff 결과(`R`)를 직접 읽지 않아요. 변경 표시의 `ChangeSummary`만 써요.
 - 기록 목록을 눌러 그 기록으로 이동하는 기능(FR-X02)과 샘플 선택(FR-X05)은 넣지 않아요.
