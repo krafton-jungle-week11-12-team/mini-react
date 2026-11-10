@@ -15,8 +15,8 @@ import { createPage, getElements, SAMPLE_HTML } from './page';
  */
 function highlight(el: Element): void {
   if (typeof el.animate !== 'function') return;
-  const on = { backgroundColor: '#EDE7FF', boxShadow: '0 0 0 4px #EDE7FF' };
-  const off = { backgroundColor: 'rgba(237, 231, 255, 0)', boxShadow: '0 0 0 4px rgba(237, 231, 255, 0)' };
+  const on = { backgroundColor: '#EDE7FF', boxShadow: '-4px 0 0 #EDE7FF, 4px 0 0 #EDE7FF' };
+  const off = { backgroundColor: 'rgba(237, 231, 255, 0)', boxShadow: '-4px 0 0 rgba(237, 231, 255, 0), 4px 0 0 rgba(237, 231, 255, 0)' };
   el.animate([off, on], { duration: 400, easing: 'ease-out', fill: 'forwards' });
 }
 

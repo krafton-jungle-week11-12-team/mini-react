@@ -140,12 +140,12 @@ index.html + style.css ──▶ 화면 (검증 페이지가 요소 노드를 �
 
 ### 강조 표시 모양
 
-- 강조 표시는 옅은 보라(`#EDE7FF`) 배경 띠예요. 글자 위치가 움직이지 않게 여백 대신 `box-shadow: 0 0 0 4px`로 띠를 넓혀요.
-- 박스 안쪽 여백이 4px보다 넓어서 가장자리 요소 노드의 띠도 잘리지 않아요. 영역 컨테이너 자체(`parentNewPath`가 `[]`)를 강조하면 박스 배경 전체가 보라가 되고, 바깥 4px 띠는 박스 밖이라 보이지 않을 수 있어요. 배경만으로 충분히 보여요. 스크롤로 박스 밖에 나가 있는 요소 노드의 띠는 다른 내용처럼 잘려요.
+- 강조 표시는 옅은 보라(`#EDE7FF`) 배경 띠예요. 글자 위치가 움직이지 않게 여백 대신 `box-shadow`로 띠를 좌우로만 4px 넓혀요(`-4px 0 0`, `4px 0 0`). 위아래로 넓히면 줄 간격이 좁은 목록에서 옆 줄 글자를 덮어요.
+- 박스 안쪽 여백이 4px보다 넓어서 가장자리 요소 노드의 띠도 잘리지 않아요. 영역 컨테이너 자체(`parentNewPath`가 `[]`)를 강조하면 박스 배경 전체가 보라가 되고, 좌우 4px 띠는 박스 밖이라 보이지 않을 수 있어요. 배경만으로 충분히 보여요. 스크롤로 박스 밖에 나가 있는 요소 노드의 띠는 다른 내용처럼 잘려요.
 - 띠는 0.4초 동안 투명에서 보라로 나타나고(`ease-out`), 그 뒤 다음 Patch나 기록 이동 전까지 그대로 남아요. `animate()`의 `fill: 'forwards'`로 마지막 모양을 유지해요. 그래야 무엇이 바뀌었는지 천천히 볼 수 있어요.
   ```ts
   el.animate([off, on], { duration: 400, easing: 'ease-out', fill: 'forwards' });
-  // on  = { backgroundColor: '#EDE7FF', boxShadow: '0 0 0 4px #EDE7FF' }
+  // on  = { backgroundColor: '#EDE7FF', boxShadow: '-4px 0 0 #EDE7FF, 4px 0 0 #EDE7FF' }
   // off = 같은 색, 투명도 0
   ```
 - 이 함수는 `src/main.ts`에 두고 `createPage`의 `options.highlight`로 넘겨요. 지우는 일은 [검증 페이지](page.md#patch)가 해요(다음 Patch, 기록 이동, 오류 처리 때 실제 영역의 애니메이션을 모두 취소).

@@ -192,8 +192,8 @@ function defaultHighlight(el: Element): void {
   if (typeof el.animate !== 'function') return;
   el.animate(
     [
-      { backgroundColor: '#EDE7FF', boxShadow: '0 0 0 4px #EDE7FF' },
-      { backgroundColor: 'transparent', boxShadow: '0 0 0 4px transparent' },
+      { backgroundColor: '#EDE7FF', boxShadow: '-4px 0 0 #EDE7FF, 4px 0 0 #EDE7FF' },
+      { backgroundColor: 'transparent', boxShadow: '-4px 0 0 transparent, 4px 0 0 transparent' },
     ],
     1200,
   );
