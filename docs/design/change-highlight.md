@@ -94,7 +94,7 @@ type ChangeSummary = {
 ```ts
 type HighlightOptions = {
   readText?: (el: Element) => string;
-  highlight?: (el: Element) => void;
+  highlight?: (el: Element, kinds: ChangeRecord['kind'][]) => void;
 };
 
 function fromDiffResult(result: (Patch | null)[], oldRoots: VNode[]): ChangeRecord[];
@@ -117,7 +117,7 @@ function showChanges(
 - `records: ChangeRecord[]` — `fromDiffResult`가 돌려준 변경 목록. 변경 하나가 한 칸이에요. (예: `[{ kind: 'text', oldPath: [0,1,0], newPath: [0,1,0], … }, { kind: 'create', oldPath: null, newPath: [0,3,5], … }]`)
 - `before: TextBefore` — `captureBefore`가 Patch 전에 돌려준 값. 순서와 개수가 `records`와 같아 같은 자리끼리 짝이에요. *i*번째 값은 `records[i]`의 부모 요소 노드의 `innerText`이고, 텍스트 노드 규칙이 아닌 변경은 `null`이에요. (예: 위 `records`에 대해 `['할 일 목록', null]`)
 - `options.readText: (el: Element) => string` — 요소 노드의 `innerText`를 읽는 함수. 기본값은 HTML 요소 노드면 `innerText`, 아니면(SVG 요소 노드 등) `textContent`를 읽어요. SVG 요소 노드에는 `innerText`가 없기 때문이에요. 단위 테스트에서 바꿔 넣어요. (예: `el => el.textContent ?? ''`)
-- `options.highlight: (el: Element) => void` — 요소 노드 하나를 강조 표시하는 함수. 기본값은 `element.animate()`로 배경색을 잠깐 바꾸는 함수예요. 색과 모양은 [화면 스타일 설계](style.md#강조-표시-모양)를 따라 검증 페이지가 정해 넘겨요. jsdom에서는 `animate`가 없어 아무것도 하지 않아요. (예: `el => el.animate([{ backgroundColor: '#EDE7FF', boxShadow: '0 0 0 4px #EDE7FF' }, {}], 800)`)
+- `options.highlight: (el: Element, kinds: ChangeRecord['kind'][]) => void` — 요소 노드 하나를 강조 표시하는 함수. `kinds`는 그 요소 노드 때문에 보이는 변경의 종류로, 겹치지 않게 처음 나온 순서로 담아요. 검증 페이지는 이 값으로 변경 종류 라벨을 붙여요. (예: 속성과 텍스트가 함께 바뀐 `li`면 `['props', 'text']`) 기본값은 `element.animate()`로 배경색을 잠깐 바꾸는 함수예요. 색과 모양은 [화면 스타일 설계](style.md#강조-표시-모양)를 따라 검증 페이지가 정해 넘겨요. jsdom에서는 `animate`가 없어 아무것도 하지 않아요. (예: `el => el.animate([{ backgroundColor: '#EDE7FF', boxShadow: '0 0 0 4px #EDE7FF' }, {}], 800)`)
 - `fromDiffResult`
   - 반환값: 변경으로 세는 칸의 목록. 한 자식 목록의 칸을 앞에서부터 처리한 뒤 그 아래 자식 목록으로 내려간 순서예요. 순서는 Diff 결과 패널에만 쓰고 판단에는 영향이 없어요. 바뀐 내용이 없으면 `[]`예요.
   - 부수 효과: 없음. **Diff 결과의 형식을 아는 함수는 이것 하나예요.**
@@ -126,7 +126,7 @@ function showChanges(
   - 부수 효과: DOM을 바꾸지 않아요. `innerText`를 읽을 때 레이아웃을 다시 계산해야 하면 Reflow가 일어날 수 있어요.
 - `showChanges`
   - 반환값: 요약 결과.
-  - 부수 효과: `highlighted`의 요소 노드마다 `options.highlight`를 호출해요.
+  - 부수 효과: `highlighted`의 요소 노드마다 `options.highlight(요소 노드, 변경 종류)`를 호출해요.
 
 ## 동작 방식
 

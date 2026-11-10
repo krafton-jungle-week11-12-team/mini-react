@@ -33,7 +33,8 @@ export type ChangeSummary = {
 
 export type HighlightOptions = {
   readText?: (el: Element) => string;
-  highlight?: (el: Element) => void;
+  /** 요소 노드 하나를 강조 표시해요. kinds는 그 요소 노드 때문에 보이는 변경의 종류예요(겹치지 않게, 처음 나온 순서). */
+  highlight?: (el: Element, kinds: ChangeRecord['kind'][]) => void;
 };
 
 // ---------------------------------------------------------------------------
@@ -243,7 +244,8 @@ export function showChanges(
   const highlight = options?.highlight ?? defaultHighlight;
   const afterCache = new Map<string, string>();
   const highlighted: Element[] = [];
-  const seen = new Set<Element>(); // 같은 요소 노드를 한 번만 담아요. 순서는 highlighted 배열이 지켜요
+  // 같은 요소 노드를 한 번만 담아요. 순서는 highlighted 배열이 지키고, Map에는 그 요소 노드의 변경 종류를 모아요
+  const kindsOf = new Map<Element, ChangeRecord['kind'][]>();
   const items: ChangeSummary['items'] = [];
 
   for (let i = 0; i < records.length; i++) {
@@ -267,13 +269,18 @@ export function showChanges(
     }
 
     items.push({ record: r, visible });
-    if (visible && target !== null && !seen.has(target)) {
-      seen.add(target);
-      highlighted.push(target);
+    if (visible && target !== null) {
+      const kinds = kindsOf.get(target);
+      if (kinds === undefined) {
+        kindsOf.set(target, [r.kind]);
+        highlighted.push(target);
+      } else if (!kinds.includes(r.kind)) {
+        kinds.push(r.kind);
+      }
     }
   }
 
-  for (let i = 0; i < highlighted.length; i++) highlight(highlighted[i]);
+  for (let i = 0; i < highlighted.length; i++) highlight(highlighted[i], kindsOf.get(highlighted[i]) ?? []);
 
   const total = records.length;
   const hidden = items.filter((item) => !item.visible).length;
