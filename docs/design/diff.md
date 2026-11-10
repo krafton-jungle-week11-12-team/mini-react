@@ -78,7 +78,7 @@ function diff(oldRoots: VNode[], newRoots: VNode[]): (Patch | null)[];
 
 `diff`는 재귀로 트리를 내려가요([ADR-009](../adr/ADR-009.md)). 내부 함수 세 개를 써요.
 
-- `pairChildren`: 자식 목록 두 개를 노드 쌍으로 짝지어요. Phase 2에서 key 기반 비교로 바꿀 때 Diff 안에서는 이 함수만 바꿔요([ADR-002](../adr/ADR-002.md)).
+- `pairChildren`: 자식 목록 두 개를 노드 쌍으로 짝지어요. Phase 2에서 key 기반 비교로 바꿀 때 짝짓는 기준은 이 함수에서만 바꿔요([ADR-002](../adr/ADR-002.md)). 다만 key로 짝지으면 순서가 바뀐 노드가 생겨, 결과의 "i번째 칸 = i번째 자식" 약속이 깨져요. 그래서 결과 형식도 함께 바뀌어요([ADR-011](../adr/ADR-011.md)).
 - `diffChildren`: 짝지은 쌍마다 `diffNode`를 불러 결과 배열을 만들어요.
 - `diffNode`: 노드 한 쌍을 비교해요. 둘 다 같은 요소면 `diffChildren`을 재귀로 불러 자식을 비교해요.
 
@@ -162,7 +162,7 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 | 자식은 같은 인덱스끼리 비교한다                              | key가 없는 Phase 1에서 가장 단순하고, 결과 위치가 곧 노드 위치가 돼요         | [ADR-002](../adr/ADR-002.md) |
 | `kind`나 `tag`가 다르면 교체로 본다                          | 다른 종류의 노드는 고쳐 쓸 수 없어요                                          | [ADR-002](../adr/ADR-002.md) |
 | 재귀로 내려가고, 자식 쌍은 `for` 반복문으로 돈다             | 함수가 돌아올 때 자식 결과로 `UPDATE`인지 `null`인지 바로 정해요. 파서가 깊이를 512단계로 제한해 콜 스택이 넘치지 않아요 | [ADR-009](../adr/ADR-009.md) |
-| 자식 목록을 짝짓는 부분을 `pairChildren`으로 나눈다          | Phase 2에서 key 기반 비교로 바꿀 때 Diff 안에서는 이 함수만 바꿔요            | [ADR-002](../adr/ADR-002.md) |
+| 자식 목록을 짝짓는 부분을 `pairChildren`으로 나눈다          | Phase 2에서 key 기반 비교로 바꿀 때 짝짓는 기준은 이 함수만 바꿔요. 순서가 바뀐 노드를 표현하려고 결과 형식은 함께 바뀌어요([ADR-011](../adr/ADR-011.md)) | [ADR-002](../adr/ADR-002.md) |
 | 결과를 트리와 같은 모양으로 만든다                           | 경로를 따로 적지 않아도 Patch가 같은 모양으로 내려가며 위치를 찾아요          | -                            |
 | 텍스트와 주석의 내용 변경은 모두 `TEXT`로 본다               | 두 타입 모두 내용이 `text` 필드에 있어 같은 비교를 써요                       | -                            |
 
@@ -204,4 +204,5 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 - [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
 - [ADR-002](../adr/ADR-002.md): Diff는 Phase 1에서 같은 자리, Phase 2에서 key로 노드를 짝짓는다. key 규칙은 Phase 2 설계에서 정해요.
 - [ADR-009](../adr/ADR-009.md): 트리 순회는 재귀로 한다
+- [ADR-011](../adr/ADR-011.md): key Diff는 뒤로 돌아간 노드만 이동으로 보고, Patch는 같은 노드를 insertBefore로 옮긴다
 - [Virtual DOM 변환 설계](vdom.md), [Patch 설계](patch.md), [변경 표시 설계](change-highlight.md)
