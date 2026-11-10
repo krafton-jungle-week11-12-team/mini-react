@@ -280,6 +280,12 @@ export function showChanges(
     }
   }
 
+  // 다른 강조 대상을 품은 조상 요소 노드는 칠하지 않아요. 칠하면 자손까지 통째로 덮여 어디가 바뀌었는지 안 보여요.
+  // 예: h1 텍스트와 div#app의 들여쓰기를 함께 바꾸면 div#app도 보이는 변경이 되지만, 강조 표시는 h1에만 해요
+  // 보이는지 판단(items, hidden)은 그대로예요. 강조 표시할 요소 노드만 줄여요
+  const innermost = highlighted.filter((a) => !highlighted.some((b) => b !== a && a.contains(b)));
+  highlighted.length = 0;
+  highlighted.push(...innermost);
   for (let i = 0; i < highlighted.length; i++) highlight(highlighted[i], kindsOf.get(highlighted[i]) ?? []);
 
   const total = records.length;
