@@ -311,6 +311,10 @@ export function createPage<R>(
         const rect = lines.length > 0 ? lines[lines.length - 1] : target.getBoundingClientRect();
         left = rect.right - box.left + 8;
         top = rect.top - box.top + (rect.height - label.offsetHeight) / 2;
+        if (left + label.offsetWidth > box.width - 4) {
+          // 글자가 줄 끝까지 가 옆에 자리가 없으면 그 줄 위로 올려 글자와 겹치지 않게 해요
+          top = rect.top - box.top - label.offsetHeight - 2;
+        }
       }
       left = Math.max(4, Math.min(left, box.width - label.offsetWidth - 4));
       label.style.left = `${left}px`;
