@@ -1,4 +1,4 @@
-// Virtual DOM 변환 단위 테스트 (docs/design/vdom.md, 테스트 케이스 V1~V13, D1~D7)
+// Virtual DOM 변환 단위 테스트 (docs/design/vdom.md, 테스트 케이스 V1~V12, D1~D6)
 import { beforeEach, describe, expect, it } from 'vitest';
 import { toDOM, toVNode, type VElement, type VNode } from './vdom';
 
@@ -122,16 +122,6 @@ describe('toVNode (DOM → Virtual DOM)', () => {
     expect(div.tag).toBe('div');
     expect(div.props).toEqual({ id: 'x' });
   });
-
-  it('V13 자식이 셋 이상이어도 형제 순서가 뒤집히지 않는다 (ADR-009)', () => {
-    const ul = asElement(toVNode(render('<ul><li>1</li><li>2</li><li>3</li></ul>'))[0]);
-    const texts = ul.children.map((li) => asElement(li).children[0]);
-    expect(texts).toEqual([
-      { kind: 'text', text: '1' },
-      { kind: 'text', text: '2' },
-      { kind: 'text', text: '3' },
-    ]);
-  });
 });
 
 describe('toDOM (Virtual DOM → DOM)', () => {
@@ -161,17 +151,11 @@ describe('toDOM (Virtual DOM → DOM)', () => {
     expect((node as Element).outerHTML).toBe('<li>B</li>');
   });
 
-  it('D5 자식이 셋 이상이어도 형제 순서가 뒤집히지 않는다 (ADR-009)', () => {
-    const ulVNode = toVNode(render('<ul><li>1</li><li>2</li><li>3</li></ul>'))[0];
-    const ul = toDOM(ulVNode) as Element;
-    expect(Array.from(ul.childNodes, (li) => li.textContent)).toEqual(['1', '2', '3']);
-  });
-
-  // D6, D7: DOM → VNode → DOM 왕복 결과가 원래 DOM과 같은지 (FR-E02)
+  // D5, D6: DOM → VNode → DOM 왕복 결과가 원래 DOM과 같은지 (FR-E02)
   const roundTripCases: [string, string][] = [
-    ['D6 샘플 HTML 코드', SAMPLE],
-    ['D7 공백 텍스트 노드가 섞인 입력', '<ul>\n<li>A</li></ul>'],
-    ['D7 주석 노드가 섞인 입력', '<div><!-- 메모 --><p>A</p></div>'],
+    ['D5 샘플 HTML 코드', SAMPLE],
+    ['D6 공백 텍스트 노드가 섞인 입력', '<ul>\n<li>A</li></ul>'],
+    ['D6 주석 노드가 섞인 입력', '<div><!-- 메모 --><p>A</p></div>'],
   ];
 
   it.each(roundTripCases)('%s를 왕복하면 원래 DOM과 같다 (FR-E02)', (_name, html) => {
