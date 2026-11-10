@@ -7,7 +7,7 @@
 | 수정일    | -                                                                                                                                            |
 | 작성자    | 오동환                                                                                                                                       |
 | 근거      | Discussions #104 (mount와 Hook의 동작 원리), #105 (App이 return한 VNode는 어디로 가는가), #106 (useState와 클로저)                           |
-| 선행 문서 | [phase1_requirement.md](../phase1/phase1_requirement.md), [phase2_h-props_requirement.md](phase2_h-props_requirement.md)                     |
+| 선행 문서 | [phase1_requirement.md](../phase1/phase1_requirement.md), [h-props_requirement.md](h-props_requirement.md)                     |
 | 작성 규칙 | 요구사항 문장은 EARS 형식(항상, 이벤트, 상태, 오류, 선택)을 따르고, 요구사항 하나에 동작 하나만 담는다.                                      |
 
 ---
@@ -39,15 +39,15 @@
 
 | 제외 항목                         | 이유                                                                                                         |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| h 함수, props 처리                | [phase2_h-props_requirement.md](phase2_h-props_requirement.md)에서 다룬다.                                   |
-| useMemo                           | [phase2_use-memo_requirement.md](phase2_use-memo_requirement.md)에서 다룬다.                                 |
-| useEffect, effect 실행            | [phase2_use-effect_requirement.md](phase2_use-effect_requirement.md)에서 다룬다. 이 문서는 mount, update 흐름에서 effect를 실행하는 자리만 정한다. |
+| h 함수, props 처리                | [h-props_requirement.md](h-props_requirement.md)에서 다룬다.                                   |
+| useMemo                           | [use-memo_requirement.md](use-memo_requirement.md)에서 다룬다.                                 |
+| useEffect, effect 실행            | [use-effect_requirement.md](use-effect_requirement.md)에서 다룬다. 이 문서는 mount, update 흐름에서 effect를 실행하는 자리만 정한다. |
 | 자식 컴포넌트의 state             | h가 자식 컴포넌트를 바로 실행하므로 자식은 props만 받는 순수 함수로 둔다. (5.3절)                            |
 | 조건문 · 반복문 안의 Hook 호출    | Hook은 호출 순서로 칸을 찾으므로, 순서가 바뀌는 호출은 지원하지 않는다.                                       |
 
 ## 3. 용어
 
-> Phase 1 용어는 [phase1_requirement.md 3절](../phase1/phase1_requirement.md#3-용어), h 함수 · props 용어는 [phase2_h-props_requirement.md 3절](phase2_h-props_requirement.md#3-용어)을 따른다.
+> Phase 1 용어는 [phase1_requirement.md 3절](../phase1/phase1_requirement.md#3-용어), h 함수 · props 용어는 [h-props_requirement.md 3절](h-props_requirement.md#3-용어)을 따른다.
 
 | 용어                  | 뜻                                                                                                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -74,7 +74,7 @@
 3. 렌더링한다. (4.3)
 4. 받은 VNode를 DOM으로 만들어 컨테이너의 자식으로 붙인다. 컨테이너에 원래 내용이 있으면 비우고 붙인다.
 5. `prevVNode`에 4단계의 VNode를 넣는다.
-6. effect를 실행한다. ([useEffect 문서](phase2_use-effect_requirement.md))
+6. effect를 실행한다. ([useEffect 문서](use-effect_requirement.md))
 
 ### 4.2 setState와 update
 
@@ -84,7 +84,7 @@
 4. 렌더링한다. (4.3)
 5. `prevVNode`와 새 VNode를 Diff로 비교하고, 그 결과로 컨테이너 안의 바뀐 노드만 Patch한다. (루트 형태 미정, 6절)
 6. `prevVNode`를 새 VNode로 바꾼다.
-7. effect를 실행한다. ([useEffect 문서](phase2_use-effect_requirement.md))
+7. effect를 실행한다. ([useEffect 문서](use-effect_requirement.md))
 
 ### 4.3 렌더링 (render)
 

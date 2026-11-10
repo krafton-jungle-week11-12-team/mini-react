@@ -37,7 +37,7 @@
 | 제외 항목                                      | 이유                                                                                                         |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | JSX                                            | Vanilla JS 과제라 JSX 변환 도구가 없다. h 함수를 직접 호출한다.                                              |
-| FunctionComponent, useState                    | [phase2_function-component_requirement.md](phase2_function-component_requirement.md)에서 다룬다.             |
+| FunctionComponent, useState                    | [function-component_requirement.md](function-component_requirement.md)에서 다룬다.             |
 | useMemo, useEffect                             | 각 Phase 2 문서에서 다룬다.                                                                                  |
 | 자식 컴포넌트의 state                          | h가 자식 컴포넌트를 바로 실행하므로 자식은 state 없는 순수 함수로 둔다. state 제약은 FunctionComponent 문서에서 다룬다. |
 | 이벤트 위임, 요소마다 핸들러 하나만 거는 방식 | 이벤트 핸들러는 이전 것을 지우고 새 것을 등록하는 방식(remove + add)으로 처리하기로 했다. (#103)             |
