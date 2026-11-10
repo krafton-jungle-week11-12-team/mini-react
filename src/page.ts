@@ -148,25 +148,58 @@ export function createPage<R>(
   }
 
   function onBack(): void {
-    move(history.back());
+    const fromIndex = history.index;
+    const fromVdom = history.current().vdom; // back()이 위치를 옮기기 전에 읽어 둬요
+    move(fromIndex, fromVdom, history.back());
   }
 
   function onForward(): void {
-    move(history.forward());
+    const fromIndex = history.index;
+    const fromVdom = history.current().vdom;
+    move(fromIndex, fromVdom, history.forward());
   }
 
   // ── 단계 ────────────────────────────────────────────────
-  /** 기록 이동: 두 영역을 기록의 상태 전체로 바꿔요 (FR-W19, W20, ADR-010). */
-  function move(entry: HistoryEntry | null): void {
+  /**
+   * 기록 이동: 두 영역을 기록의 상태 전체로 바꿔요 (FR-W19, W20, ADR-010).
+   * 실제 영역은 Patch를 거치지 않아요. 대신 이동 전 기록과 이동한 기록의 vdom을 비교해
+   * 무엇이 바뀌었는지 강조 표시, 요약 문구, Diff 패널로 보여 줘요. 이 비교 결과는 보여 주기만 해요.
+   */
+  function move(fromIndex: number, fromVdom: VNode[], entry: HistoryEntry | null): void {
     if (entry === null) return; // 1
-    setTestCode(entry.html); // 2
-    setRealCode(entry.html); // 2
-    el.testRoot.innerHTML = entry.html; // 3
-    el.realRoot.innerHTML = entry.html; // 3
     clearHighlights();
-    showMessage('', false); // 4
+
+    // 2. 이동 전 기록과 이동한 기록을 비교해요. 실제 영역이 아직 이동 전 기록과 같은 구조라 지금 읽어요
+    let records: ChangeRecord[] = [];
+    let before: TextBefore = [];
+    try {
+      records = engine.fromDiffResult(engine.diff(fromVdom, entry.vdom), fromVdom);
+      before = engine.captureBefore(el.realRoot, records, options);
+    } catch {
+      records = []; // 비교에 실패해도 이동은 해요. 변경 표시만 하지 않아요
+    }
+
+    setTestCode(entry.html); // 3
+    setRealCode(entry.html); // 3
+    el.testRoot.innerHTML = entry.html; // 4
+    el.realRoot.innerHTML = entry.html; // 4
+
+    // 5. innerHTML로 바꾼 실제 영역은 이동한 기록과 같은 구조라 강조할 요소 노드를 찾을 수 있어요
     lastSummary = null;
-    updateButtons();
+    let text = `기록 ${fromIndex + 1} → ${history.index + 1}`;
+    if (records.length > 0) {
+      try {
+        const summary = engine.showChanges(el.realRoot, records, before, options);
+        lastSummary = summary;
+        text += `: ${summary.message}`;
+      } catch {
+        clearHighlights();
+      }
+    } else {
+      text += ': 바뀐 내용 없음';
+    }
+    showMessage(text, false);
+    updateButtons(); // 6
     renderPanels();
   }
 
