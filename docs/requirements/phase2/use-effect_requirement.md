@@ -190,7 +190,7 @@ effect 실행 중에 setState가 update를 바로 부르면, 새 렌더링의 ef
 
 | ID     | 유형              | 요구사항                                                                                                                          | 확인 방법 (초안)                                                                                                                                      | 비고                                        |
 | ------ | ----------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| FR-F13 | 상태 (While)      | effect나 cleanup을 실행하는 동안, 시스템은 setState가 칸을 바꿔도 update를 바로 실행하지 않고 예약만 해야 한다.                     | effect₁이 setState하고 effect₂가 실행 기록을 남기게 해, effect₂가 다음 렌더링의 effect보다 먼저 기록되는지 확인                                           | FR-S06의 예외. FunctionComponent 문서 반영 필요 (6.2) |
+| FR-F13 | 상태 (While)      | effect나 cleanup을 실행하는 동안, 시스템은 setState가 칸을 바꿔도 update를 바로 실행하지 않고 예약만 해야 한다.                     | effect₁이 setState하고 effect₂가 실행 기록을 남기게 해, effect₂가 다음 렌더링의 effect보다 먼저 기록되는지 확인                                           | FR-S06의 예외 ([FunctionComponent 4.2](function-component_requirement.md#42-setstate와-update)) |
 | FR-F14 | 이벤트 (When)     | effect 실행 단계가 끝났을 때 update가 예약돼 있으면, 시스템은 예약을 지우고 update를 한 번 실행해야 한다.                            | mount의 effect에서 setState를 두 번 부른 뒤, 렌더링 횟수가 2(mount 1 + update 1)이고 화면이 마지막 값인지 확인                                           | mount와 update 모두 적용                    |
 | FR-F15 | 항상 (Ubiquitous) | 시스템은 effect 실행 중 예약된 update를 mount나 update가 끝나기 전에 마쳐야 한다.                                                    | `mount()` 바로 다음 줄에서 화면이 effect가 setState한 값인지 확인                                                                                       | 페인트 전에 끝남 (4.3)                      |
 | FR-F16 | 오류 (If-Then)    | 만약 effect 안의 setState가 지금 값과 같은 값으로 호출되면, 시스템은 update를 예약하지 않아야 한다.                                 | mount의 effect에서 지금 값과 같은 값으로 setState한 뒤 렌더링 횟수가 1인지 확인                                                                          | 같은 값 건너뛰기 ([FR-S08](function-component_requirement.md#52-usestate)) |
@@ -221,7 +221,7 @@ effect 실행 중에 setState가 update를 바로 부르면, 새 렌더링의 ef
   - 테스트에서 이전 테스트의 타이머가 남는 문제는 가짜 타이머(`vi.useFakeTimers()`)로 대신한다.
 - effect 안의 setState는 허용하고, effect가 다 끝난 뒤 update를 한 번 실행한다. (FR-F13~F15)
   - 근거: 바로 update하면 update 안에서 update가 불려, 새 렌더링의 effect가 이전 렌더링의 남은 effect보다 먼저 실행되고 이전 effect가 새 결과를 덮어쓴다.
-  - 방법: setState가 update를 직접 부르지 않고 `scheduleUpdate()`를 거치게 한다. 배칭 자리로 쓸 함수를 같이 쓴다.
+  - 방법: setState가 update를 직접 부르지 않고 `scheduleUpdate()`를 거치게 한다. 배칭 자리로 쓸 함수를 같이 쓴다. ([FunctionComponent 4.2의 5단계, 6.1](function-component_requirement.md#42-setstate와-update))
 
   ```ts
   update() {
@@ -258,7 +258,6 @@ effect 실행 중에 setState가 update를 바로 부르면, 새 렌더링의 ef
 
 ### 6.2 미정 항목
 
-- FunctionComponent 문서 반영: 이 문서의 결정에 맞춰 [FunctionComponent 4.2의 5단계](function-component_requirement.md#42-setstate와-update)("setState가 `update()`를 바로 부른다")와 FR-S06에 effect 실행 중 예외를 넣어야 한다. 배칭(FunctionComponent 6.2)을 정할 때 `scheduleUpdate()` 하나로 함께 정한다.
 - 실행 대기 목록과 "effect 실행 중" 표시를 둘 위치: 인스턴스 필드로 둘지, `currentComponent`처럼 모듈 변수로 둘지 정한다.
 - hooks 칸의 타입: useState는 값, useMemo는 `{ value, deps }`, useEffect는 `{ deps, cleanup }`를 칸에 넣는다. [use-memo 6.2](use-memo_requirement.md#62-미정-항목)와 함께 정한다.
 
