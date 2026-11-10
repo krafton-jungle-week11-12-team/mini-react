@@ -76,8 +76,10 @@ type EngineModules<R> = {
 
 type PageElements = {
   realCode: HTMLElement;
+  realLines: HTMLElement;
   realRoot: HTMLElement;
   testCode: HTMLTextAreaElement;
+  testLines: HTMLElement;
   testRoot: HTMLElement;
   patchButton: HTMLButtonElement;
   backButton: HTMLButtonElement;
@@ -101,8 +103,10 @@ type Page = {
   - 각 함수의 뜻과 규칙은 위 각 모듈 문서를 따라요.
 - `PageElements` — 화면의 요소 노드. `index.html`에 미리 있어요.
   - `realCode: HTMLElement` — 실제 영역의 HTML 코드를 보여 주는 요소 노드. HTML 코드는 `textContent`로만 넣어요. (예: `<pre id="real-code">`)
+  - `realLines: HTMLElement` — `realCode` 왼쪽의 줄 번호 칸. 줄 번호만 `textContent`로 넣어요. (예: `<pre id="real-lines" aria-hidden="true">`)
   - `realRoot: HTMLElement` — 실제 영역 컨테이너. Patch가 고치는 곳이에요. (예: `<div id="real-root">`)
   - `testCode: HTMLTextAreaElement` — 테스트 영역의 HTML 코드 입력창. (예: `<textarea id="test-code">`)
+  - `testLines: HTMLElement` — `testCode` 왼쪽의 줄 번호 칸. (예: `<pre id="test-lines" aria-hidden="true">`)
   - `testRoot: HTMLElement` — 테스트 영역 컨테이너. 항상 `innerHTML`로 렌더링해요. (예: `<div id="test-root">`)
   - `patchButton: HTMLButtonElement` — Patch 버튼. (예: `<button id="patch">`)
   - `backButton: HTMLButtonElement` — 뒤로가기 버튼. (예: `<button id="back">`)
@@ -246,6 +250,7 @@ Patch 직후와 기록 이동 직후에는 입력창 값이 현재 위치 기록
 | 기록 이동 때 실제 영역은 기록의 `html`을 `innerHTML`로 넣어 바꾼다                                                                                               | 요구사항 4.3이 "기록의 상태 전체로 바꾼다"고 정했어요. 이동한 기록의 `vdom`과 같은 구조가 돼요                                                                                            | [ADR-010](../adr/ADR-010.md) (제안됨) |
 | HTML 코드 입력은 기본 입력창(textarea) 수준으로 한다                                                                                                             | 에디터 구현은 범위에서 제외했어요(요구사항 2.2)                                                                                                                                           | -                                     |
 | 실제 영역의 HTML 코드 칸에는 바뀐 줄을 표시하지 않는다                                                                                                           | 엔진은 바뀐 노드만 알고 바뀐 줄은 몰라요. 줄 단위 비교를 따로 만들지 않고, 강조 표시와 Diff 결과 패널로 바뀐 부분을 보여 줘요                                                             | -                                     |
+| 줄 번호는 코드 칸 옆 줄 번호 칸에 따로 넣는다                                                                                                                    | 코드 칸에는 HTML 코드만 남아 `textContent`와 `value`가 기록의 `html`과 그대로 같아요. 줄 번호가 복사나 비교에 섞이지 않아요                                                               | -                                     |
 | 스크립트 실행은 막지 않는다                                                                                                                                      | 요구사항 2.2가 스크립트 실행 차단을 범위에서 뺐어요. 두 영역에서 실행 여부가 다를 수 있는 점은 한계로 둬요(경계 케이스 참고)                                                              | -                                     |
 | 사용자가 실제 영역을 조작해 프로퍼티만 바뀐 차이(input의 `value` 등)는 맞추지 않는다                                                                             | Virtual DOM 트리는 속성만 담아서 이런 차이는 Diff에도, 9단계 확인에도 잡히지 않아요. 속성이나 노드가 바뀐 조작은 9단계 확인에서 잡혀 되돌려져요. 입력을 막는 기능은 Phase 1 범위 밖이에요 | -                                     |
 
@@ -320,11 +325,14 @@ type PageElementsX = PageElements & {
 ### 스크롤 맞추기
 
 - 두 영역 컨테이너(`realRoot`, `testRoot`)와 두 HTML 코드 칸(`realCode`, `testCode`)은 스크롤을 함께 움직여요. 규칙은 [화면 스타일 설계](style.md#스크롤-맞추기)를 따라요.
+- 줄 번호 칸(`realLines`, `testLines`)은 옆 코드 칸의 `scrollTop`을 그대로 따라가요.
 - 스크롤 이벤트는 `createPage`가 연결해요. `src/main.ts`는 모듈을 묶어 넘기기만 해요.
 
 ### HTML 코드 칸
 
 - 실제 영역의 HTML 코드 칸(`realCode`)에는 바뀐 줄을 표시하지 않아요. HTML 코드는 `textContent`로만 넣어요. 바뀐 부분은 렌더링 결과의 강조 표시와 Diff 결과 패널로 보여 줘요.
+- 줄 번호는 코드 칸 옆 줄 번호 칸에 따로 넣어요. 코드 칸의 줄 수(`\n` 개수 + 1)만큼 `1\n2\n…`을 `textContent`로 넣어요. (예: 9줄이면 `'1\n2\n3\n4\n5\n6\n7\n8\n9'`)
+- `realCode.textContent`나 `testCode.value`를 바꾸는 모든 곳(로드 1단계, Patch 11단계, 기록 이동 2단계, 입력창 `input` 이벤트)에서 그 칸의 줄 번호도 갱신해요.
 
 ## 정하지 않은 것
 
