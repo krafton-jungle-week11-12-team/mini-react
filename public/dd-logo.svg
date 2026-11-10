@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1230 1000" role="img" aria-label="Double D 로고">
+<defs><clipPath id="b"><path d="M520.0,120 H790.0 A380.0,380.0 0 0 1 790.0,880 H520.0 Z M710.0,290 H770.0 A210.0,210.0 0 0 1 770.0,710 H710.0 Z" clip-rule="evenodd"/></clipPath></defs>
+<path d="M60,120 H330 A380.0,380.0 0 0 1 330,880 H60 Z M250,290 H310.0 A210.0,210.0 0 0 1 310.0,710 H250 Z" fill="#E03131" fill-rule="evenodd"/>
+<path d="M520.0,120 H790.0 A380.0,380.0 0 0 1 790.0,880 H520.0 Z M710.0,290 H770.0 A210.0,210.0 0 0 1 770.0,710 H710.0 Z" fill="#1E7FD6" fill-rule="evenodd"/>
+<path d="M60,120 H330 A380.0,380.0 0 0 1 330,880 H60 Z M250,290 H310.0 A210.0,210.0 0 0 1 310.0,710 H250 Z" fill="#5F3DC4" fill-rule="evenodd" clip-path="url(#b)"/>
+</svg>
