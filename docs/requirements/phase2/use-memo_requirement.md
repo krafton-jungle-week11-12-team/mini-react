@@ -21,7 +21,7 @@
 | 수정일    | -                                                                                                       |
 | 작성자    | [이름]                                                                                                  |
 | 근거      | [회의 / 코어타임]                                                                                       |
-| 선행 문서 | [phase2_function-component_requirement.md](phase2_function-component_requirement.md)                    |
+| 선행 문서 | [function-component_requirement.md](function-component_requirement.md)                    |
 | 작성 규칙 | 요구사항 문장은 EARS 형식(항상, 이벤트, 상태, 오류, 선택)을 따르고, 요구사항 하나에 동작 하나만 담는다. |
 
 ---
