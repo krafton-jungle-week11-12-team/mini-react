@@ -157,6 +157,6 @@ push(h4)
 
 ## 관련 문서
 
-- [요구사항 명세서](../requirements/phase1_requirement.md)
+- [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
 - [ADR-006](../adr/ADR-006.md)
 - [검증 페이지 설계](page.md), [Diff 설계](diff.md), [Virtual DOM 변환 설계](vdom.md)

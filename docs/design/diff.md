@@ -201,7 +201,7 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 
 ## 관련 문서
 
-- [요구사항 명세서](../requirements/phase1_requirement.md)
+- [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
 - [ADR-002](../adr/ADR-002.md): Diff는 Phase 1에서 같은 자리, Phase 2에서 key로 노드를 짝짓는다. key 규칙은 Phase 2 설계에서 정해요.
 - [ADR-009](../adr/ADR-009.md): 트리 순회는 재귀로 한다
 - [Virtual DOM 변환 설계](vdom.md), [Patch 설계](patch.md), [변경 표시 설계](change-highlight.md)

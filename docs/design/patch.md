@@ -123,6 +123,6 @@ function patch(parent: Node, patches: (Patch | null)[]): void;
 
 ## 관련 문서
 
-- [요구사항 명세서](../requirements/phase1_requirement.md)
+- [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
 - [ADR-009](../adr/ADR-009.md): 트리 순회는 재귀로 한다
 - [Diff 설계](diff.md), [Virtual DOM 변환 설계](vdom.md), [변경 표시 설계](change-highlight.md)
