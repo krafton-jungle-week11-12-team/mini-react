@@ -1,9 +1,9 @@
-# Mini React Phase 2 요구사항 명세서: useEffect
+# Mini React Phase 2 요구사항 명세서: FunctionComponent · useState · State 제약
 
 <!--
 작성 규칙
-- 이 문서는 Phase 2 모듈 하나(useEffect)만 다뤄요.
-- 형식은 docs/requirements/phase1_requirement.md를 따라요.
+- 이 문서는 Phase 2 모듈 하나(FunctionComponent · useState · State 제약)만 다뤄요.
+- 형식은 docs/requirements/phase1/phase1_requirement.md를 따라요.
 - 요구사항 문장은 EARS 형식을 따르고, 요구사항 하나에 동작 하나만 담아요.
   - 항상 (Ubiquitous): 시스템은 ~해야 한다.
   - 이벤트 (When): ~하면, 시스템은 ~해야 한다.
@@ -21,7 +21,7 @@
 | 수정일    | -                                                                                                       |
 | 작성자    | [이름]                                                                                                  |
 | 근거      | [회의 / 코어타임]                                                                                       |
-| 선행 문서 | [phase2_function-component_requirement.md](phase2_function-component_requirement.md), [phase2_use-memo_requirement.md](phase2_use-memo_requirement.md) (의존성 비교) |
+| 선행 문서 | [phase1_requirement.md](../phase1/phase1_requirement.md), [phase2_h-props_requirement.md](phase2_h-props_requirement.md) |
 | 작성 규칙 | 요구사항 문장은 EARS 형식(항상, 이벤트, 상태, 오류, 선택)을 따르고, 요구사항 하나에 동작 하나만 담는다. |
 
 ---
@@ -42,7 +42,7 @@
 
 ### 2.2 제외
 
-<!-- 다루지 않는 것과 이유를 써요. -->
+<!-- 다루지 않는 것과 이유를 써요. 다른 Phase 2 문서에서 다루는 것(useMemo, useEffect)도 적어 두면 구현에 섞여 들어가지 않아요. -->
 
 | 제외 항목 | 이유   |
 | --------- | ------ |
@@ -50,7 +50,7 @@
 
 ## 3. 용어
 
-<!-- 이 문서에서 새로 쓰는 용어를 써요. 다른 문서의 용어는 링크해요. -->
+<!-- 이 문서에서 새로 쓰는 용어를 써요. Phase 1 용어는 phase1_requirement.md 3절을 링크해요. -->
 
 | 용어   | 뜻   |
 | ------ | ---- |
@@ -75,25 +75,25 @@
 > 확인 방법은 초안이다. 테스트 문서를 작성할 때 구체화한다.
 > 비고 열의 "삭제됨"은 번호를 유지하기 위해 남긴 행이다.
 
-<!-- ID 규칙: FR-F[번호] (useEffect 등록·실행), FR-L[번호] (cleanup) -->
+<!-- ID 규칙: FR-C[번호] (FunctionComponent), FR-S[번호] (useState), FR-T[번호] (State 제약) -->
 
-### 5.1 effect 등록
-
-| ID     | 유형   | 요구사항   | 확인 방법 (초안) | 비고 |
-| ------ | ------ | ---------- | ---------------- | ---- |
-| FR-F01 | [유형] | [요구사항] | [확인 방법]      |      |
-
-### 5.2 effect 실행
-
-| ID         | 유형   | 요구사항   | 확인 방법 (초안) | 비고 |
-| ---------- | ------ | ---------- | ---------------- | ---- |
-| FR-F[번호] | [유형] | [요구사항] | [확인 방법]      |      |
-
-### 5.3 cleanup
+### 5.1 FunctionComponent
 
 | ID     | 유형   | 요구사항   | 확인 방법 (초안) | 비고 |
 | ------ | ------ | ---------- | ---------------- | ---- |
-| FR-L01 | [유형] | [요구사항] | [확인 방법]      |      |
+| FR-C01 | [유형] | [요구사항] | [확인 방법]      |      |
+
+### 5.2 useState
+
+| ID     | 유형   | 요구사항   | 확인 방법 (초안) | 비고 |
+| ------ | ------ | ---------- | ---------------- | ---- |
+| FR-S01 | [유형] | [요구사항] | [확인 방법]      |      |
+
+### 5.3 State 제약
+
+| ID     | 유형   | 요구사항   | 확인 방법 (초안) | 비고 |
+| ------ | ------ | ---------- | ---------------- | ---- |
+| FR-T01 | [유형] | [요구사항] | [확인 방법]      |      |
 
 ## 6. 설계로 넘기는 항목
 

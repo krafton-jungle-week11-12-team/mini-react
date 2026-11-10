@@ -252,6 +252,6 @@ patch 후 showChanges:
 
 ## 관련 문서
 
-- [요구사항 명세서](../requirements/phase1_requirement.md)
+- [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
 - [ADR-002](../adr/ADR-002.md), [ADR-007](../adr/ADR-007.md), [ADR-008](../adr/ADR-008.md)
 - [Diff 설계](diff.md), [Patch 설계](patch.md), [검증 페이지 설계](page.md)

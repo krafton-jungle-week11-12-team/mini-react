@@ -48,7 +48,7 @@
 
 ## 위치와 흐름
 
-[요구사항 4절 "동작 흐름"](../requirements/phase1_requirement.md#4-동작-흐름)의 세 흐름과 HTML 코드 수정을 이 문서가 엮어요.
+[요구사항 4절 "동작 흐름"](../requirements/phase1/phase1_requirement.md#4-동작-흐름)의 세 흐름과 HTML 코드 수정을 이 문서가 엮어요.
 
 ```text
 로드      : 샘플 HTML 코드 ─▶ 두 영역 렌더링 ─▶ toVNode ─▶ createHistory(첫 기록)
@@ -118,7 +118,7 @@ type Page = {
   - `onBack(): void`, `onForward(): void` — 뒤로가기, 앞으로가기 버튼의 `click` 이벤트 핸들러. (예: `page.onBack()`)
   - `history: StateHistory<HistoryEntry>` — 페이지가 만든 State History. `readonly`라 다른 객체로 바꿀 수 없고, 기록은 핸들러가 바꿔요. 단위 테스트에서 기록 개수와 현재 위치를 확인할 때 써요. (예: `page.history.length`)
 
-샘플 HTML 코드는 [요구사항 FR-W23](../requirements/phase1_requirement.md#페이지-로드)의 문자열을 그대로 `SAMPLE_HTML` 상수로 둬요. 끝에 줄바꿈을 붙이지 않아요.
+샘플 HTML 코드는 [요구사항 FR-W23](../requirements/phase1/phase1_requirement.md#페이지-로드)의 문자열을 그대로 `SAMPLE_HTML` 상수로 둬요. 끝에 줄바꿈을 붙이지 않아요.
 
 ## 인터페이스
 
@@ -230,7 +230,7 @@ createPage(getElements(document), SAMPLE_HTML, {
 
 2단계나 5단계에서 오류가 나도 이동은 그대로 해요. 강조 표시와 Diff 결과만 보여 주지 않아요.
 
-실제 영역은 Patch를 거치지 않고 기록의 상태 전체로 바꿔요([요구사항 4.3](../requirements/phase1_requirement.md#43-뒤로가기-앞으로가기), [ADR-010](../adr/ADR-010.md)(제안됨)). 같은 HTML 코드를 같은 파서로 파싱하므로, 실제 영역의 DOM은 이동한 기록의 `vdom`과 같은 구조가 돼요. 그래서 다음 Patch도 맞게 동작해요.
+실제 영역은 Patch를 거치지 않고 기록의 상태 전체로 바꿔요([요구사항 4.3](../requirements/phase1/phase1_requirement.md#43-뒤로가기-앞으로가기), [ADR-010](../adr/ADR-010.md)(제안됨)). 같은 HTML 코드를 같은 파서로 파싱하므로, 실제 영역의 DOM은 이동한 기록의 `vdom`과 같은 구조가 돼요. 그래서 다음 Patch도 맞게 동작해요.
 
 2·5단계의 비교는 화면에 보여 주기만 해요. 실제 영역을 고치는 데 쓰지 않아요. 뒤로 가면 방향이 거꾸로라, Patch 때 추가된 노드는 `remove`로 보여요.
 
@@ -349,10 +349,10 @@ type PageElementsX = PageElements & {
 
 ## 정하지 않은 것
 
-- 스크립트 실행 정책을 요구사항에 반영할지: 이 문서는 "막지 않는다"로 정했어요. 요구사항 2.2의 "(협의 필요)"와 [7절](../requirements/phase1_requirement.md#7-추후-논의) 항목을 지울지 임동호·오동환이 이 문서 리뷰 때 정해요.
+- 스크립트 실행 정책을 요구사항에 반영할지: 이 문서는 "막지 않는다"로 정했어요. 요구사항 2.2의 "(협의 필요)"와 [7절](../requirements/phase1/phase1_requirement.md#7-추후-논의) 항목을 지울지 임동호·오동환이 이 문서 리뷰 때 정해요.
 
 ## 관련 문서
 
-- [요구사항 명세서](../requirements/phase1_requirement.md)
+- [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
 - [ADR-004](../adr/ADR-004.md), [ADR-005](../adr/ADR-005.md), [ADR-007](../adr/ADR-007.md), [ADR-010](../adr/ADR-010.md)
 - [Virtual DOM 변환 설계](vdom.md), [Diff 설계](diff.md), [Patch 설계](patch.md), [State History 설계](history.md), [변경 표시 설계](change-highlight.md), [화면 스타일 설계](style.md)

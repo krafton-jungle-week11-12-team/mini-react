@@ -21,7 +21,7 @@
 
 ## 다루는 요구사항
 
-<!-- docs/requirements/phase1_requirement.md에서 이 모듈이 만족해야 하는 요구사항 ID를 가져와요. -->
+<!-- docs/requirements/phase1/phase1_requirement.md에서 이 모듈이 만족해야 하는 요구사항 ID를 가져와요. -->
 
 | ID       | 요구사항 요약   | 이 문서에서 다루는 곳 |
 | -------- | --------------- | --------------------- |
@@ -111,5 +111,5 @@ function [함수 이름]([파라미터]: [타입]): [반환 타입];
 
 ## 관련 문서
 
-- [요구사항 명세서](../requirements/phase1_requirement.md)
+- [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
 - [관련 ADR 또는 설계 문서]

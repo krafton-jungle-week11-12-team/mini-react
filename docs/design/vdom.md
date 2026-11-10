@@ -186,5 +186,5 @@ HTML 코드가 줄바꿈으로 끝나면 결과 배열 끝에 `{ kind: 'text', t
 
 ## 관련 문서
 
-- [요구사항 명세서](../requirements/phase1_requirement.md)
+- [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
 - [Diff 설계](diff.md), [Patch 설계](patch.md)
