@@ -117,7 +117,7 @@ function showChanges(
 - `records: ChangeRecord[]` — `fromDiffResult`가 돌려준 변경 목록. 변경 하나가 한 칸이에요. (예: `[{ kind: 'text', oldPath: [0,1,0], newPath: [0,1,0], … }, { kind: 'create', oldPath: null, newPath: [0,3,5], … }]`)
 - `before: TextBefore` — `captureBefore`가 Patch 전에 돌려준 값. 순서와 개수가 `records`와 같아 같은 자리끼리 짝이에요. *i*번째 값은 `records[i]`의 부모 요소 노드의 `innerText`이고, 텍스트 노드 규칙이 아닌 변경은 `null`이에요. (예: 위 `records`에 대해 `['할 일 목록', null]`)
 - `options.readText: (el: Element) => string` — 요소 노드의 `innerText`를 읽는 함수. 기본값은 HTML 요소 노드면 `innerText`, 아니면(SVG 요소 노드 등) `textContent`를 읽어요. SVG 요소 노드에는 `innerText`가 없기 때문이에요. 단위 테스트에서 바꿔 넣어요. (예: `el => el.textContent ?? ''`)
-- `options.highlight: (el: Element) => void` — 요소 노드 하나를 강조 표시하는 함수. 기본값은 `element.animate()`로 배경색을 잠깐 바꾸는 함수예요. 색과 모양은 [화면 스타일 설계](style.md#강조-표시-모양)를 따라 검증 페이지가 정해 넘겨요. jsdom에서는 `animate`가 없어 아무것도 하지 않아요. (예: `el => el.animate([{ backgroundColor: '#EDE7FF', boxShadow: '0 0 0 4px #EDE7FF' }, {}], 800)`)
+- `options.highlight: (el: Element) => void` — 요소 노드 하나를 강조 표시하는 함수. 기본값은 `element.animate()`로 배경색을 잠깐 바꾸는 함수예요. 색과 모양은 [화면 스타일 설계](style.md#강조-표시-모양)를 따라 검증 페이지가 정해 넘겨요. jsdom에서는 `animate`가 없어 아무것도 하지 않아요. (예: `el => el.animate([{ backgroundColor: '#EDE7FF', boxShadow: '-4px 0 0 #EDE7FF, 4px 0 0 #EDE7FF' }, {}], 800)`)
 - `fromDiffResult`
   - 반환값: 변경으로 세는 칸의 목록. 한 자식 목록의 칸을 앞에서부터 처리한 뒤 그 아래 자식 목록으로 내려간 순서예요. 순서는 Diff 결과 패널에만 쓰고 판단에는 영향이 없어요. 바뀐 내용이 없으면 `[]`예요.
   - 부수 효과: 없음. **Diff 결과의 형식을 아는 함수는 이것 하나예요.**
