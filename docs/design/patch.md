@@ -33,49 +33,26 @@ Patch는 새 타입을 만들지 않아요. 입력은 [Diff 설계](diff.md)의 
 ## 인터페이스
 
 ```ts
-function patch(container: Element, patches: (Patch | null)[]): void;
+function patch(parent: Node, patches: (Patch | null)[]): void;
 ```
 
-- `container: Element` — 실제 영역 컨테이너. 이 요소의 자식 목록을 고쳐요. 컨테이너 자신은 고치지 않아요.
-- `patches: (Patch | null)[]` — [`diff`](diff.md)의 반환값을 그대로 넣어요. *i*번째 칸이 컨테이너의 *i*번째 자식에 대한 결과예요. (예: `[null, { type: 'TEXT', text: 'B' }]`)
+- `parent: Node` — 자식을 고칠 부모 DOM 노드. 처음에는 실제 영역 컨테이너를 넣고, `UPDATE`를 만나면 그 요소를 넣어 재귀로 불러요. (예: 실제 영역 컨테이너, `<ul class="todo">`)
+- `patches: (Patch | null)[]` — `parent`의 자식 목록에 대한 Diff 결과. *i*번째 칸이 `parent`의 *i*번째 자식에 대한 결과예요. 처음에는 [`diff`](diff.md)의 반환값을 그대로 넣어요. (예: `[null, { type: 'TEXT', text: 'B' }]`)
 - 반환값: 없음.
-- 부수 효과: `container` 아래의 DOM을 고쳐요. 바뀐 노드에 대해서만 DOM API를 불러요.
+- 부수 효과: `parent` 아래의 DOM을 고쳐요. 바뀐 노드에 대해서만 DOM API를 불러요.
 
-전제 조건: `container`의 자식 목록은 Diff의 이전 트리(`oldRoots`)와 같은 모양이어야 해요. 이전 트리는 현재 기록의 `vdom`이고, 실제 영역은 매 Patch 뒤에 이 `vdom`과 같아요(FR-W15). 그래서 `REMOVE`, `REPLACE`, `TEXT`, `UPDATE` 칸에는 항상 대응하는 DOM 노드가 있어요.
+전제 조건: `parent`의 자식 목록은 Diff의 이전 트리(`oldRoots`)와 같은 모양이어야 해요. 이전 트리는 현재 기록의 `vdom`이고, 실제 영역은 매 Patch 뒤에 이 `vdom`과 같아요(FR-W15). 그래서 `REMOVE`, `REPLACE`, `TEXT`, `UPDATE` 칸에는 항상 대응하는 DOM 노드가 있어요.
 
 ## 동작 방식
 
-`patch`는 재귀 대신 반복문과 명시적 스택으로 내려가요([ADR-003](../adr/ADR-003.md)). 내부 함수 두 개를 써요.
+`patch`는 내부 함수 `applyPatch`로 칸 하나씩 적용하고, `UPDATE`면 그 요소의 자식에 `patch`를 재귀로 불러요([ADR-009](../adr/ADR-009.md)).
 
-- `patchChildren`: 부모 하나의 자식 목록에 Diff 결과 한 목록을 적용하고, `UPDATE`면 그 요소의 자식 작업을 모아요.
-- `applyPatch`: 칸 하나를 DOM에 적용해요. 자식으로 내려가지 않아요.
-
-스택 항목은 고칠 부모 DOM 노드와 그 자식 목록에 대한 Diff 결과를 함께 담아요. Diff의 스택 항목(`{ oldList, newList, out }`)과 같이 목록 단위예요.
-
-```ts
-type PatchTask = {
-  parent: Node;               // 자식을 고칠 부모 DOM 노드. 처음에는 실제 영역 컨테이너
-  patches: (Patch | null)[];  // parent의 자식 목록에 대한 Diff 결과
-};
-```
-
-Diff와 달리 정리 단계가 없어요. Patch는 결과를 위로 모으지 않고 DOM을 고치기만 해서, 위에서부터 내려가며 바로 적용하면 끝나요.
-
-### `patch(container, patches)`
-
-1. 스택에 `{ parent: container, patches }`를 넣어요.
-2. 스택에서 하나 꺼내 `patchChildren`으로 처리해요. 스택이 빌 때까지 반복해요.
-
-### `patchChildren(task)`
+### `patch(parent, patches)`
 
 1. 적용 전에 `parent`의 자식 목록(`childNodes`)을 배열로 복사해 둬요.
-2. `patches`를 앞에서부터 돌아요.
+2. `patches`를 앞에서부터 `for` 반복문으로 돌아요. `forEach` 같은 콜백으로 돌면 재귀 한 단계마다 호출이 더 쌓여 버틸 수 있는 깊이가 줄어요([ADR-009](../adr/ADR-009.md) 결정 5번).
 3. 칸이 `null`이면 건너뛰어요. 그 노드는 그대로 둬요.
 4. `null`이 아니면 `applyPatch(parent, 복사한 목록[i], 칸)`을 불러요.
-5. 칸이 `UPDATE`면 `{ parent: 복사한 목록[i], patches: 칸.children }`을 모아 둬요.
-6. 모아 둔 항목을 **뒤에서부터** 스택에 넣어요. 그래야 앞 자식부터 꺼내져요.
-
-자식 목록은 그 작업을 꺼낼 때 복사해요. `UPDATE`는 요소 객체를 그대로 두므로, 부모 작업이 끝난 뒤에 꺼내도 그 요소의 자식 목록은 아직 Diff의 이전 트리와 같아요.
 
 ### `applyPatch(parent, node, p)`
 
@@ -85,7 +62,7 @@ Diff와 달리 정리 단계가 없어요. Patch는 결과를 위로 모으지 �
 | `REMOVE`  | `parent.removeChild(node)`                                               |                                              |
 | `REPLACE` | `parent.replaceChild(toDOM(p.vnode), node)`                              | 같은 자리에 새 노드가 들어가요               |
 | `TEXT`    | `node.nodeValue = p.text`                                                | 텍스트와 주석 모두 `nodeValue`로 고쳐요      |
-| `UPDATE`  | `set`의 속성마다 `setAttribute`, `remove`의 속성마다 `removeAttribute` | 요소 객체는 그대로 둬요. 자식은 `patchChildren`이 스택으로 고쳐요 |
+| `UPDATE`  | `set`의 속성마다 `setAttribute`, `remove`의 속성마다 `removeAttribute`, 그다음 `patch(node, p.children)` | 요소 객체는 그대로 두고 속성과 자식만 고쳐요 |
 
 예시 (샘플 HTML 코드에서 `h1`의 텍스트만 바꿈):
 
@@ -94,9 +71,9 @@ Diff와 달리 정리 단계가 없어요. Patch는 결과를 위로 모으지 �
       patches = [UPDATE(div#app) ─ children[1]: UPDATE(h1) ─ children[0]: TEXT '오늘 할 일']
 ```
 
-1. 스택: `[{ 컨테이너, [UPDATE(div#app)] }]`. 꺼내서 복사한 목록은 `[div#app]`이에요. 0번 칸이 `UPDATE`라 속성은 바뀐 게 없어 건너뛰고, `{ div#app, children }`을 스택에 넣어요.
-2. 스택: `[{ div#app, … }]`. 꺼내서 복사한 목록은 `[텍스트, h1, 텍스트, ul, 텍스트, button, 텍스트]`예요. 1번 칸만 `UPDATE`라 `{ h1, children }`을 스택에 넣어요.
-3. 스택: `[{ h1, … }]`. 꺼내서 0번 칸이 `TEXT`라 `'할 일 목록'` 텍스트 노드의 `nodeValue`를 `'오늘 할 일'`로 바꿔요. 스택이 비어 끝나요.
+1. `patch(컨테이너, …)`: 복사한 목록은 `[div#app]`이에요. 0번 칸이 `UPDATE`라 속성은 건너뛰고 `patch(div#app, …)`를 불러요.
+2. `patch(div#app, …)`: 복사한 목록은 `[텍스트, h1, 텍스트, ul, 텍스트, button, 텍스트]`예요. 1번 칸만 `UPDATE`라 `patch(h1, …)`를 불러요.
+3. `patch(h1, …)`: 0번 칸이 `TEXT`라 `'할 일 목록'` 텍스트 노드의 `nodeValue`를 `'오늘 할 일'`로 바꿔요.
 
 ```text
 출력: 텍스트 노드 하나의 nodeValue만 바뀌어요.
@@ -107,8 +84,7 @@ Diff와 달리 정리 단계가 없어요. Patch는 결과를 위로 모으지 �
 
 | 결정                                                    | 이유                                                                                                   | 관련 ADR                     |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------- |
-| 재귀 대신 반복문과 명시적 스택으로 내려간다            | 사용자가 깊게 중첩한 HTML을 넣어도 콜 스택이 넘치지 않아요                                             | [ADR-003](../adr/ADR-003.md) |
-| 스택 항목에 고칠 부모와 그 자식 목록의 Diff 결과를 담는다 | 한 목록을 한 번에 처리해야 복사한 자식 목록의 인덱스로 노드를 찾을 수 있어요                          | [ADR-003](../adr/ADR-003.md) |
+| 재귀로 내려가고, 칸은 `for` 반복문으로 돈다           | 코드가 트리 모양과 닮아 이해하기 쉬워요. 파서가 깊이를 512단계로 제한해 콜 스택이 넘치지 않아요        | [ADR-009](../adr/ADR-009.md) |
 | 새 노드는 Virtual DOM → DOM 변환으로 만든다             | 렌더링 결과는 파싱한 DOM으로 만들고, 변환은 Patch에서만 써요                                           | [ADR-004](../adr/ADR-004.md) |
 | 실제 영역 DOM에 강조용 속성을 붙이지 않는다             | 강조 표시가 두 영역 비교(FR-W15)에 영향을 주지 않아야 해요                                             | [ADR-008](../adr/ADR-008.md) |
 | 적용 전에 자식 목록을 복사해 두고 그 목록으로 노드를 찾는다 | 앞 칸의 `REMOVE`가 뒤 칸의 인덱스를 당겨도 엉뚱한 노드를 고치지 않아요. 그래서 적용 순서를 따로 정하지 않아도 돼요 | -                            |
@@ -127,7 +103,7 @@ Diff와 달리 정리 단계가 없어요. Patch는 결과를 위로 모으지 �
 | 교체                       | `<p>A</p>` → `<div>A</div>`                         | `replaceChild`로 같은 위치에 새 노드가 들어가요                                               | FR-E04        |
 | 속성 삭제                  | `<button disabled>` → `<button>`                    | `removeAttribute('disabled')`만 불러요. `button`은 같은 객체예요                              | FR-W14        |
 | 주석 내용 변경             | `<!-- a -->` → `<!-- b -->`                         | 주석 노드의 `nodeValue`만 바뀌어요                                                            | FR-W26        |
-| 깊게 중첩된 요소           | `<div>`를 10,000번 중첩 → 맨 안쪽 텍스트만 바꿈     | 오류 없이 끝나고, 맨 안쪽 텍스트 노드의 `nodeValue`만 바뀌어요                               | FR-E04 ([ADR-003](../adr/ADR-003.md)) |
+| 깊게 중첩된 요소           | `<div>`를 512번 중첩(Chromium 파서 상한) → 맨 안쪽 텍스트만 바꿈 | 오류 없이 끝나고, 맨 안쪽 텍스트 노드의 `nodeValue`만 바뀌어요                         | FR-E04 ([ADR-009](../adr/ADR-009.md)) |
 | 스크립트가 든 노드 추가    | `<script>alert(1)</script>`, `<img src=x onerror=…>` | `toDOM`으로 만든 노드를 문서에 붙이면 실행될 수 있어요. 정책은 요구사항 7절에서 정해요        | -             |
 | 전제 조건이 깨짐           | 실제 영역이 현재 기록의 `vdom`과 다름               | 칸에 대응하는 노드가 없거나 다른 노드라 오류가 나거나 잘못 고쳐요. FR-W15로 막아요            | FR-W15        |
 
@@ -137,8 +113,7 @@ Diff와 달리 정리 단계가 없어요. Patch는 결과를 위로 모으지 �
   - FR-E04, W14: Patch 전후로 바뀌지 않은 노드가 같은 DOM 객체(`===`)로 남는지 확인해요. 위 예시에서 `ul`, `button`을 확인해요.
   - FR-E09: 빈 문자열로 Patch한 뒤 실제 영역에 노드가 없는지 확인해요.
   - 여러 자식 삭제: 위 경계 케이스에서 남은 `li`가 원래 첫 `li`와 같은 객체인지 확인해요.
-  - 깊게 중첩된 요소: 10,000단계로 중첩한 `div`에서 맨 안쪽 텍스트만 바꿔도 오류 없이 끝나는지 확인해요(ADR-003).
-  - 형제 순서: 자식이 셋 이상이고 여러 칸이 `UPDATE`인 요소에서, 각 `UPDATE`의 자식이 엉뚱한 형제에 적용되지 않는지 확인해요.
+  - 깊게 중첩된 요소: 512단계로 중첩한 `div`에서 맨 안쪽 텍스트만 바꿔도 오류 없이 끝나는지 확인해요(ADR-009).
   - FR-W15: 강조 표시를 뺀 두 영역의 DOM을 각각 Virtual DOM 트리로 변환해 같은지 확인해요. 다르면 Diff가 노드를 놓친 것이에요.
 - 검증 페이지: Patch 버튼을 누른 뒤 두 영역이 같게 보이는지 확인해요.
 
@@ -151,5 +126,5 @@ Diff와 달리 정리 단계가 없어요. Patch는 결과를 위로 모으지 �
 ## 관련 문서
 
 - [요구사항 명세서](../requirements/phase1_requirement.md)
-- [ADR-003](../adr/ADR-003.md): 트리 순회는 반복문과 명시적 스택으로 한다
+- [ADR-009](../adr/ADR-009.md): 트리 순회는 재귀로 한다
 - [Diff 설계](diff.md), [Virtual DOM 변환 설계](vdom.md), [변경 표시 설계](change-highlight.md)
