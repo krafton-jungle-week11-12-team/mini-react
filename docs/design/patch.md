@@ -103,7 +103,6 @@ function patch(parent: Node, patches: (Patch | null)[]): void;
 | 교체                       | `<p>A</p>` → `<div>A</div>`                         | `replaceChild`로 같은 위치에 새 노드가 들어가요                                               | FR-E04        |
 | 속성 삭제                  | `<button disabled>` → `<button>`                    | `removeAttribute('disabled')`만 불러요. `button`은 같은 객체예요                              | FR-W14        |
 | 주석 내용 변경             | `<!-- a -->` → `<!-- b -->`                         | 주석 노드의 `nodeValue`만 바뀌어요                                                            | FR-W26        |
-| 깊게 중첩된 요소           | `<div>`를 512번 중첩(Chromium 파서 상한) → 맨 안쪽 텍스트만 바꿈 | 오류 없이 끝나고, 맨 안쪽 텍스트 노드의 `nodeValue`만 바뀌어요                         | FR-E04 ([ADR-009](../adr/ADR-009.md)) |
 | 스크립트가 든 노드 추가    | `<script>alert(1)</script>`, `<img src=x onerror=…>` | `toDOM`으로 만든 노드를 문서에 붙이면 실행될 수 있어요. 정책은 요구사항 7절에서 정해요        | -             |
 | 전제 조건이 깨짐           | 실제 영역이 현재 기록의 `vdom`과 다름               | 칸에 대응하는 노드가 없거나 다른 노드라 오류가 나거나 잘못 고쳐요. FR-W15로 막아요            | FR-W15        |
 
@@ -113,7 +112,6 @@ function patch(parent: Node, patches: (Patch | null)[]): void;
   - FR-E04, W14: Patch 전후로 바뀌지 않은 노드가 같은 DOM 객체(`===`)로 남는지 확인해요. 위 예시에서 `ul`, `button`을 확인해요.
   - FR-E09: 빈 문자열로 Patch한 뒤 실제 영역에 노드가 없는지 확인해요.
   - 여러 자식 삭제: 위 경계 케이스에서 남은 `li`가 원래 첫 `li`와 같은 객체인지 확인해요.
-  - 깊게 중첩된 요소: 512단계로 중첩한 `div`에서 맨 안쪽 텍스트만 바꿔도 오류 없이 끝나는지 확인해요(ADR-009).
   - FR-W15: 강조 표시를 뺀 두 영역의 DOM을 각각 Virtual DOM 트리로 변환해 같은지 확인해요. 다르면 Diff가 노드를 놓친 것이에요.
 - 검증 페이지: Patch 버튼을 누른 뒤 두 영역이 같게 보이는지 확인해요.
 
