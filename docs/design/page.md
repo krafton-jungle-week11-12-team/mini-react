@@ -207,6 +207,8 @@ createPage(getElements(document), SAMPLE_HTML, {
 10. `history.push({ html, vdom: newVdom })`로 새 기록을 저장해요(FR-W17).
 11. `realCode.textContent = html`로 실제 영역의 HTML 코드를 바꾸고, 버튼 상태를 갱신해요.
 
+강조 표시는 다음 Patch까지 남아 있어요. 그래서 5단계 뒤(변경이 있을 때만) 지난 강조 표시를 지우고 6단계로 가요. 기록 이동과 오류 처리 때도 지워요. 강조 표시는 `animate()`로만 그리므로 실제 영역의 `getAnimations({ subtree: true })`를 모두 취소하면 지워져요. 속성은 바꾸지 않아요(FR-W27).
+
 #### 오류 처리
 
 6~8단계에서 오류가 나거나 9단계 확인에 실패하면 아래처럼 처리해요.

@@ -119,6 +119,7 @@ export function createPage<R>(
     const result = engine.diff(old, newVdom); // 4 (FR-W13)
     const records = engine.fromDiffResult(result, old); // 5
     if (records.length === 0) return; // FR-W28: 실제 영역, State History, 요약 문구를 바꾸지 않아요
+    clearHighlights(); // 지난 Patch의 강조 표시를 지우고 이번 변경만 표시해요
 
     let summary: ChangeSummary;
     try {
@@ -162,6 +163,7 @@ export function createPage<R>(
     setRealCode(entry.html); // 2
     el.testRoot.innerHTML = entry.html; // 3
     el.realRoot.innerHTML = entry.html; // 3
+    clearHighlights();
     showMessage('', false); // 4
     lastSummary = null;
     updateButtons();
@@ -171,6 +173,7 @@ export function createPage<R>(
   /** 오류 처리: 두 영역을 현재 위치 기록으로 되돌리고 기록은 저장하지 않아요. 입력창은 그대로 둬요. */
   function fail(text: string): void {
     const { html } = history.current();
+    clearHighlights();
     el.testRoot.innerHTML = html;
     el.realRoot.innerHTML = html;
     showMessage(text, true);
@@ -195,6 +198,16 @@ export function createPage<R>(
     notes.length = history.index;
     notes.push(text);
     if (notes.length !== history.length) console.error('기록 목록 패널과 State History의 기록 개수가 달라요');
+  }
+
+  /**
+   * 실제 영역에 남아 있는 강조 표시 애니메이션을 모두 지워요.
+   * 강조 표시는 animate()로만 그려 속성을 바꾸지 않으니(FR-W27), 지울 때도 애니메이션만 취소해요. jsdom에는 getAnimations가 없어요.
+   */
+  function clearHighlights(): void {
+    if (typeof el.realRoot.getAnimations !== 'function') return;
+    const animations = el.realRoot.getAnimations({ subtree: true });
+    for (let i = 0; i < animations.length; i++) animations[i].cancel();
   }
 
   /** 입력창 값이 현재 위치 기록과 같은 동안 Patch 버튼을 비활성화해요 (FR-W10, W25, W26). */
