@@ -217,6 +217,7 @@ describe('Diff·Patch와 함께 (경계 케이스)', () => {
     expect(summary.message).toBe('변경 2개');
     expect(summary.highlighted).toEqual([real.firstChild]);
     expect(opts.highlight).toHaveBeenCalledTimes(1);
+    expect(opts.highlight).toHaveBeenCalledWith(real.firstChild, ['props', 'text']); // 변경 종류를 함께 넘겨요
   });
 
   it('요소 노드를 주석으로 교체하면 영역 컨테이너를 강조 표시해요', () => {
