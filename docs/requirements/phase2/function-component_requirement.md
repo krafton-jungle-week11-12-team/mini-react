@@ -161,13 +161,16 @@
 - 루트 형태: update에서 VNode 하나를 `[vnode]`로 감싸 Phase 1 diff(`VNode[]`)에 그대로 넘긴다. Phase 1 diff, patch는 고치지 않는다.
   - 근거: Phase 1은 컨테이너 자신을 비교하지 않고 컨테이너의 자식 목록끼리 비교한 뒤, 그 결과를 `patch(container, result)`로 컨테이너의 자식에 적용한다. 컴포넌트 함수가 돌려준 VNode는 컨테이너의 자식 하나이므로, `[vnode]`가 Phase 1의 자식 목록과 같은 층이다.
   - 고려한 다른 선택지: diff가 VNode 하나도 받게 고치기, Phase 1의 루트를 컨테이너로 바꾸기. 둘 다 Phase 1 코드를 고쳐야 한다. 특히 루트를 컨테이너로 바꾸면 실제 영역과 테스트 영역 컨테이너의 `id`가 달라 Patch 때마다 실제 영역 컨테이너의 `id`가 바뀌고, patch에 컨테이너의 부모를 넘겨야 해서 위치가 어긋난다.
+- 같은 값 건너뛰기: setState에 넘긴 값이 지금 값과 `Object.is`로 같으면 hooks에 쓰지 않고 update도 부르지 않는다. ([#107](https://github.com/orgs/krafton-jungle-week11-12-team/discussions/107))
+  - 함수를 넘겼으면 먼저 실행해 새 값을 계산한 뒤 비교한다.
+  - 근거: 같은 값으로 다시 렌더링하면 Diff 결과가 비어 화면이 바뀌지 않으므로, 렌더링과 Diff 비용만 든다. `===` 대신 `Object.is`를 써서 state가 `NaN`일 때도 같은 값으로 본다.
+  - 주의: 배열·객체는 참조로 비교하므로, 직접 고친 뒤 같은 객체를 넘기면 update가 생략된다. 새 배열·객체를 만들어 넘긴다.
 
 ### 6.2 미정 항목
 
 - 배칭: 지금은 setState마다 `update()`를 바로 부른다.
   - setState마다 바로 update한다.
   - `queueMicrotask`로 모아 한 번만 update한다.
-- 같은 값 건너뛰기: setState에 넘긴 값이 지금 값과 `Object.is`로 같으면 update를 생략할지 ([#107](https://github.com/orgs/krafton-jungle-week11-12-team/discussions/107))
 - mount 두 번 호출, mount 전 update 호출을 막는 방식 (오류를 던질지, 무시할지)
 
 ## 7. 추후 논의
