@@ -86,12 +86,14 @@
 ### 4.2 setState와 update
 
 1. 사용자 동작(클릭, 입력)으로 핸들러가 setState를 부른다.
-2. setState가 자기 칸(`hooks[i]`)을 새 값으로 바꾼다. 함수를 넘겼으면 그 순간의 `hooks[i]`로 함수를 실행한 결과를 넣는다.
-3. setState가 `update()`를 바로 부른다. (배칭은 미정, 6절)
-4. 렌더링한다. (4.3)
-5. `prevVNode`와 새 VNode를 각각 `[ ]`로 감싸 Diff로 비교하고(`diff([prevVNode], [vnode])`), 그 결과로 컨테이너 안의 바뀐 노드만 Patch한다(`patch(container, result)`). (루트 형태, 6절)
-6. `prevVNode`를 새 VNode로 바꾼다.
-7. effect를 실행한다. ([useEffect 문서](use-effect_requirement.md))
+2. setState가 새 값을 정한다. 함수를 넘겼으면 그 순간의 `hooks[i]`로 함수를 실행한 결과가 새 값이다.
+3. 새 값이 지금 값(`hooks[i]`)과 `Object.is`로 같으면 칸을 바꾸지 않고 여기서 끝낸다. (6절)
+4. setState가 자기 칸(`hooks[i]`)을 새 값으로 바꾼다.
+5. setState가 `update()`를 바로 부른다. (배칭은 미정, 6절)
+6. 렌더링한다. (4.3)
+7. `prevVNode`와 새 VNode를 각각 `[ ]`로 감싸 Diff로 비교하고(`diff([prevVNode], [vnode])`), 그 결과로 컨테이너 안의 바뀐 노드만 Patch한다(`patch(container, result)`). (루트 형태, 6절)
+8. `prevVNode`를 새 VNode로 바꾼다.
+9. effect를 실행한다. ([useEffect 문서](use-effect_requirement.md))
 
 ### 4.3 렌더링 (render)
 
