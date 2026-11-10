@@ -10,6 +10,8 @@ export type VElement = {
   tag: string;
   props: Record<string, string>;
   children: VNode[];
+  /** 형제 사이에서 이 노드를 가리키는 이름표. Diff가 짝을 찾을 때만 써요 (ADR-002, ADR-011). DOM 속성으로 만들지 않아요 */
+  key?: string;
 };
 
 export type VText = {
@@ -75,7 +77,11 @@ function createVNode(node: Node): VNode | null {
       for (const attribute of Array.from(element.attributes)) {
         props[attribute.name] = attribute.value;
       }
-      return { kind: 'element', tag: element.localName, props, children: toVNodeChildren(element) };
+      const vnode: VElement = { kind: 'element', tag: element.localName, props, children: toVNodeChildren(element) };
+      // 검증 페이지에서 key 비교를 확인할 수 있게 HTML의 key 속성을 key로 읽어요. 속성은 props에도 그대로 남아요
+      const key = element.getAttribute('key');
+      if (key !== null) vnode.key = key;
+      return vnode;
     }
     case Node.TEXT_NODE:
       return { kind: 'text', text: node.nodeValue ?? '' };

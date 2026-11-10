@@ -401,6 +401,8 @@ function renderDiff(view: HTMLElement, summary: ChangeSummary | null): void {
     const textNode = record.kind === 'text' || ((record.kind === 'create' || record.kind === 'replace') && record.newNodeKind === 'text');
     if (textNode) detail = `'${showSpaces(detail)}'`;
     if (record.kind === 'remove') detail = '삭제';
+    // 이동은 key 비교에서만 나와요 (ADR-011). 이전 위치를 함께 보여 줘요
+    if (record.kind === 'move') detail = `${detail} · [${(record.oldPath ?? []).join(',')}]에서 옮김`;
     if (!visible) detail += ' · 안 보여요';
     li.append(
       span(`chip chip-${record.kind}`, record.kind),

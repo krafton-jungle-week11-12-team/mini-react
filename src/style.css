@@ -424,6 +424,11 @@ textarea.code:focus-visible {
   color: #c92a2a;
 }
 
+.chip-move {
+  background: #fff3bf;
+  color: #a35f00;
+}
+
 .diff-path {
   font-family: var(--dd-mono);
   color: var(--dd-text-sub);
