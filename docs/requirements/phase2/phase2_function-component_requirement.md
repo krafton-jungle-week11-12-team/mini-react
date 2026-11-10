@@ -1,106 +1,152 @@
 # Mini React Phase 2 요구사항 명세서: FunctionComponent · useState · State 제약
 
-<!--
-작성 규칙
-- 이 문서는 Phase 2 모듈 하나(FunctionComponent · useState · State 제약)만 다뤄요.
-- 형식은 docs/requirements/phase1/phase1_requirement.md를 따라요.
-- 요구사항 문장은 EARS 형식을 따르고, 요구사항 하나에 동작 하나만 담아요.
-  - 항상 (Ubiquitous): 시스템은 ~해야 한다.
-  - 이벤트 (When): ~하면, 시스템은 ~해야 한다.
-  - 상태 (While): ~인 동안, 시스템은 ~해야 한다.
-  - 오류 (If-Then): 만약 ~하면, 시스템은 ~해야 한다.
-  - 선택 (Where): ~ 기능이 포함되면, 시스템은 ~해야 한다.
-- 기준은 docs/technical-writing-principles.md를 따라요.
-- 이 주석 블록과 각 섹션의 안내 주석은 다 쓴 뒤 지워요.
--->
-
-| 항목      | 내용                                                                                                    |
-| --------- | ------------------------------------------------------------------------------------------------------- |
-| 문서 상태 | 초안 v0.1                                                                                               |
-| 작성일    | [YYYY-MM-DD]                                                                                            |
-| 수정일    | -                                                                                                       |
-| 작성자    | [이름]                                                                                                  |
-| 근거      | [회의 / 코어타임]                                                                                       |
-| 선행 문서 | [phase1_requirement.md](../phase1/phase1_requirement.md), [phase2_h-props_requirement.md](phase2_h-props_requirement.md) |
-| 작성 규칙 | 요구사항 문장은 EARS 형식(항상, 이벤트, 상태, 오류, 선택)을 따르고, 요구사항 하나에 동작 하나만 담는다. |
+| 항목      | 내용                                                                                                                                         |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 문서 상태 | 초안 v0.1                                                                                                                                    |
+| 작성일    | 2026-11-10                                                                                                                                   |
+| 수정일    | -                                                                                                                                            |
+| 작성자    | 오동환                                                                                                                                       |
+| 근거      | Discussions #104 (mount와 Hook의 동작 원리), #105 (App이 return한 VNode는 어디로 가는가), #106 (useState와 클로저)                           |
+| 선행 문서 | [phase1_requirement.md](../phase1/phase1_requirement.md), [phase2_h-props_requirement.md](phase2_h-props_requirement.md)                     |
+| 작성 규칙 | 요구사항 문장은 EARS 형식(항상, 이벤트, 상태, 오류, 선택)을 따르고, 요구사항 하나에 동작 하나만 담는다.                                      |
 
 ---
 
 ## 1. 목표
 
-<!-- 이 모듈을 구현하면 무엇을 할 수 있게 되는지 써요. -->
-
-- [목표]
+- 컴포넌트 함수(App)를 FunctionComponent에 맡겨 처음 화면을 그리고(mount), state가 바뀌면 다시 그릴(update) 수 있게 한다.
+- update는 Phase 1의 Diff와 Patch로 바뀐 노드만 실제 DOM에 반영한다.
+- useState로 state를 컴포넌트 함수 바깥(인스턴스)에 보관해, 리렌더링 뒤에도 값이 유지되게 한다.
 
 ## 2. 범위
 
 ### 2.1 포함
 
-<!-- 이 문서에서 다루는 기능을 써요. -->
-
-- [항목]
+- FunctionComponent
+  - 생성 (컴포넌트 함수, props, 컨테이너 보관)
+  - render (컴포넌트 함수를 실행해 VNode 얻기)
+  - mount (처음 그리기)
+  - update (다시 그리기)
+- useState
+  - hooks 배열, hookIndex, currentComponent
+  - setState (값으로 바꾸기, 함수형 업데이트)
+- State 제약
+  - state를 루트 컴포넌트에만 두기
+  - 렌더링 밖 Hook 호출 막기
+  - state를 setState로만 바꾸기
 
 ### 2.2 제외
 
-<!-- 다루지 않는 것과 이유를 써요. 다른 Phase 2 문서에서 다루는 것(useMemo, useEffect)도 적어 두면 구현에 섞여 들어가지 않아요. -->
-
-| 제외 항목 | 이유   |
-| --------- | ------ |
-| [항목]    | [이유] |
+| 제외 항목                         | 이유                                                                                                         |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| h 함수, props 처리                | [phase2_h-props_requirement.md](phase2_h-props_requirement.md)에서 다룬다.                                   |
+| useMemo                           | [phase2_use-memo_requirement.md](phase2_use-memo_requirement.md)에서 다룬다.                                 |
+| useEffect, effect 실행            | [phase2_use-effect_requirement.md](phase2_use-effect_requirement.md)에서 다룬다. 이 문서는 mount, update 흐름에서 effect를 실행하는 자리만 정한다. |
+| 자식 컴포넌트의 state             | h가 자식 컴포넌트를 바로 실행하므로 자식은 props만 받는 순수 함수로 둔다. (5.3절)                            |
+| 조건문 · 반복문 안의 Hook 호출    | Hook은 호출 순서로 칸을 찾으므로, 순서가 바뀌는 호출은 지원하지 않는다.                                       |
 
 ## 3. 용어
 
-<!-- 이 문서에서 새로 쓰는 용어를 써요. Phase 1 용어는 phase1_requirement.md 3절을 링크해요. -->
+> Phase 1 용어는 [phase1_requirement.md 3절](../phase1/phase1_requirement.md#3-용어), h 함수 · props 용어는 [phase2_h-props_requirement.md 3절](phase2_h-props_requirement.md#3-용어)을 따른다.
 
-| 용어   | 뜻   |
-| ------ | ---- |
-| [용어] | [뜻] |
+| 용어                  | 뜻                                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 컴포넌트 함수         | props를 받아 VNode를 돌려주는 함수. (예: `App`)                                                                      |
+| 루트 컴포넌트         | FunctionComponent에 맡긴 컴포넌트 함수. state를 가질 수 있는 유일한 컴포넌트다.                                     |
+| FunctionComponent     | 컴포넌트 함수를 맡아 실행 시점을 정하고, state와 이전 VNode를 보관하는 인스턴스. `new FunctionComponent(App, props, container)`로 만든다. |
+| 컨테이너              | 루트 컴포넌트가 돌려준 VNode를 붙이는 실제 DOM 요소. VNode 트리 바깥에 있다. (Phase 1 영역 컨테이너와 같은 역할)    |
+| 렌더링 (render)       | 컴포넌트 함수를 실행해 새 VNode를 얻는 것. 화면은 바꾸지 않는다.                                                    |
+| mount                 | 처음 화면을 그리는 것. VNode를 DOM으로 만들어 컨테이너에 붙인다.                                                     |
+| update                | state가 바뀐 뒤 다시 그리는 것. 이전 VNode와 새 VNode를 Diff로 비교해 Patch한다.                                     |
+| prevVNode             | 지금 화면을 그린 VNode. 다음 update에서 Diff의 비교 기준이 된다.                                                     |
+| hooks 배열            | state를 컴포넌트 함수 바깥(인스턴스)에 보관하는 배열. Hook마다 한 칸을 쓴다.                                         |
+| hookIndex             | 다음 Hook이 쓸 칸 번호. Hook이 호출될 때마다 1씩 늘고, 렌더링을 시작할 때 0으로 되돌린다.                             |
+| currentComponent      | 지금 렌더링 중인 FunctionComponent를 가리키는 전역 변수. Hook이 어느 인스턴스의 hooks 배열을 쓸지 찾는 데 쓴다.     |
+| 함수형 업데이트       | setState에 값 대신 함수(`prev => prev + 1`)를 넘기는 것. setState가 실행되는 순간의 state 값으로 계산한다.          |
+| stale closure         | 핸들러가 렌더링 당시 복사한 옛날 state 값을 보는 문제                                                                |
 
 ## 4. 동작 흐름
 
-<!-- 이 모듈이 처리하는 흐름을 단계별로 써요. -->
+### 4.1 생성과 mount
 
-### 4.1 [흐름 이름]
+1. `main.ts`에서 `new FunctionComponent(App, props, container)`로 인스턴스를 만든다. 이때 App은 실행하지 않고 보관만 한다.
+2. `main.ts`에서 `mount()`를 한 번 부른다.
+3. 렌더링한다. (4.3)
+4. 받은 VNode를 DOM으로 만들어 컨테이너의 자식으로 붙인다. 컨테이너에 원래 내용이 있으면 비우고 붙인다.
+5. `prevVNode`에 4단계의 VNode를 넣는다.
+6. effect를 실행한다. ([useEffect 문서](phase2_use-effect_requirement.md))
 
-1. [단계]
-2. [단계]
+### 4.2 setState와 update
 
-### 4.2 [흐름 이름]
+1. 사용자 동작(클릭, 입력)으로 핸들러가 setState를 부른다.
+2. setState가 자기 칸(`hooks[i]`)을 새 값으로 바꾼다. 함수를 넘겼으면 그 순간의 `hooks[i]`로 함수를 실행한 결과를 넣는다.
+3. setState가 `update()`를 바로 부른다. (배칭과 같은 값 건너뛰기는 미정, 6절)
+4. 렌더링한다. (4.3)
+5. `prevVNode`와 새 VNode를 Diff로 비교하고, 그 결과로 컨테이너 안의 바뀐 노드만 Patch한다. (루트 형태 미정, 6절)
+6. `prevVNode`를 새 VNode로 바꾼다.
+7. effect를 실행한다. ([useEffect 문서](phase2_use-effect_requirement.md))
 
-1. [단계]
-2. [단계]
+### 4.3 렌더링 (render)
+
+1. `hookIndex`를 0으로 되돌린다.
+2. `currentComponent`가 이 인스턴스를 가리키게 한다.
+3. 보관한 컴포넌트 함수를 `fn(props)`로 실행한다. 이 동안 useState가 호출 순서대로 `hooks[0]`, `hooks[1]`, …을 쓴다.
+4. `currentComponent`를 `null`로 되돌리고, 3단계에서 받은 VNode를 돌려준다.
 
 ## 5. 기능 요구사항
 
 > 확인 방법은 초안이다. 테스트 문서를 작성할 때 구체화한다.
 > 비고 열의 "삭제됨"은 번호를 유지하기 위해 남긴 행이다.
-
-<!-- ID 규칙: FR-C[번호] (FunctionComponent), FR-S[번호] (useState), FR-T[번호] (State 제약) -->
+> 비고 열의 "미정"은 6절의 결정에 따라 요구사항이 바뀔 수 있다는 뜻이다.
 
 ### 5.1 FunctionComponent
 
-| ID     | 유형   | 요구사항   | 확인 방법 (초안) | 비고 |
-| ------ | ------ | ---------- | ---------------- | ---- |
-| FR-C01 | [유형] | [요구사항] | [확인 방법]      |      |
+| ID     | 유형              | 요구사항                                                                                                                        | 확인 방법 (초안)                                                                                                       | 비고                     |
+| ------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| FR-C01 | 이벤트 (When)     | FunctionComponent를 만들면, 시스템은 컴포넌트 함수, props, 컨테이너를 보관하고 컴포넌트 함수는 실행하지 않아야 한다.             | 호출 횟수를 세는 컴포넌트 함수로 인스턴스를 만든 직후 호출 횟수가 0인지 확인                                            |                          |
+| FR-C02 | 이벤트 (When)     | mount가 호출되면, 시스템은 렌더링해서 받은 VNode를 DOM으로 만들어 컨테이너의 자식으로 붙여야 한다.                               | mount 후 컨테이너의 자식이 컴포넌트 함수가 돌려준 루트 VNode 하나이고, 그 아래 트리가 VNode와 같은지 확인               |                          |
+| FR-C03 | 이벤트 (When)     | 컨테이너에 원래 내용이 있을 때 mount가 호출되면, 시스템은 원래 내용을 지우고 붙여야 한다.                                        | 자식이 있는 컨테이너에 mount한 뒤 원래 자식이 남아 있지 않은지 확인                                                    |                          |
+| FR-C04 | 이벤트 (When)     | update가 호출되면, 시스템은 렌더링해서 받은 새 VNode를 `prevVNode`와 Diff로 비교해 바뀐 노드만 Patch해야 한다.                  | update 전후로 바뀌지 않은 노드가 같은 DOM 객체(`===`)로 유지되는지 확인 (Phase 1 FR-E04와 같은 방법)                    | 루트 형태 미정 (6절)     |
+| FR-C05 | 이벤트 (When)     | mount나 update가 DOM 반영을 마치면, 시스템은 `prevVNode`를 이번에 렌더링한 VNode로 바꿔야 한다.                                  | 빈 목록 → `[A]` → `[A, B]`로 두 번 update한 뒤 화면에 A가 한 번만 있는지 확인                                          |                          |
+| FR-C06 | 이벤트 (When)     | 렌더링을 시작하면, 시스템은 `hookIndex`를 0으로 되돌려야 한다.                                                                   | useState를 두 번 쓰는 컴포넌트를 여러 번 update해도 두 state가 초기화되지 않는지 확인                                   |                          |
+| FR-C07 | 상태 (While)      | 컴포넌트 함수를 실행하는 동안, 시스템은 `currentComponent`가 이 인스턴스를 가리키게 해야 한다.                                    | 컴포넌트 함수 안에서 읽은 `currentComponent`가 그 인스턴스인지 확인                                                    |                          |
+| FR-C08 | 이벤트 (When)     | 컴포넌트 함수 실행이 끝나면, 시스템은 `currentComponent`를 `null`로 되돌려야 한다.                                               | mount 후 `currentComponent`가 `null`인지 확인                                                                          |                          |
+| FR-C09 | 오류 (If-Then)    | 만약 이미 mount된 인스턴스에서 mount가 다시 호출되면, 시스템은 컨테이너에 DOM을 다시 붙이지 않아야 한다.                          | mount를 두 번 호출한 뒤 컨테이너의 자식이 하나인지 확인                                                                | 막는 방식 미정 (6절)     |
+| FR-C10 | 오류 (If-Then)    | 만약 mount 전에 update가 호출되면, 시스템은 컨테이너를 바꾸지 않아야 한다.                                                       | mount 전에 update를 호출한 뒤 컨테이너가 그대로인지 확인                                                               | 막는 방식 미정 (6절)     |
 
 ### 5.2 useState
 
-| ID     | 유형   | 요구사항   | 확인 방법 (초안) | 비고 |
-| ------ | ------ | ---------- | ---------------- | ---- |
-| FR-S01 | [유형] | [요구사항] | [확인 방법]      |      |
+| ID     | 유형              | 요구사항                                                                                                                   | 확인 방법 (초안)                                                                                                       | 비고                                  |
+| ------ | ----------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| FR-S01 | 이벤트 (When)     | 첫 렌더링에서 useState가 호출되면, 시스템은 비어 있는 자기 칸에 초깃값을 저장하고 그 값을 돌려줘야 한다.                    | `useState(0)`이 첫 렌더링에서 0을 돌려주고 `hooks[0]`이 0인지 확인                                                     |                                       |
+| FR-S02 | 이벤트 (When)     | 리렌더링에서 useState가 호출되면, 시스템은 초깃값을 무시하고 자기 칸에 저장된 값을 돌려줘야 한다.                           | setState(5) 뒤 리렌더링에서 `useState(0)`이 5를 돌려주는지 확인                                                         |                                       |
+| FR-S03 | 항상 (Ubiquitous) | 시스템은 한 렌더링 안에서 useState가 호출된 순서대로 칸을 나눠 줘야 한다.                                                   | `count`, `text` 두 state를 쓰는 컴포넌트에서 한쪽을 바꿔도 다른 쪽 값이 그대로인지 확인                                  |                                       |
+| FR-S04 | 이벤트 (When)     | 값을 넘겨 setState가 호출되면, 시스템은 자기 칸을 그 값으로 바꿔야 한다.                                                    | `setText('')` 뒤 `hooks[i]`가 `''`인지 확인                                                                            |                                       |
+| FR-S05 | 이벤트 (When)     | 함수를 넘겨 setState가 호출되면, 시스템은 그 순간 자기 칸의 값을 인자로 함수를 실행하고, 결과로 칸을 바꿔야 한다.           | 한 핸들러에서 `setCount(prev => prev + 1)`을 두 번 부르면 2가 되는지 확인. 같은 자리에서 `setCount(count + 1)`을 두 번 부르면 1이 되는 것과 비교 | stale closure 대응                    |
+| FR-S06 | 이벤트 (When)     | setState가 칸을 바꾸면, 시스템은 update를 실행해야 한다.                                                                     | 버튼 클릭으로 setState를 부른 뒤 화면의 값이 바뀌는지 확인                                                             | 배칭, 같은 값 건너뛰기 미정 (6절)     |
+| FR-S07 | 항상 (Ubiquitous) | 시스템은 렌더링이 끝난 뒤(`currentComponent`가 `null`인 때) 호출된 setState도 자기 인스턴스의 자기 칸을 바꿔야 한다.        | mount 후 클릭 핸들러에서 setState를 불러 해당 칸이 바뀌는지 확인                                                       | setState가 인스턴스와 칸 번호를 클로저로 기억 |
 
 ### 5.3 State 제약
 
-| ID     | 유형   | 요구사항   | 확인 방법 (초안) | 비고 |
-| ------ | ------ | ---------- | ---------------- | ---- |
-| FR-T01 | [유형] | [요구사항] | [확인 방법]      |      |
+| ID     | 유형              | 요구사항                                                                                                          | 확인 방법 (초안)                                                                                           | 비고 |
+| ------ | ----------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---- |
+| FR-T01 | 항상 (Ubiquitous) | 시스템은 state를 루트 컴포넌트에만 둬야 하며, 자식 컴포넌트는 props만 받아 VNode를 돌려주는 순수 함수여야 한다.    | 예제 앱의 자식 컴포넌트에 Hook 호출이 없고, 같은 props로 두 번 실행하면 같은 VNode를 돌려주는지 확인        |      |
+| FR-T02 | 오류 (If-Then)    | 만약 렌더링 밖(`currentComponent`가 `null`인 때)에서 Hook이 호출되면, 시스템은 오류를 던져야 한다.               | mount 전과 mount 후에 useState를 직접 호출하면 오류가 나는지 확인                                          |      |
+| FR-T03 | 항상 (Ubiquitous) | 시스템은 setState가 호출될 때만 update를 실행해야 한다.                                                            | 핸들러에서 state 변수를 직접 바꾸거나 배열에 `push`해도 화면이 바뀌지 않는지 확인                           | 그래서 state는 setState로만 바꾼다 (#106) |
 
 ## 6. 설계로 넘기는 항목
 
-<!-- 요구사항 단계에서 정하지 않고 설계 문서나 ADR에서 정할 것을 써요. -->
+> 아래 항목은 모두 **미정**이다. ([#104](https://github.com/orgs/krafton-jungle-week11-12-team/discussions/104) "7. 정할 것")
 
-- [항목]
+- 루트 형태: update에서 Diff에 VNode 하나를 어떻게 넘길지
+  - A. `[vnode]`로 감싸 Phase 1 diff(`VNode[]`)에 그대로 넘긴다.
+  - B. diff가 VNode 하나도 받게 고친다.
+- 배칭: 지금은 setState마다 `update()`를 바로 부른다.
+  - setState마다 바로 update한다.
+  - `queueMicrotask`로 모아 한 번만 update한다.
+- 같은 값 건너뛰기: setState에 넘긴 값이 지금 값과 `Object.is`로 같으면 update를 생략할지 ([#107](https://github.com/orgs/krafton-jungle-week11-12-team/discussions/107))
+- mount 두 번 호출, mount 전 update 호출을 막는 방식 (오류를 던질지, 무시할지)
 
 ## 7. 추후 논의
 
-- [항목]
+- 자식 컴포넌트에서 Hook을 호출했을 때 감지할지: h가 자식 컴포넌트를 루트의 렌더링 도중 실행하므로, 지금 구조로는 자식의 Hook 호출이 루트의 칸을 조용히 차지한다.
