@@ -173,6 +173,23 @@ describe('Patch', () => {
     expect(el.message.classList.contains('is-error')).toBe(true);
   });
 
+  it('강조 표시 뒤 오류가 나도 되돌린 영역의 새 요소 노드는 강조 표시 대상이 아니에요', () => {
+    // showChanges가 강조 표시까지 한 뒤 오류를 던지는 경우. 되돌리면 innerHTML로 새 노드가 생겨요
+    const { el, page, type } = setup({
+      showChanges: (...args) => {
+        showChanges(...args);
+        throw new Error('표시 뒤 오류');
+      },
+    });
+    type(SAMPLE_HTML.replace('할 일 목록', '오늘 할 일'));
+    page.onPatch();
+    const animated = options.highlight.mock.calls.map(([target]) => target as Element);
+    expect(animated.length).toBeGreaterThan(0);
+    for (const target of animated) expect(el.realRoot.contains(target)).toBe(false); // 떨어져 나간 옛 노드예요
+    expect(el.realRoot.innerHTML).toBe(SAMPLE_HTML);
+    expect(page.history.length).toBe(1);
+  });
+
   it('Patch 후 두 영역이 다르면 되돌리고 저장하지 않아요', () => {
     const { el, page, type } = setup({ patch: () => {} });
     type(SAMPLE_HTML.replace('장보기', '빨래하기'));

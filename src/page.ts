@@ -108,7 +108,7 @@ export function createPage<R>(
   // ── 핸들러 ──────────────────────────────────────────────
   function onInput(): void {
     setLines(el.testLines, el.testCode.value);
-    el.patchButton.disabled = !hasChanges(el.testCode.value); // FR-W10, W25, W26
+    updatePatchButton(); // 입력 때는 뒤로·앞으로 버튼 상태가 바뀌지 않아요
   }
 
   function onPatch(): void {
@@ -138,8 +138,7 @@ export function createPage<R>(
     }
 
     history.push({ html, vdom: newVdom }); // 10 (FR-W17)
-    notes.length = history.index;
-    notes.push(`Patch, ${summary.message}`);
+    addNote(`Patch, ${summary.message}`);
     lastSummary = summary;
     showMessage(summary.message, false);
     setRealCode(html); // 11
@@ -188,8 +187,23 @@ export function createPage<R>(
     return engine.fromDiffResult(engine.diff(old, engine.toVNode(div)), old).length > 0;
   }
 
+  /**
+   * 방금 push한 기록의 설명을 notes에 맞춰 넣어요. push가 지운 뒤 기록만큼 notes도 지워요.
+   * State History는 기록 목록 전체를 꺼내 주지 않아서(history.md) 패널용 목록은 페이지가 따로 들고 있어요.
+   */
+  function addNote(text: string): void {
+    notes.length = history.index;
+    notes.push(text);
+    if (notes.length !== history.length) console.error('기록 목록 패널과 State History의 기록 개수가 달라요');
+  }
+
+  /** 입력창 값이 현재 위치 기록과 같은 동안 Patch 버튼을 비활성화해요 (FR-W10, W25, W26). */
+  function updatePatchButton(): void {
+    el.patchButton.disabled = !hasChanges(el.testCode.value);
+  }
+
   function updateButtons(): void {
-    el.patchButton.disabled = !hasChanges(el.testCode.value); // FR-W10
+    updatePatchButton();
     el.backButton.disabled = !history.canBack(); // FR-W21
     el.forwardButton.disabled = !history.canForward(); // FR-W29
   }
@@ -254,10 +268,13 @@ function syncPair(a: HTMLElement, b: HTMLElement, after?: () => void): void {
   const follow = (from: HTMLElement, to: HTMLElement) => () => {
     if (echo === from) {
       echo = null;
-    } else if (to.scrollTop !== from.scrollTop || to.scrollLeft !== from.scrollLeft) {
-      echo = to;
+    } else {
+      const top = to.scrollTop;
+      const left = to.scrollLeft;
       to.scrollTop = from.scrollTop;
       to.scrollLeft = from.scrollLeft;
+      // 실제로 움직였을 때만 scroll 이벤트가 나요. 내용 길이가 달라 끝에 막혀 그대로면 표시를 남기지 않아요
+      if (to.scrollTop !== top || to.scrollLeft !== left) echo = to;
     }
     after?.();
   };
@@ -269,11 +286,14 @@ function syncPair(a: HTMLElement, b: HTMLElement, after?: () => void): void {
 // 2차 패널 (FR-X01, X03, X04)
 // ---------------------------------------------------------------------------
 
-function span(className: string, text: string): HTMLSpanElement {
-  const s = document.createElement('span');
-  s.className = className;
-  s.textContent = text;
-  return s;
+/** 그 문서에서 span을 만드는 함수를 돌려줘요. 전역 document 대신 패널의 ownerDocument를 써요. */
+function spanIn(doc: Document) {
+  return (className: string, text: string): HTMLSpanElement => {
+    const s = doc.createElement('span');
+    s.className = className;
+    s.textContent = text;
+    return s;
+  };
 }
 
 /** 줄바꿈은 \n으로 보이게 바꿔요. 공백만 있는 텍스트는 공백도 ·로 보이게 해요. */
@@ -284,6 +304,7 @@ function showSpaces(text: string): string {
 
 /** Virtual DOM 트리를 한 줄에 노드 하나씩 그려요 (FR-X03). */
 function renderVdom(view: HTMLElement, roots: VNode[]): void {
+  const span = spanIn(view.ownerDocument);
   view.replaceChildren();
   if (roots.length === 0) {
     view.append(span('vd-empty', '(빈 트리)'));
@@ -323,10 +344,11 @@ function renderVdom(view: HTMLElement, roots: VNode[]): void {
 
 /** 마지막 Patch의 변경 목록을 한 줄씩 그려요 (FR-X04). 형식은 kind 경로 detail이에요. */
 function renderDiff(view: HTMLElement, summary: ChangeSummary | null): void {
+  const span = spanIn(view.ownerDocument);
   view.replaceChildren();
   if (summary === null) return;
   for (const { record, visible } of summary.items) {
-    const li = document.createElement('li');
+    const li = view.ownerDocument.createElement('li');
     li.className = visible ? 'diff-item' : 'diff-item is-hidden';
     const path = record.newPath ?? record.oldPath ?? [];
     let detail = record.detail;
@@ -345,9 +367,10 @@ function renderDiff(view: HTMLElement, summary: ChangeSummary | null): void {
 
 /** 기록 목록과 현재 위치를 세로 타임라인으로 그려요 (FR-X01). */
 function renderHistory(view: HTMLElement, notes: string[], current: number): void {
+  const span = spanIn(view.ownerDocument);
   view.replaceChildren();
   for (let i = 0; i < notes.length; i++) {
-    const li = document.createElement('li');
+    const li = view.ownerDocument.createElement('li');
     li.className = i === current ? 'history-item is-current' : 'history-item';
     const title = span('history-title', i === current ? `기록 ${i + 1} (지금 보는 기록)` : `기록 ${i + 1}`);
     li.append(span('history-dot', ''), title, span('history-note', notes[i]));
