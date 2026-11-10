@@ -318,6 +318,11 @@ describe('강조 대상 줄이기', () => {
     expect(summary.highlighted).toEqual([real.querySelector('h1')]);
   });
 
+  it('조상 자신이 바뀐 경우(속성 변경)는 자손이 있어도 칠해요', () => {
+    const { real, summary } = run('<ul class="a"><li>A</li></ul>', '<ul class="b"><li>B</li></ul>');
+    expect(summary.highlighted).toEqual([real.firstChild, real.querySelector('li')]);
+  });
+
   it('조상만 있으면 그대로 칠해요', () => {
     const { real, summary } = run('<ul><li>A</li><li>B</li></ul>', '<ul><li>A</li></ul>');
     expect(summary.highlighted).toEqual([real.firstChild]);
