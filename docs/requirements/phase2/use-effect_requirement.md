@@ -72,7 +72,7 @@
 | 부수 효과 (side effect) | 함수가 값을 돌려주는 것 말고 함수 바깥의 값을 바꾸는 일. (예: `document.title` 바꾸기, localStorage 저장, 타이머 시작, 이벤트 구독) setState도 부수 효과다. |
 | effect                  | useEffect의 첫 번째 인자. 인자 없이 실행되고, cleanup 함수를 돌려주거나 아무것도 돌려주지 않는다. (예: `() => { document.title = title; }`)                |
 | cleanup                 | effect가 돌려주는 함수. effect가 시작한 일을 정리한다. 시스템이 칸에 보관했다가 그 effect를 다시 실행하기 직전에 부른다. (예: `() => clearInterval(id)`)    |
-| effect 칸               | useEffect가 쓰는 hooks 칸. 이번 deps(`deps`)와 마지막으로 실행한 effect가 돌려준 cleanup(`cleanup`)을 함께 저장한다. (예: `{ deps: [count], cleanup: fn }`) |
+| effect 칸               | useEffect가 쓰는 hooks 칸. 이번 deps(`deps`)와 마지막으로 실행한 effect가 돌려준 cleanup(`cleanup`)을 함께 저장한다. (예: `{ kind: 'effect', deps: [count], cleanup: fn }`) |
 | 실행 대기 목록          | 이번 렌더링에서 deps가 바뀌어 실행해야 하는 effect와 그 칸 번호의 목록. 인스턴스가 가지며, effect를 실행하면 비운다. (`pendingEffects`)                   |
 | effect 실행 (runEffects)| 실행 대기 목록의 cleanup을 모두 부른 뒤 effect를 모두 실행하는 단계. mount와 update의 마지막 단계다.                                                      |
 | 커밋 (commit)           | 렌더링 결과를 실제 DOM에 반영하는 것. mount에서는 컨테이너에 붙이기, update에서는 Patch다.                                                               |
@@ -88,7 +88,7 @@ useEffect는 렌더링 중 컴포넌트 함수 안에서, 매 렌더링마다 �
 2. `hookIndex`로 자기 칸 번호(`i`)를 정하고 `hookIndex`를 1 늘린다.
 3. 칸(`hooks[i]`)이 있고, 칸의 deps와 이번 deps를 의존성 비교한 결과가 "같다"이면 아무것도 하지 않고 끝낸다. ([use-memo 4.2](use-memo_requirement.md#42-의존성-비교))
 4. 칸이 비어 있거나(첫 렌더링) 의존성 비교 결과가 "바뀌었다"이면, effect와 칸 번호를 실행 대기 목록에 넣는다(`pendingEffects.push({ i, effect })`).
-5. 칸의 deps를 이번 deps로 바꾼다. 칸의 cleanup은 그대로 둔다. 첫 렌더링이면 cleanup이 없는 칸을 만든다(`hooks[i] = { deps, cleanup: undefined }`).
+5. 칸의 deps를 이번 deps로 바꾼다. 칸의 cleanup은 그대로 둔다. 첫 렌더링이면 cleanup이 없는 칸을 만든다(`hooks[i] = { kind: 'effect', deps, cleanup: undefined }`).
 
 deps에 따라 effect가 실행되는 렌더링은 다음과 같다. (판단 규칙은 [FR-D](use-memo_requirement.md#52-의존성-비교))
 
@@ -241,7 +241,7 @@ effect 실행 중에 setState가 update를 바로 부르면, 새 렌더링의 ef
   }
   ```
 
-- effect 칸에는 `{ deps, cleanup }`을 저장한다. effect 함수는 칸이 아니라 실행 대기 목록(`{ i, effect }`)에 넣는다.
+- effect 칸에는 `{ kind: 'effect', deps, cleanup }`을 저장한다. effect 함수는 칸이 아니라 실행 대기 목록(`{ i, effect }`)에 넣는다.
   - 근거: effect는 매 렌더링마다 새로 만들어지고, 실행할 때만 필요하다. deps는 다음 렌더링의 비교에, cleanup은 다음 실행 전 정리에 필요하므로 칸에 남긴다.
 
   ```ts
@@ -256,10 +256,11 @@ effect 실행 중에 setState가 update를 바로 부르면, 새 렌더링의 ef
   - 위 코드는 effect가 함수가 아닌 값을 돌려주면 그 값을 그대로 저장한다. FR-L02에 맞게 함수일 때만 저장하도록 설계에서 정한다.
 - 의존성 비교는 useMemo 문서의 `depsChanged`를 그대로 호출한다. ([use-memo 6.1](use-memo_requirement.md#61-결정된-항목))
 
+- hooks 칸의 타입: 모든 칸을 `kind`로 구분하는 유니언으로 둔다. effect 칸은 `{ kind: 'effect', deps, cleanup }`이다. 타입 정의와 근거는 [FunctionComponent 6.1](function-component_requirement.md#61-결정된-항목)에 둔다.
+
 ### 6.2 미정 항목
 
 - 실행 대기 목록과 "effect 실행 중" 표시를 둘 위치: 인스턴스 필드로 둘지, `currentComponent`처럼 모듈 변수로 둘지 정한다.
-- hooks 칸의 타입: useState는 값, useMemo는 `{ value, deps }`, useEffect는 `{ deps, cleanup }`를 칸에 넣는다. [use-memo 6.2](use-memo_requirement.md#62-미정-항목)와 함께 정한다.
 
 ## 7. 추후 논의
 
