@@ -87,7 +87,7 @@
 
 1. 사용자 동작(클릭, 입력)으로 핸들러가 setState를 부른다.
 2. setState가 자기 칸(`hooks[i]`)을 새 값으로 바꾼다. 함수를 넘겼으면 그 순간의 `hooks[i]`로 함수를 실행한 결과를 넣는다.
-3. setState가 `update()`를 바로 부른다. (배칭과 같은 값 건너뛰기는 미정, 6절)
+3. setState가 `update()`를 바로 부른다. (배칭은 미정, 6절)
 4. 렌더링한다. (4.3)
 5. `prevVNode`와 새 VNode를 각각 `[ ]`로 감싸 Diff로 비교하고(`diff([prevVNode], [vnode])`), 그 결과로 컨테이너 안의 바뀐 노드만 Patch한다(`patch(container, result)`). (루트 형태, 6절)
 6. `prevVNode`를 새 VNode로 바꾼다.
@@ -136,7 +136,7 @@
 | FR-S03 | 항상 (Ubiquitous) | 시스템은 한 렌더링 안에서 useState가 호출된 순서대로 칸을 나눠 줘야 한다.                                                   | `count`, `text` 두 state를 쓰는 컴포넌트에서 한쪽을 바꿔도 다른 쪽 값이 그대로인지 확인                                  |                                       |
 | FR-S04 | 이벤트 (When)     | 값을 넘겨 setState가 호출되면, 시스템은 자기 칸을 그 값으로 바꿔야 한다.                                                    | `setText('')` 뒤 `hooks[i]`가 `''`인지 확인                                                                            |                                       |
 | FR-S05 | 이벤트 (When)     | 함수를 넘겨 setState가 호출되면, 시스템은 그 순간 자기 칸의 값을 인자로 함수를 실행하고, 결과로 칸을 바꿔야 한다.           | 한 핸들러에서 `setCount(prev => prev + 1)`을 두 번 부르면 2가 되는지 확인. 같은 자리에서 `setCount(count + 1)`을 두 번 부르면 1이 되는 것과 비교 | stale closure 대응                    |
-| FR-S06 | 이벤트 (When)     | setState가 칸을 바꾸면, 시스템은 update를 실행해야 한다.                                                                     | 버튼 클릭으로 setState를 부른 뒤 화면의 값이 바뀌는지 확인                                                             | 배칭, 같은 값 건너뛰기 미정 (6절)     |
+| FR-S06 | 이벤트 (When)     | setState가 칸을 바꾸면, 시스템은 update를 실행해야 한다.                                                                     | 버튼 클릭으로 setState를 부른 뒤 화면의 값이 바뀌는지 확인                                                             | 배칭 미정 (6절)                       |
 | FR-S07 | 항상 (Ubiquitous) | 시스템은 렌더링이 끝난 뒤(`currentComponent`가 `null`인 때) 호출된 setState도 자기 인스턴스의 자기 칸을 바꿔야 한다.        | mount 후 클릭 핸들러에서 setState를 불러 해당 칸이 바뀌는지 확인                                                       | setState가 인스턴스와 칸 번호를 클로저로 기억 |
 
 ### 5.3 State 제약
