@@ -4,7 +4,7 @@
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | 문서 상태 | 초안 v0.1                                                                                                                                    |
 | 작성일    | 2026-11-10                                                                                                                                   |
-| 수정일    | 2026-11-11 (임동호 요구사항 병합, 루트 형태 · 같은 값 건너뛰기 결정, 앱 작성 규칙 분리)                                                                                       |
+| 수정일    | 2026-11-11 (임동호 요구사항 병합, 루트 형태 · 같은 값 건너뛰기 결정, 앱 작성 규칙 분리, scheduleUpdate 반영)                                                                                       |
 | 작성자    | 오동환, 임동호                                                                                                                                       |
 | 근거      | Discussions #104 (mount와 Hook의 동작 원리), #105 (App이 return한 VNode는 어디로 가는가), #106 (useState와 클로저), #107 (같은 값이면 update 건너뛰기), 임동호 컴포넌트 요구사항, 2026-11-10 코어타임                           |
 | 선행 문서 | [phase1_requirement.md](../phase1/phase1_requirement.md), [h-props_requirement.md](h-props_requirement.md)                     |
@@ -93,7 +93,7 @@
 2. setState가 새 값을 정한다. 함수를 넘겼으면 그 순간의 `hooks[i]`로 함수를 실행한 결과가 새 값이다.
 3. 새 값이 지금 값(`hooks[i]`)과 `Object.is`로 같으면 칸을 바꾸지 않고 여기서 끝낸다. (6절)
 4. setState가 자기 칸(`hooks[i]`)을 새 값으로 바꾼다.
-5. setState가 `update()`를 바로 부른다. (배칭은 미정, 6절)
+5. setState가 `scheduleUpdate()`를 부른다. effect 실행 중이 아니면 `update()`를 바로 부르고, effect 실행 중이면 update를 예약만 한다. 예약된 update는 effect가 다 끝난 뒤 한 번 실행한다. ([useEffect 4.3](use-effect_requirement.md#43-effect-안의-setstate)) (배칭은 미정, 6절)
 6. 렌더링한다. (4.3)
 7. `prevVNode`와 새 VNode를 각각 `[ ]`로 감싸 Diff로 비교하고(`diff([prevVNode], [vnode])`), 그 결과로 컨테이너 안의 바뀐 노드만 Patch한다(`patch(container, result)`). (루트 형태, 6절)
 8. `prevVNode`를 새 VNode로 바꾼다.
@@ -138,7 +138,7 @@
 | FR-S03 | 항상 (Ubiquitous) | 시스템은 한 렌더링 안에서 useState가 호출된 순서대로 칸을 나눠 줘야 한다.                                                   | `count`, `text` 두 state를 쓰는 컴포넌트에서 한쪽을 바꿔도 다른 쪽 값이 그대로인지 확인                                  |                                       |
 | FR-S04 | 이벤트 (When)     | 값을 넘겨 setState가 호출되면, 시스템은 자기 칸을 그 값으로 바꿔야 한다.                                                    | `setText('')` 뒤 `hooks[i]`가 `''`인지 확인                                                                            |                                       |
 | FR-S05 | 이벤트 (When)     | 함수를 넘겨 setState가 호출되면, 시스템은 그 순간 자기 칸의 값을 인자로 함수를 실행하고, 결과로 칸을 바꿔야 한다.           | 한 핸들러에서 `setCount(prev => prev + 1)`을 두 번 부르면 2가 되는지 확인. 같은 자리에서 `setCount(count + 1)`을 두 번 부르면 1이 되는 것과 비교 | stale closure 대응                    |
-| FR-S06 | 이벤트 (When)     | setState가 칸을 바꾸면, 시스템은 update를 실행해야 한다.                                                                     | 버튼 클릭으로 setState를 부른 뒤 화면의 값이 바뀌는지 확인                                                             | 배칭 미정 (6절)                       |
+| FR-S06 | 이벤트 (When)     | setState가 칸을 바꾸면, 시스템은 update를 실행해야 한다.                                                                     | 버튼 클릭으로 setState를 부른 뒤 화면의 값이 바뀌는지 확인                                                             | 배칭 미정 (6절). effect 실행 중이면 예약 ([use-effect FR-F13, F14](use-effect_requirement.md#54-effect-안의-setstate)) |
 | FR-S07 | 항상 (Ubiquitous) | 시스템은 렌더링이 끝난 뒤(`currentComponent`가 `null`인 때) 호출된 setState도 자기 인스턴스의 자기 칸을 바꿔야 한다.        | mount 후 클릭 핸들러에서 setState를 불러 해당 칸이 바뀌는지 확인                                                       | setState가 인스턴스와 칸 번호를 클로저로 기억 |
 | FR-S08 | 오류 (If-Then)    | 만약 setState에 넘긴 값(함수를 넘겼으면 그 실행 결과)이 지금 값과 `Object.is`로 같으면, 시스템은 칸을 바꾸지 않고 update를 실행하지 않아야 한다. | 렌더링 횟수를 세는 컴포넌트에서 지금 값과 같은 값, 같은 값을 돌려주는 함수, state가 `NaN`일 때 `NaN`으로 각각 setState해 렌더링 횟수가 늘지 않는지 확인 | 6.1 같은 값 건너뛰기 (#107) |
 
@@ -184,10 +184,14 @@
 - mount 두 번 호출, mount 전 update 호출: 시스템이 막지 않는다. 앱 작성 규칙(FR-A12)으로 둔다. FR-C09, C10은 삭제한다.
   - 근거: 두 경우 모두 정상 경로로는 생기지 않는다. update를 부르는 것은 setState뿐이고, setState는 렌더링 중 useState가 돌려주며(FR-T01), 첫 렌더링은 mount 안에서 일어난다. 그래서 setState가 있으면 이미 mount된 뒤다. mount는 `main.ts`에서 한 번만 부른다(4.1). 앱 코드가 API를 직접 잘못 부를 때만 생기므로 앱 작성 규칙에서 다룬다.
   - 대가: 규칙을 어기면 `prevVNode`가 없어 Diff나 Patch에서 원인을 알기 어려운 오류가 난다. 부르는 곳이 `main.ts` 한 곳이라 감수한다.
+- update 예약: setState는 `update()`를 직접 부르지 않고 `scheduleUpdate()`를 거친다. ([use-effect 6.1](use-effect_requirement.md#61-결정된-항목), [#121](https://github.com/orgs/krafton-jungle-week11-12-team/discussions/121))
+  - effect 실행 중이 아니면 `update()`를 바로 부른다. effect 실행 중이면 예약만 하고, effect가 다 끝난 뒤 update를 한 번 실행한다.
+  - 근거: effect 실행 중에 update를 바로 부르면 update 안에서 update가 불려, 새 렌더링의 effect가 이전 렌더링의 남은 effect보다 먼저 실행된다.
+  - 배칭을 넣을 때도 이 함수만 고친다. (6.2)
 
 ### 6.2 미정 항목
 
-- 배칭: 지금은 setState마다 `update()`를 바로 부른다.
+- 배칭: 지금은 effect 실행 중이 아니면 setState마다 `update()`를 바로 부른다. 어느 쪽이든 `scheduleUpdate()` 안에서 정한다. ([#121](https://github.com/orgs/krafton-jungle-week11-12-team/discussions/121))
   - setState마다 바로 update한다.
   - `queueMicrotask`로 모아 한 번만 update한다.
 
