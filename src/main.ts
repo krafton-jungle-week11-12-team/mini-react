@@ -9,12 +9,15 @@ import { fromDiffResult, captureBefore, showChanges } from './change-highlight';
 import { createHistory } from './history';
 import { createPage, getElements, SAMPLE_HTML } from './page';
 
-/** 강조 표시 모양 (style.md "강조 표시 모양"): 옅은 보라 배경 띠를 잠깐 보여 주고 사라지게 해요. 속성은 바꾸지 않아요 (FR-W27). */
+/**
+ * 강조 표시 모양 (style.md "강조 표시 모양"): 옅은 보라 배경 띠가 나타나 다음 Patch나 기록 이동 전까지 남아요.
+ * animate()의 fill: 'forwards'로 마지막 모양을 유지해요. 속성은 바꾸지 않아요 (FR-W27). 지우는 건 createPage가 해요.
+ */
 function highlight(el: Element): void {
   if (typeof el.animate !== 'function') return;
-  const on = { backgroundColor: '#EDE7FF', boxShadow: '0 0 0 4px #EDE7FF' };
-  const off = { backgroundColor: 'rgba(237, 231, 255, 0)', boxShadow: '0 0 0 4px rgba(237, 231, 255, 0)' };
-  el.animate([{ ...on, offset: 0 }, { ...on, offset: 0.7 }, { ...off, offset: 1 }], { duration: 2400, easing: 'ease-out' });
+  const on = { backgroundColor: '#EDE7FF', boxShadow: '-4px 0 0 #EDE7FF, 4px 0 0 #EDE7FF' };
+  const off = { backgroundColor: 'rgba(237, 231, 255, 0)', boxShadow: '-4px 0 0 rgba(237, 231, 255, 0), 4px 0 0 rgba(237, 231, 255, 0)' };
+  el.animate([off, on], { duration: 400, easing: 'ease-out', fill: 'forwards' });
 }
 
 createPage(

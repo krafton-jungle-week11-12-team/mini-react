@@ -192,8 +192,8 @@ function defaultHighlight(el: Element): void {
   if (typeof el.animate !== 'function') return;
   el.animate(
     [
-      { backgroundColor: '#EDE7FF', boxShadow: '0 0 0 4px #EDE7FF' },
-      { backgroundColor: 'transparent', boxShadow: '0 0 0 4px transparent' },
+      { backgroundColor: '#EDE7FF', boxShadow: '-4px 0 0 #EDE7FF, 4px 0 0 #EDE7FF' },
+      { backgroundColor: 'transparent', boxShadow: '-4px 0 0 transparent, 4px 0 0 transparent' },
     ],
     1200,
   );
@@ -244,6 +244,8 @@ export function showChanges(
   const afterCache = new Map<string, string>();
   const highlighted: Element[] = [];
   const seen = new Set<Element>(); // 같은 요소 노드를 한 번만 담아요. 순서는 highlighted 배열이 지켜요
+  // 그 요소 노드 자신이 바뀐 경우(속성 변경, 추가·교체된 요소 노드). 부모라서 칠하는 경우와 구분해요
+  const self = new Set<Element>();
   const items: ChangeSummary['items'] = [];
 
   for (let i = 0; i < records.length; i++) {
@@ -267,12 +269,20 @@ export function showChanges(
     }
 
     items.push({ record: r, visible });
+    if (visible && target !== null && rule.type === 'element' && rule.target === 'new') self.add(target);
     if (visible && target !== null && !seen.has(target)) {
       seen.add(target);
       highlighted.push(target);
     }
   }
 
+  // 부모라서 칠하는 요소 노드(텍스트 노드 규칙, 삭제·교체된 요소 노드의 부모)가 다른 강조 대상을 품으면 칠하지 않아요.
+  // 칠하면 자손까지 통째로 덮여 어디가 바뀌었는지 안 보여요. 그 요소 노드 자신이 바뀐 경우(속성 변경 등)는 그대로 칠해요
+  // 예: h1 텍스트와 div#app의 들여쓰기를 함께 바꾸면 div#app도 보이는 변경이 되지만, 강조 표시는 h1에만 해요
+  // 보이는지 판단(items, hidden)은 그대로예요. 강조 표시할 요소 노드만 줄여요
+  const innermost = highlighted.filter((a) => self.has(a) || !highlighted.some((b) => b !== a && a.contains(b)));
+  highlighted.length = 0;
+  highlighted.push(...innermost);
   for (let i = 0; i < highlighted.length; i++) highlight(highlighted[i]);
 
   const total = records.length;

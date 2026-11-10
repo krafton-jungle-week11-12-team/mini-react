@@ -119,6 +119,7 @@ export function createPage<R>(
     const result = engine.diff(old, newVdom); // 4 (FR-W13)
     const records = engine.fromDiffResult(result, old); // 5
     if (records.length === 0) return; // FR-W28: 실제 영역, State History, 요약 문구를 바꾸지 않아요
+    clearHighlights(); // 지난 Patch의 강조 표시를 지우고 이번 변경만 표시해요
 
     let summary: ChangeSummary;
     try {
@@ -147,30 +148,65 @@ export function createPage<R>(
   }
 
   function onBack(): void {
-    move(history.back());
+    const fromIndex = history.index;
+    const fromVdom = history.current().vdom; // back()이 위치를 옮기기 전에 읽어 둬요
+    move(fromIndex, fromVdom, history.back());
   }
 
   function onForward(): void {
-    move(history.forward());
+    const fromIndex = history.index;
+    const fromVdom = history.current().vdom;
+    move(fromIndex, fromVdom, history.forward());
   }
 
   // ── 단계 ────────────────────────────────────────────────
-  /** 기록 이동: 두 영역을 기록의 상태 전체로 바꿔요 (FR-W19, W20, ADR-010). */
-  function move(entry: HistoryEntry | null): void {
+  /**
+   * 기록 이동: 두 영역을 기록의 상태 전체로 바꿔요 (FR-W19, W20, ADR-010).
+   * 실제 영역은 Patch를 거치지 않아요. 대신 이동 전 기록과 이동한 기록의 vdom을 비교해
+   * 무엇이 바뀌었는지 강조 표시, 요약 문구, Diff 패널로 보여 줘요. 이 비교 결과는 보여 주기만 해요.
+   */
+  function move(fromIndex: number, fromVdom: VNode[], entry: HistoryEntry | null): void {
     if (entry === null) return; // 1
-    setTestCode(entry.html); // 2
-    setRealCode(entry.html); // 2
-    el.testRoot.innerHTML = entry.html; // 3
-    el.realRoot.innerHTML = entry.html; // 3
-    showMessage('', false); // 4
+    clearHighlights();
+
+    // 2. 이동 전 기록과 이동한 기록을 비교해요. 실제 영역이 아직 이동 전 기록과 같은 구조라 지금 읽어요
+    let records: ChangeRecord[] = [];
+    let before: TextBefore = [];
+    try {
+      records = engine.fromDiffResult(engine.diff(fromVdom, entry.vdom), fromVdom);
+      before = engine.captureBefore(el.realRoot, records, options);
+    } catch {
+      records = []; // 비교에 실패해도 이동은 해요. 변경 표시만 하지 않아요
+    }
+
+    setTestCode(entry.html); // 3
+    setRealCode(entry.html); // 3
+    el.testRoot.innerHTML = entry.html; // 4
+    el.realRoot.innerHTML = entry.html; // 4
+
+    // 5. innerHTML로 바꾼 실제 영역은 이동한 기록과 같은 구조라 강조할 요소 노드를 찾을 수 있어요
     lastSummary = null;
-    updateButtons();
+    let text = `기록 ${fromIndex + 1} → ${history.index + 1}`;
+    if (records.length > 0) {
+      try {
+        const summary = engine.showChanges(el.realRoot, records, before, options);
+        lastSummary = summary;
+        text += `: ${summary.message}`;
+      } catch {
+        clearHighlights();
+      }
+    } else {
+      text += ': 바뀐 내용 없음';
+    }
+    showMessage(text, false);
+    updateButtons(); // 6
     renderPanels();
   }
 
   /** 오류 처리: 두 영역을 현재 위치 기록으로 되돌리고 기록은 저장하지 않아요. 입력창은 그대로 둬요. */
   function fail(text: string): void {
     const { html } = history.current();
+    clearHighlights();
     el.testRoot.innerHTML = html;
     el.realRoot.innerHTML = html;
     showMessage(text, true);
@@ -195,6 +231,16 @@ export function createPage<R>(
     notes.length = history.index;
     notes.push(text);
     if (notes.length !== history.length) console.error('기록 목록 패널과 State History의 기록 개수가 달라요');
+  }
+
+  /**
+   * 실제 영역에 남아 있는 강조 표시 애니메이션을 모두 지워요.
+   * 강조 표시는 animate()로만 그려 속성을 바꾸지 않으니(FR-W27), 지울 때도 애니메이션만 취소해요. jsdom에는 getAnimations가 없어요.
+   */
+  function clearHighlights(): void {
+    if (typeof el.realRoot.getAnimations !== 'function') return;
+    const animations = el.realRoot.getAnimations({ subtree: true });
+    for (let i = 0; i < animations.length; i++) animations[i].cancel();
   }
 
   /** 입력창 값이 현재 위치 기록과 같은 동안 Patch 버튼을 비활성화해요 (FR-W10, W25, W26). */
