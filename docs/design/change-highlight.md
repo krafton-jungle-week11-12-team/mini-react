@@ -114,8 +114,8 @@ function showChanges(
 - `result: (Patch | null)[]` — [`diff`](diff.md)의 반환값. (예: 동작 방식 예시의 Diff 결과)
 - `oldRoots: VNode[]` — Diff에 넘긴 이전 트리. 현재 위치 기록의 `vdom`이에요. 삭제·교체된 노드의 종류를 여기서 읽어요. (예: `history.current().vdom`)
 - `container: Element` — 실제 영역 컨테이너. (예: `<div id="real-root">`)
-- `records: ChangeRecord[]` — `fromDiffResult`가 돌려준 값.
-- `before: TextBefore` — `captureBefore`가 돌려준 값.
+- `records: ChangeRecord[]` — `fromDiffResult`가 돌려준 변경 목록. 변경 하나가 한 칸이에요. (예: `[{ kind: 'text', oldPath: [0,1,0], newPath: [0,1,0], … }, { kind: 'create', oldPath: null, newPath: [0,3,5], … }]`)
+- `before: TextBefore` — `captureBefore`가 Patch 전에 돌려준 값. 순서와 개수가 `records`와 같아 같은 자리끼리 짝이에요. *i*번째 값은 `records[i]`의 부모 요소 노드의 `innerText`이고, 텍스트 노드 규칙이 아닌 변경은 `null`이에요. (예: 위 `records`에 대해 `['할 일 목록', null]`)
 - `options.readText: (el: Element) => string` — 요소 노드의 `innerText`를 읽는 함수. 기본값은 HTML 요소 노드면 `innerText`, 아니면(SVG 요소 노드 등) `textContent`를 읽어요. SVG 요소 노드에는 `innerText`가 없기 때문이에요. 단위 테스트에서 바꿔 넣어요. (예: `el => el.textContent ?? ''`)
 - `options.highlight: (el: Element) => void` — 요소 노드 하나를 강조 표시하는 함수. 기본값은 `element.animate()`로 배경색을 잠깐 바꾸는 함수예요. 색과 모양은 [화면 스타일 설계](style.md#강조-표시-모양)를 따라 검증 페이지가 정해 넘겨요. jsdom에서는 `animate`가 없어 아무것도 하지 않아요. (예: `el => el.animate([{ backgroundColor: 'yellow' }, {}], 800)`)
 - `fromDiffResult`
