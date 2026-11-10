@@ -74,6 +74,7 @@ index.html + style.css ──▶ 화면 (검증 페이지가 요소 노드를 �
 | `history-label`                          | `<span>`                   | `historyLabel` (2차)                         |
 | `message`                                | `<p>`                      | `message`                                    |
 | `vdom-view`, `diff-view`, `history-view` | `<pre>`, `<ol>`, `<ol>`    | `vdomView`, `diffView`, `historyView` (2차)  |
+| `real-marks`                             | `<div aria-hidden="true">` | `realMarks` (2차)                            |
 
 ## 동작 방식
 
@@ -150,6 +151,16 @@ index.html + style.css ──▶ 화면 (검증 페이지가 요소 노드를 �
   ```
 - 이 함수는 `src/main.ts`에 두고 `createPage`의 `options.highlight`로 넘겨요. 지우는 일은 [검증 페이지](page.md#patch)가 해요(다음 Patch, 기록 이동, 오류 처리 때 실제 영역의 애니메이션을 모두 취소).
 - [변경 표시](change-highlight.md)의 `options.highlight`에 이 모양을 `element.animate()`로 그리는 함수를 넘겨요. 스타일 속성을 바꾸지 않아 두 영역 비교에 영향이 없어요(FR-W27).
+
+### 변경 종류 라벨
+
+- 강조 표시한 요소 노드 옆에 변경 종류(`text`, `create`, `remove`, `replace`, `props`)를 Diff 결과 패널과 같은 칩으로 띄워요. 한 요소 노드에 여러 종류가 있으면 칩을 나란히 놓아요.
+- 놓는 자리:
+  - 글자만 가진 요소 노드(`h1`, `li` 등): 글자 마지막 줄 끝에서 8px 오른쪽, 그 줄 가운데 높이
+  - 자식 요소 노드가 있는 요소 노드(`ul` 등): 그 요소 노드의 오른쪽 위 안쪽. 자식의 라벨과 겹치지 않아요
+  - 영역 컨테이너 자체: 렌더링 결과 박스의 오른쪽 위 구석
+- 칩은 글자 11px, 위아래 1px·좌우 6px 여백에 옅은 그림자를 넣어 강조 띠 위에서도 보여요.
+- 라벨은 `realRoot` 안이 아니라 형제인 층(`realMarks`, `position: absolute`, `pointer-events: none`)에 그려요. 실제 영역의 DOM을 바꾸지 않아 두 영역 비교에 영향이 없어요(FR-W27). 박스 밖으로 스크롤된 라벨은 층의 `overflow: hidden`으로 잘려요.
 
 ### 버튼 상태
 
