@@ -182,7 +182,6 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 | 공백만 변경             | `<li>A</li>` → `<li> A</li>`                    | `TEXT` 1개                                             | FR-W25        |
 | 순서 바뀜               | `<li>A</li><li>B</li>` → `<li>B</li><li>A</li>` | 인덱스끼리 비교해 두 `li` 안이 각각 `TEXT`             | FR-W13 ([ADR-002](../adr/ADR-002.md)) |
 | 앞에 노드 끼워 넣기     | `<li>A</li>` → `<li>Z</li><li>A</li>`           | 첫 칸 `TEXT`(A → Z), 두 번째 칸 `CREATE`(A)            | FR-W13 ([ADR-002](../adr/ADR-002.md)) |
-| 깊게 중첩된 요소        | `<div>`를 512번 중첩(Chromium 파서 상한) → 맨 안쪽 텍스트만 바꿈 | 오류 없이 끝나요. 조상 `div`는 모두 `UPDATE`, 맨 안쪽 칸은 `TEXT` | FR-E03 ([ADR-009](../adr/ADR-009.md)) |
 | 모두 삭제               | 샘플 HTML 코드 → 빈 문자열                      | 루트 칸이 모두 `REMOVE`                                | FR-E09        |
 | 빈 문자열 → 내용 추가   | 빈 문자열 → `<p>A</p>`                          | `[CREATE]`                                             | FR-E08        |
 | 바뀐 내용 없음          | 같은 트리                                       | 모든 칸이 `null`                                       | FR-W10, W28   |
