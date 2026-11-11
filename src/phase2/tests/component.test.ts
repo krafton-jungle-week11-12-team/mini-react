@@ -2,9 +2,9 @@
 // 기준은 docs/requirements/phase2/function-component_requirement.md 5.1절 FR-C01~C12의 확인 방법이에요.
 // FR-C09, C10은 삭제된 요구사항이고, 5.4절 앱 작성 규칙(FR-A)은 코드 리뷰로 확인해서 여기서 다루지 않아요.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FunctionComponent, getCurrentComponent } from './component';
-import { useState } from './use-state';
-import { toVNode, type VNode } from '../vdom';
+import { FunctionComponent, getCurrentComponent } from '../modules/component';
+import { useState } from '../modules/use-state';
+import { toVNode, type VNode } from '../../phase1/modules/vdom';
 
 // h 없이 VNode를 만들어요. 이 문서의 요구사항이 h에 기대지 않게 하려는 거예요
 const text = (t: string): VNode => ({ kind: 'text', text: t });

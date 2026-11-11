@@ -4,8 +4,8 @@
 // - Diff 결과(R)의 내용은 읽지 않아요. 바뀐 내용이 있는지는 fromDiffResult 결과 길이로 판단해요
 
 import type { ChangeRecord, ChangeSummary, HighlightOptions, TextBefore } from './change-highlight';
-import type { HistoryEntry, StateHistory } from './history';
-import type { VNode } from './vdom';
+import type { HistoryEntry, StateHistory } from '../modules/history';
+import type { VNode } from '../modules/vdom';
 
 /** 요구사항 FR-W23의 샘플 HTML 코드. 끝에 줄바꿈을 붙이지 않아요. */
 export const SAMPLE_HTML = `<div id="app">

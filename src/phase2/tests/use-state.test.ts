@@ -2,10 +2,10 @@
 // 기준은 docs/requirements/phase2/function-component_requirement.md 5.2절 FR-S01~S08, 5.3절 FR-T01~T03의 확인 방법이에요.
 // "버튼 클릭으로 setState"는 렌더링 때 받은 setState를 테스트에서 직접 불러 확인해요. 클릭 핸들러 등록은 h-props(FR-P01)에서 확인해요.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FunctionComponent } from './component';
-import { useMemo } from './use-memo';
-import { useState } from './use-state';
-import type { VNode } from '../vdom';
+import { FunctionComponent } from '../modules/component';
+import { useMemo } from '../modules/use-memo';
+import { useState } from '../modules/use-state';
+import type { VNode } from '../../phase1/modules/vdom';
 
 // h 없이 VNode를 만들어요. 이 문서의 요구사항이 h에 기대지 않게 하려는 거예요
 const text = (t: string): VNode => ({ kind: 'text', text: t });

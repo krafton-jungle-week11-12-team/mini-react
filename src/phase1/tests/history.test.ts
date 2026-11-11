@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createHistory } from './history';
+import { createHistory } from '../modules/history';
 
 // 기록은 내용을 읽지 않아서 빈 객체로 넣어요. 같은 객체(===)로 돌아오는지 확인할 수 있어요
 const h = () => ({});

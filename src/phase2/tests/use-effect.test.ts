@@ -2,10 +2,10 @@
 // 기준은 docs/requirements/phase2/use-effect_requirement.md 5절 FR-F01~F16, FR-L01~L06의 확인 방법이에요.
 // mount·update는 FunctionComponent로, state 변경은 렌더링 때 받은 setState를 테스트에서 직접 불러 일으켜요.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FunctionComponent } from './component';
-import { useEffect } from './use-effect';
-import { useState } from './use-state';
-import type { VNode } from '../vdom';
+import { FunctionComponent } from '../modules/component';
+import { useEffect } from '../modules/use-effect';
+import { useState } from '../modules/use-state';
+import type { VNode } from '../../phase1/modules/vdom';
 
 // h 없이 VNode를 만들어요. 이 문서의 요구사항이 h에 기대지 않게 하려는 거예요
 const text = (t: string): VNode => ({ kind: 'text', text: t });

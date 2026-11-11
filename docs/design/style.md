@@ -148,7 +148,7 @@ phase1.html + style.css ──▶ 화면 (검증 페이지가 요소 노드를 �
   // on  = { backgroundColor: '#EDE7FF', boxShadow: '-4px 0 0 #EDE7FF, 4px 0 0 #EDE7FF' }
   // off = 같은 색, 투명도 0
   ```
-- 이 함수는 `src/phase1/main.ts`에 두고 `createPage`의 `options.highlight`로 넘겨요. 지우는 일은 [검증 페이지](page.md#patch)가 해요(다음 Patch, 기록 이동, 오류 처리 때 실제 영역의 애니메이션을 모두 취소).
+- 이 함수는 `src/phase1/page/main.ts`에 두고 `createPage`의 `options.highlight`로 넘겨요. 지우는 일은 [검증 페이지](page.md#patch)가 해요(다음 Patch, 기록 이동, 오류 처리 때 실제 영역의 애니메이션을 모두 취소).
 - [변경 표시](change-highlight.md)의 `options.highlight`에 이 모양을 `element.animate()`로 그리는 함수를 넘겨요. 스타일 속성을 바꾸지 않아 두 영역 비교에 영향이 없어요(FR-W27).
 
 ### 버튼 상태

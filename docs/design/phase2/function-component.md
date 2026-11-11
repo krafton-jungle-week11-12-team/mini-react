@@ -6,7 +6,7 @@
 
 ## 개요
 
-FunctionComponent는 루트 컴포넌트 함수를 맡아 처음 화면을 그리고(mount), state가 바뀌면 바뀐 노드만 다시 그려요(update). hooks 배열과 이전 VNode, effect 실행 대기 목록을 인스턴스에 보관해요. 이 문서를 읽으면 mount, update, render, scheduleUpdate의 순서와 Phase 1 `diff`, `patch`를 부르는 방법을 알고 `src/phase2/component.ts`를 구현할 수 있어요.
+FunctionComponent는 루트 컴포넌트 함수를 맡아 처음 화면을 그리고(mount), state가 바뀌면 바뀐 노드만 다시 그려요(update). hooks 배열과 이전 VNode, effect 실행 대기 목록을 인스턴스에 보관해요. 이 문서를 읽으면 mount, update, render, scheduleUpdate의 순서와 Phase 1 `diff`, `patch`를 부르는 방법을 알고 `src/phase2/modules/component.ts`를 구현할 수 있어요.
 
 ## 다루는 요구사항
 
@@ -68,7 +68,7 @@ class FunctionComponent<P extends object = Record<string, unknown>> {
 
 type HookSlot = StateSlot | MemoSlot | EffectSlot;
 
-// src/phase2/component.ts 안의 모듈 변수
+// src/phase2/modules/component.ts 안의 모듈 변수
 let currentComponent: FunctionComponent | null;
 ```
 
@@ -197,7 +197,7 @@ function getCurrentComponent(): FunctionComponent | null;
 | effect 실행 중 표시를 켜고 끄는 일과 예약된 update 실행은 FunctionComponent가 한다             | `scheduleUpdate`와 같은 곳에서 다뤄야 예약 규칙이 한 파일에 모여요. `runEffects`는 cleanup과 effect 실행만 해요                | -        |
 | 배칭은 넣지 않고, effect 실행 중이 아니면 setState마다 `update()`를 바로 부른다                  | 요구사항 6.2 미정 항목이에요. 넣을 때는 `scheduleUpdate`만 고쳐요                                                             | -        |
 | mount 두 번, mount 전 update를 막지 않는다                                                     | 요구사항 6.1 결정이에요. FR-C09, C10은 삭제되고 FR-A12 앱 작성 규칙으로 옮겼어요                                               | -        |
-| FunctionComponent와 `getCurrentComponent`는 `src/phase2/component.ts`에 둔다                          | Hook 파일들이 이 파일만 import하면 돼요                                                                                       | -        |
+| FunctionComponent와 `getCurrentComponent`는 `src/phase2/modules/component.ts`에 둔다                          | Hook 파일들이 이 파일만 import하면 돼요                                                                                       | -        |
 
 ## 경계 케이스
 

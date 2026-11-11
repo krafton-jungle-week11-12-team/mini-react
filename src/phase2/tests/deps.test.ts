@@ -2,7 +2,7 @@
 // 기준은 docs/requirements/phase2/use-memo_requirement.md 5.2절 FR-D01~D04의 확인 방법이에요.
 // depsChanged는 "바뀌었다"면 true, "같다"면 false를 돌려줘요 (요구사항 6.1).
 import { describe, expect, it } from 'vitest';
-import { depsChanged } from './deps';
+import { depsChanged } from '../modules/deps';
 
 describe('depsChanged: 원소를 Object.is로 비교', () => {
   it('[NaN] → [NaN]은 같다고 판단해요 (FR-D01)', () => {
