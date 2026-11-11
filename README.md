@@ -77,8 +77,6 @@ GitHub Claude App이 Discussions, Issues, PR 댓글에서 리뷰와 피드백을
 
 아래 기록은 모두 GitHub에서 `#번호`로 가리킬 수 있어요. 이슈, PR, Discussion에서 `#번호`로 연결해 두면 AI가 그 기록을 따라 읽고 작업의 컨텍스트로 써요.
 
-### 2-1. Discussions
-
 ![Discussions 기록이 #번호로 연결되어 AI 작업 컨텍스트가 되는 흐름](docs/images/discussions.png)
 
 팀의 대화와 학습은 Discussions에 모아요.
