@@ -5,90 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Double D</title>
     <link rel="icon" href="./dd-logo.svg" type="image/svg+xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap"
-    />
-    <script type="module" crossorigin src="./assets/index-z4PLSJV-.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CNAA7iLk.css">
   </head>
   <body>
-    <div class="dd">
-      <header class="dd-header">
-        <div class="dd-header-inner">
-          <div class="dd-brand">
-            <img src="./dd-logo.svg" alt="" class="dd-logo" />
-            <span class="dd-name">Double D</span>
-          </div>
-          <nav class="dd-actions" aria-label="기록 이동과 Patch">
-            <div class="dd-history-nav">
-              <button type="button" id="back" class="btn btn-back">뒤로</button>
-              <span id="history-label" class="dd-history-label">기록 1 / 1</span>
-              <button type="button" id="forward" class="btn btn-forward">앞으로</button>
-            </div>
-            <button type="button" id="patch" class="btn btn-patch">Patch</button>
-          </nav>
-        </div>
-      </header>
-
-      <main class="dd-main">
-        <div class="dd-row dd-row-top">
-          <section class="panel area area-real" aria-labelledby="real-h">
-            <div class="panel-head">
-              <h2 id="real-h" class="panel-title">실제 영역</h2>
-              <span class="panel-sub">Patch로만 바뀌어요</span>
-            </div>
-            <div class="code-box">
-              <pre id="real-lines" class="code-lines" aria-hidden="true"></pre>
-              <pre id="real-code" class="code" tabindex="0" aria-label="실제 영역 HTML 코드"></pre>
-            </div>
-            <div class="render-frame">
-              <div id="real-root" class="render-root"></div>
-            </div>
-          </section>
-
-          <section class="panel area area-test" aria-labelledby="test-h">
-            <div class="panel-head">
-              <h2 id="test-h" class="panel-title">테스트 영역</h2>
-              <label for="test-code" class="panel-sub">HTML 코드를 고친 뒤 Patch를 눌러요</label>
-            </div>
-            <div class="code-box">
-              <pre id="test-lines" class="code-lines" aria-hidden="true"></pre>
-              <textarea id="test-code" class="code" spellcheck="false" wrap="off" autocomplete="off"></textarea>
-            </div>
-            <div class="render-frame">
-              <div id="test-root" class="render-root"></div>
-            </div>
-          </section>
-        </div>
-
-        <div class="dd-row dd-row-bottom">
-          <section class="panel panel-vdom" aria-labelledby="vdom-h">
-            <div class="panel-head">
-              <h2 id="vdom-h" class="panel-title">Virtual DOM</h2>
-              <span class="panel-sub">지금 보는 기록의 트리</span>
-            </div>
-            <pre id="vdom-view" class="vdom-view"></pre>
-          </section>
-
-          <section class="panel panel-diff" aria-labelledby="diff-h">
-            <div class="panel-head panel-head-start">
-              <h2 id="diff-h" class="panel-title">Diff</h2>
-              <p id="message" class="message" role="status"></p>
-            </div>
-            <ol id="diff-view" class="diff-view"></ol>
-          </section>
-
-          <section class="panel panel-history" aria-labelledby="hist-h">
-            <div class="panel-head">
-              <h2 id="hist-h" class="panel-title">기록</h2>
-            </div>
-            <ol id="history-view" class="history-view"></ol>
-          </section>
-        </div>
-      </main>
-    </div>
+    <!-- 첫 화면: Phase 1 검증 페이지와 Phase 2 할 일 앱으로 가는 링크만 둬요 -->
+    <main>
+      <h1>Double D · Mini React</h1>
+      <ul>
+        <li><a href="./phase1.html">Phase 1 · Virtual DOM, Diff, Patch 검증 페이지</a></li>
+        <li><a href="./phase2.html">Phase 2 · 컴포넌트와 Hook으로 만든 할 일 앱</a></li>
+      </ul>
+    </main>
   </body>
 </html>
