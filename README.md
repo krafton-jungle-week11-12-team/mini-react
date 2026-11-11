@@ -1,7 +1,7 @@
 # w11-12-mini-react
 https://krafton-jungle-week11-12-team.github.io/mini-react/
 
-Vanilla TypeScript로 Virtual DOM + Diff + Patch(Phase 1)와 Component · State · Hooks(Phase 2)를 직접 구현한 미니 리액트예요.
+TypeScript로 Virtual DOM + Diff + Patch(Phase 1)와 Component · State · Hooks(Phase 2)를 직접 구현한 미니 리액트예요.
 
 이 문서를 읽으면 우리 팀이 사람과 AI가 어떻게 나눠 일하는지, 그리고 AI가 팀의 작업 흐름을 따라오도록 어떤 기록을 남기는지 알 수 있어요.
 
