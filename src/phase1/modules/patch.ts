@@ -5,6 +5,7 @@
 // - 재귀로 내려가고, 칸은 for 반복문으로 돌아요 (ADR-009)
 
 import type { ChildPatches, KeyedPatches, Patch } from './diff';
+import { removeProp, setProp } from '../../phase2/modules/props';
 import { toDOM } from './vdom';
 
 /**
@@ -100,10 +101,10 @@ function applyPatch(parent: Node, node: ChildNode | undefined, p: Patch, index: 
       // 요소 객체는 그대로 두고 속성과 자식만 고쳐요
       const element = requireNode(node, p, index) as Element;
       for (const [name, value] of Object.entries(p.props.set)) {
-        element.setAttribute(name, value);
+        setProp(element, name, value);
       }
       for (let i = 0; i < p.props.remove.length; i++) {
-        element.removeAttribute(p.props.remove[i]);
+        removeProp(element, p.props.remove[i]);
       }
       patch(element, p.children); // 재귀
       return;
