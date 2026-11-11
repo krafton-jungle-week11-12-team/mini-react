@@ -4,26 +4,7 @@ Vanilla TypeScript로 Virtual DOM + Diff + Patch(Phase 1)와 Component · State 
 
 이 문서를 읽으면 우리 팀이 사람과 AI가 어떻게 나눠 일하는지, 그리고 AI가 팀의 작업 흐름을 따라오도록 어떤 기록을 남기는지 알 수 있어요.
 
-## 브랜치
-
-- `main`: 머지된 최신 코드와 문서
-- `gh-pages`: [검증 페이지](https://krafton-jungle-week11-12-team.github.io/mini-react/) 배포용 빌드
-- `archive/stack-traversal`: 트리를 반복문과 스택으로 순회하던 때의 기록 ([ADR-003](docs/adr/ADR-003.md))
-- `archive/main-before-keyed`: key Diff([ADR-011](docs/adr/ADR-011.md))를 넣기 전의 `main`
-
-## 목차
-
-1. [워크플로우](#1-워크플로우)
-2. [기록: AI에게 주는 컨텍스트](#2-기록-ai에게-주는-컨텍스트)
-3. [앞으로 개선하고 싶은 점](#3-앞으로-개선하고-싶은-점)
-
----
-
-## 1. 워크플로우
-
-### 단계
-
-한 Phase는 요구사항 → 설계 → 테스트 → 구현 순서로 진행해요. 요구사항은 각자 따로 쓴 뒤 하나로 합치고, 설계 중에 내린 결정은 ADR로 남겨요. 구현은 먼저 실패하는 테스트(Red)를 쓴 뒤 그 테스트를 통과(Green)시키는 방식으로 해요.
+## 1. AI 협업 워크플로우
 
 ```mermaid
 flowchart LR
@@ -44,20 +25,24 @@ flowchart LR
     REQ --> DES
 ```
 
-| 단계                           | 사람의 역할                                                                           | 산출물 위치            |
-| ------------------------------ | ------------------------------------------------------------------------------------- | ---------------------- |
-| Requirements                   | 각자 과제를 읽고 요구사항을 따로 쓴 뒤(Requirements A, B), 함께 비교해 하나로 합쳐요. | `docs/requirements/` |
-| Design                         | AI가 쓰고, 사람은 PR에서 검토해요.                                                    | `docs/design/`       |
-| ADR                            | 선택지를 비교하고 사람이 결정해요.                                                    | `docs/adr/`          |
-| Test (Red)                     | AI가 쓰고, 사람은 PR에서 검토해요.                                                    | `src/**/*.test.ts`   |
-| Implementation → Test (Green) | AI가 테스트를 통과시키고, 사람은 PR에서 검토한 뒤 머지해요.                           | `src/`               |
+| 구분              | 단계                     | 역할                                                                 | 산출물 위치          |
+| ----------------- | ------------------------ | -------------------------------------------------------------------- | -------------------- |
+| Human in the loop | Requirements A, B        | 사람이 각자 과제를 읽고 요구사항을 따로 써요.                         | `docs/requirements/` |
+| Human in the loop | Requirements (합침)      | 사람이 두 요구사항을 함께 비교해 하나로 합쳐요.                       | `docs/requirements/` |
+| Human on the loop | Design                   | AI가 쓰고, 사람은 PR에서 검토해요.                                    | `docs/design/`       |
+| Human on the loop | ADR                      | AI가 선택지를 비교해 정리하고, 사람이 결정해요.                       | `docs/adr/`          |
+| Human on the loop | Test (Red)               | AI가 실패하는 테스트를 쓰고, 사람은 PR에서 검토해요.                  | `src/**/*.test.ts`   |
+| Human on the loop | Implementation           | AI가 테스트를 통과하도록 구현하고, 사람은 PR에서 검토해요.            | `src/`               |
+| Human on the loop | Test (Green)             | AI가 모든 테스트 통과를 확인하고, 사람이 검토한 뒤 머지해요.          | `src/**/*.test.ts`   |
 
 - **Human in the loop**: 사람이 직접 쓰고 판단해야 다음 단계로 넘어가요. 무엇을 만들지 정하는 요구사항 단계예요.
 - **Human on the loop**: AI가 알아서 진행하고, 사람은 결과를 지켜보다가 문제가 있을 때 개입해요. 요구사항이 정해진 뒤의 설계, ADR, 테스트, 구현이 여기에 해당해요.
 
-### 자동화
+---
 
-#### AI 구현 자동화를 위한 스킬설계
+## 2. 워크플로우 자동화
+
+### AI 구현 자동화를 위한 스킬설계
 
 요구사항 → 설계 문서 → 테스트 → 구현 → 최종 검증 순서로 진행되며, 각 단계를 커맨드 하나로 실행해요.
 
@@ -85,7 +70,7 @@ GitHub Claude App이 Discussions, Issues, PR 댓글에서 리뷰와 피드백을
 
 ---
 
-## 2. 기록: AI에게 주는 컨텍스트
+## 3. 기록: AI에게 주는 컨텍스트
 
 1번 워크플로우에서 AI가 사람의 작업 흐름과 최대한 맞춰 일하려면, 팀이 무엇을 이야기하고 정했는지 AI도 알아야 해요. 그래서 아래 기록을 GitHub에 남겨요. AI에게는 일종의 학습 자료예요.
 
@@ -101,7 +86,7 @@ GitHub Claude App이 Discussions, Issues, PR 댓글에서 리뷰와 피드백을
 
 ---
 
-## 3. 앞으로 개선하고 싶은 점
+## 4. 앞으로 개선하고 싶은 점
 
 1. **모듈화와 서브 에이전트로 병렬 작업**: 모듈을 서로 영향을 주지 않게 나눠, 사람끼리 분업하기 쉽게 만들어요. 나눈 모듈은 서브 에이전트에 하나씩 맡겨 동시에 진행해서 속도를 높여요.
 2. **AI 스킬관리** : 처리 속도를 늦추는 스킬은 다른 스킬이 자동으로 호출하지 않고 사용자가 직접 호출하도록 바꿔 속도를 높여요.
