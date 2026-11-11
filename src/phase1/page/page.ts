@@ -10,15 +10,18 @@ import type { HistoryEntry, StateHistory } from '../modules/history';
 import type { VNode } from '../modules/vdom';
 import { sanitize, type SanitizeResult } from './sanitize';
 
-/** 요구사항 FR-W23의 샘플 HTML 코드. 끝에 줄바꿈을 붙이지 않아요. */
-export const SAMPLE_HTML = `<div id="app">
-  <h1 class="title">할 일 목록</h1>
-  <ul class="todo">
-    <li>장보기</li>
-    <li>운동하기</li>
-  </ul>
-  <button type="button">추가</button>
-</div>`;
+/**
+ * 요구사항 FR-W23의 샘플 HTML 코드. 끝에 줄바꿈을 붙이지 않아요.
+ * 줄바꿈을 닫는 `>` 앞에 둬 요소 노드 사이에 공백 텍스트 노드가 생기지 않아요 (ADR-007, sample.md)
+ */
+export const SAMPLE_HTML = `<div id="app"
+  ><h1 class="title">할 일 목록</h1
+  ><ul class="todo"
+    ><li>장보기</li
+    ><li>운동하기</li
+  ></ul
+  ><button type="button">추가</button
+></div>`;
 
 /** toDOM으로 그린 영역을 다시 읽은 트리가 원래 트리와 다를 때 보여 주는 오류 문구예요 (ADR-013). */
 export const RENDER_ERROR = 'Virtual DOM 트리를 DOM으로 그린 결과가 원래 트리와 달라요';

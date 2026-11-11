@@ -15,9 +15,9 @@ export type Sample = {
 };
 
 /**
- * key 비교용 샘플은 줄바꿈을 닫는 `>` 앞에 둬요.
- * li 사이에 공백 텍스트 노드가 생기지 않아 모든 형제가 key를 가져요 (ADR-007, ADR-011).
- * 한 줄에 li 하나라 줄을 통째로 옮기면 순서가 바뀌어요.
+ * 모든 샘플은 줄바꿈을 닫는 `>` 앞에 둬요.
+ * 요소 노드 사이에 공백 텍스트 노드가 생기지 않아 Virtual DOM 트리에 줄바꿈 노드가 나오지 않아요 (ADR-007은 그대로예요).
+ * key 샘플은 모든 형제가 key를 가져 key 비교가 동작해요 (ADR-011). 한 줄에 li 하나라 줄을 통째로 옮기면 순서가 바뀌어요.
  */
 const KEYED_LIST = `<ul class="todo"
   ><li key="a">장보기</li
@@ -43,20 +43,16 @@ export const SAMPLES: readonly Sample[] = [
     id: 'text-props',
     label: '글자·속성',
     hint: 'p의 글자나 h1의 class를 바꾸고 Patch를 눌러 보세요. text, props가 나와요.',
-    html: `<div id="app">
-  <h1 class="title">오늘 할 일</h1>
-  <p class="note">글자를 바꿔 보세요</p>
-</div>`,
+    html: `<div id="app"
+  ><h1 class="title">오늘 할 일</h1
+  ><p class="note">글자를 바꿔 보세요</p
+></div>`,
   },
   {
     id: 'add-remove',
     label: '추가·삭제',
     hint: '가운데 li를 지우고 Patch를 눌러 보세요. key가 없어 자리끼리 비교해, 뒤 항목의 글자가 바뀌고 끝이 지워져요.',
-    html: `<ul class="todo">
-  <li>장보기</li>
-  <li>운동하기</li>
-  <li>안녕</li>
-</ul>`,
+    html: INDEX_LIST,
   },
   {
     id: 'keyed-move',

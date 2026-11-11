@@ -162,7 +162,7 @@ describe('샘플로 보는 Diff', () => {
     const { el, page, type } = setup();
     const sample = byId('add-remove');
     page.loadSample(sample.html, '샘플');
-    type(sample.html.replace('  <li>운동하기</li>\n', ''));
+    type(sample.html.replace('  ><li>운동하기</li\n', ''));
     page.onPatch();
     const kinds = Array.from(el.diffView?.querySelectorAll('.chip') ?? []).map((x) => x.textContent);
     expect(kinds).toContain('text');

@@ -90,6 +90,21 @@ textarea {
   display: flex;
   align-items: center;
   gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 첫 화면으로 가는 링크. 기록 이동 묶음 앞에 둬요 */
+.dd-home {
+  padding: 0 4px;
+  color: var(--dd-text-sub);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.dd-home:hover {
+  color: var(--dd-primary-text);
 }
 
 .dd-logo {
