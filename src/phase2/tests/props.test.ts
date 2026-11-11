@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { diff } from '../../phase1/modules/diff';
 import { h } from '../modules/h';
 import { patch } from '../../phase1/modules/patch';
-import { toDOM, type VNode } from '../../phase1/modules/vdom';
+import { toDOM, toVNode, type VNode } from '../../phase1/modules/vdom';
 
 let container: HTMLElement;
 
@@ -174,5 +174,63 @@ describe('props: 추가 케이스', () => {
 
     expect(root.textContent).toBe('ba');
     expect(log).toEqual(['b']);
+  });
+});
+
+// ADR-015: property와 attribute를 함께 맞춰 Phase 1의 toVNode로 다시 읽어도 같은 트리가 나와요
+describe('props: property와 attribute 맞추기 (ADR-015)', () => {
+  /** HTML 코드를 파싱해 toVNode로 만든 트리예요. Phase 1 검증 페이지가 만드는 트리와 같아요 */
+  function fromHtml(html: string): VNode[] {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return toVNode(div);
+  }
+
+  it('HTML의 value·checked·selected를 toDOM으로 그려 다시 읽으면 같은 트리예요', () => {
+    const html = '<input value="a"><input type="checkbox" checked=""><select><option value="x">X</option><option value="y" selected="">Y</option></select>';
+    const roots = fromHtml(html);
+    container.replaceChildren(...roots.map(toDOM));
+    expect(toVNode(container)).toEqual(roots);
+  });
+
+  it('HTML의 checked=""는 체크된 채로 그려요', () => {
+    const [vnode] = fromHtml('<input type="checkbox" checked>');
+    const checkbox = mount(vnode) as HTMLInputElement;
+    expect(checkbox.checked).toBe(true);
+    expect(checkbox.getAttribute('checked')).toBe('');
+  });
+
+  it('HTML에서 value를 바꿔 Patch하면 property와 attribute가 함께 바뀌어요', () => {
+    const [prev] = fromHtml('<input value="a">');
+    const [next] = fromHtml('<input value="b">');
+    const input = mount(prev) as HTMLInputElement;
+    input.value = '사용자 입력';
+
+    update(prev, next);
+
+    expect(input.value).toBe('b');
+    expect(input.getAttribute('value')).toBe('b');
+    expect(toVNode(container)).toEqual([next]);
+  });
+
+  it('h의 checked: true·false는 attribute를 붙이거나 지워요', () => {
+    const prev = h('input', { type: 'checkbox', checked: true });
+    const checkbox = mount(prev) as HTMLInputElement;
+    expect(checkbox.getAttribute('checked')).toBe('');
+
+    update(prev, h('input', { type: 'checkbox', checked: false }));
+
+    expect(checkbox.checked).toBe(false);
+    expect(checkbox.hasAttribute('checked')).toBe(false);
+  });
+
+  it('value가 없어지면 property를 비우고 attribute도 지워요 (FR-P07)', () => {
+    const prev = h('input', { value: '우유' });
+    const input = mount(prev) as HTMLInputElement;
+
+    update(prev, h('input', null));
+
+    expect(input.value).toBe('');
+    expect(input.hasAttribute('value')).toBe(false);
   });
 });

@@ -299,6 +299,17 @@ describe('Patch', () => {
   });
 });
 
+describe('입력 요소 props (ADR-015)', () => {
+  it('value·checked·selected가 든 HTML 코드도 Patch 후 두 영역이 같아요 (FR-W15)', () => {
+    const { el, page, type } = setup();
+    type(SAMPLE_HTML + '<input value="a"><input type="checkbox" checked><select><option>X</option><option selected>Y</option></select>');
+    page.onPatch();
+    expect(page.history.length).toBe(2);
+    expect(sameAreas(el)).toBe(true);
+    expect((el.realRoot.querySelector('[type=checkbox]') as HTMLInputElement).checked).toBe(true);
+  });
+});
+
 describe('기록 이동', () => {
   it('뒤로·앞으로 가면 두 영역을 그 기록으로 바꿔요 (FR-W19, W20)', () => {
     const { el, page, type } = setup();
