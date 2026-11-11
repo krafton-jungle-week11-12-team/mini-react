@@ -1,4 +1,4 @@
-// 검증 페이지 (docs/design/page.md)
+// 검증 페이지 (docs/design/phase1/page.md)
 // 로드·HTML 코드 수정·Patch·기록 이동 때 엔진 모듈을 순서대로 호출해요
 // - 엔진 모듈은 import하지 않고 EngineModules로 넘겨받아요. import는 src/phase1/main.ts 한 곳에서만 해요
 // - Diff 결과(R)의 내용은 읽지 않아요. 바뀐 내용이 있는지는 fromDiffResult 결과 길이로 판단해요

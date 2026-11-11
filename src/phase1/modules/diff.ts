@@ -1,4 +1,4 @@
-// Diff (docs/design/diff.md)
+// Diff (docs/design/phase1/diff.md)
 // 두 Virtual DOM 트리를 비교해 추가, 삭제, 교체, 속성 변경, 텍스트 변경을 찾아요 (FR-E03)
 // - 재귀로 내려가고, 자식 쌍은 for 반복문으로 돌아요 (ADR-009)
 // - 자식은 같은 인덱스끼리 짝지어요 (ADR-002)

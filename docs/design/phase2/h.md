@@ -29,11 +29,11 @@ h 함수는 `h(tag, props, ...children)` 호출을 VNode로 바꿔요. 컴포넌
 ```
 
 - 입력을 주는 곳: 컴포넌트 함수. [FunctionComponent](function-component.md)가 렌더링할 때 루트 컴포넌트 안에서 불려요. 자식 컴포넌트도 h 안에서 실행돼요.
-- 출력을 받는 곳: 컴포넌트 함수의 반환값으로 [FunctionComponent](function-component.md)에 가요. 요소 VNode의 `props`는 [props 반영](props.md)이 DOM에 반영하고, `key`는 [Diff](../diff.md)가 자식 목록을 짝지을 때 읽어요([ADR-011](../../adr/ADR-011.md)).
+- 출력을 받는 곳: 컴포넌트 함수의 반환값으로 [FunctionComponent](function-component.md)에 가요. 요소 VNode의 `props`는 [props 반영](props.md)이 DOM에 반영하고, `key`는 [Diff](../phase1/diff.md)가 자식 목록을 짝지을 때 읽어요([ADR-011](../../adr/ADR-011.md)).
 
 ## 자료구조
 
-h는 [Virtual DOM 변환 설계](../vdom.md)의 `VNode`를 그대로 만들어요. key Diff에서 더해진 `VElement`의 `key?: string` 필드도 채워요. `props` 타입은 [props 반영 설계](props.md)에서 넓힌 `Props`를 써요. h가 새로 정하는 타입은 자식 인자와 컴포넌트 함수의 타입이에요.
+h는 [Virtual DOM 변환 설계](../phase1/vdom.md)의 `VNode`를 그대로 만들어요. key Diff에서 더해진 `VElement`의 `key?: string` 필드도 채워요. `props` 타입은 [props 반영 설계](props.md)에서 넓힌 `Props`를 써요. h가 새로 정하는 타입은 자식 인자와 컴포넌트 함수의 타입이에요.
 
 ```ts
 type Child = VNode | string | number | boolean | null | undefined | Child[];
@@ -148,5 +148,5 @@ h는 내부 함수 `normalizeChildren`으로 자식을 정리해요. 인자는 �
 
 - [요구사항 명세서: h 함수 · props 처리](../../requirements/phase2/h-props_requirement.md)
 - [props 반영 설계](props.md), [FunctionComponent 설계](function-component.md)
-- [Virtual DOM 변환 설계 (Phase 1)](../vdom.md)
+- [Virtual DOM 변환 설계 (Phase 1)](../phase1/vdom.md)
 - [ADR-002](../../adr/ADR-002.md), [ADR-009](../../adr/ADR-009.md), [ADR-011](../../adr/ADR-011.md)

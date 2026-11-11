@@ -1,4 +1,4 @@
-// 변경 표시 (docs/design/change-highlight.md)
+// 변경 표시 (docs/design/phase1/change-highlight.md)
 // Patch로 바뀐 부분 중 화면에 보이는 것만 실제 영역에서 강조 표시하고, 변경 개수를 요약해요 (FR-W16, W27, W30)
 // - Diff 결과의 형식을 아는 함수는 fromDiffResult 하나예요. 나머지는 ChangeRecord만 써요
 // - 바뀐 노드는 Patch 결과가 아니라 두 트리에서의 위치로 실제 영역에서 직접 찾아요

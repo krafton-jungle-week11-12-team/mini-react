@@ -45,18 +45,18 @@ function patch(parent: Node, patches: ChildPatches): void;
 
 ## 동작 방식
 
-`patch`는 `patches`가 `KeyedPatches`면 `patchKeyed`를 부르고, 배열이면 내부 함수 `applyPatch`로 칸 하나씩 적용하고, `UPDATE`면 그 요소의 자식에 `patch`를 재귀로 불러요([ADR-009](../adr/ADR-009.md)).
+`patch`는 `patches`가 `KeyedPatches`면 `patchKeyed`를 부르고, 배열이면 내부 함수 `applyPatch`로 칸 하나씩 적용하고, `UPDATE`면 그 요소의 자식에 `patch`를 재귀로 불러요([ADR-009](../../adr/ADR-009.md)).
 
 ### `patch(parent, patches)`
 
 1. 적용 전에 `parent`의 자식 목록(`childNodes`)을 배열로 복사해 둬요.
-2. `patches`를 앞에서부터 `for` 반복문으로 돌아요. `forEach` 같은 콜백으로 돌면 재귀 한 단계마다 호출이 더 쌓여 버틸 수 있는 깊이가 줄어요([ADR-009](../adr/ADR-009.md) 결정 5번).
+2. `patches`를 앞에서부터 `for` 반복문으로 돌아요. `forEach` 같은 콜백으로 돌면 재귀 한 단계마다 호출이 더 쌓여 버틸 수 있는 깊이가 줄어요([ADR-009](../../adr/ADR-009.md) 결정 5번).
 3. 칸이 `null`이면 건너뛰어요. 그 노드는 그대로 둬요.
 4. `null`이 아니면 `applyPatch(parent, 복사한 목록[i], 칸)`을 불러요.
 
 ### `patchKeyed(parent, keyed)`
 
-key로 짝지은 결과를 적용해요([ADR-011](../adr/ADR-011.md)). 이동한 노드는 새로 만들지 않고 같은 DOM 노드를 옮겨요. 그래서 체크 상태, 입력값, 이벤트 핸들러가 함께 따라가요.
+key로 짝지은 결과를 적용해요([ADR-011](../../adr/ADR-011.md)). 이동한 노드는 새로 만들지 않고 같은 DOM 노드를 옮겨요. 그래서 체크 상태, 입력값, 이벤트 핸들러가 함께 따라가요.
 
 1. 적용 전에 `parent`의 자식 목록을 배열로 복사해 둬요.
 2. `removes`의 인덱스마다 복사한 목록의 노드를 `removeChild`로 지워요.
@@ -108,13 +108,13 @@ key로 짝지은 결과를 적용해요([ADR-011](../adr/ADR-011.md)). 이동한
 
 | 결정                                                    | 이유                                                                                                   | 관련 ADR                     |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------- |
-| key 결과는 이동한 노드를 새로 만들지 않고 `insertBefore`로 옮긴다 | 같은 DOM 노드를 옮겨야 체크 상태, 입력값, 포커스가 남아요 | [ADR-011](../adr/ADR-011.md) |
-| key 결과는 뒤에서부터 배치한다                          | 기준 노드가 항상 최종 자리에 있어 위치 계산이 필요 없어요                                              | [ADR-011](../adr/ADR-011.md) |
-| 재귀로 내려가고, 칸은 `for` 반복문으로 돈다           | 코드가 트리 모양과 닮아 이해하기 쉬워요. 파서가 깊이를 512단계로 제한해 콜 스택이 넘치지 않아요        | [ADR-009](../adr/ADR-009.md) |
-| 새 노드는 Virtual DOM → DOM 변환으로 만든다             | 렌더링 결과는 파싱한 DOM으로 만들고, 변환은 Patch에서만 써요                                           | [ADR-004](../adr/ADR-004.md) |
-| 실제 영역 DOM에 강조용 속성을 붙이지 않는다             | 강조 표시가 두 영역 비교(FR-W15)에 영향을 주지 않아야 해요                                             | [ADR-008](../adr/ADR-008.md) |
+| key 결과는 이동한 노드를 새로 만들지 않고 `insertBefore`로 옮긴다 | 같은 DOM 노드를 옮겨야 체크 상태, 입력값, 포커스가 남아요 | [ADR-011](../../adr/ADR-011.md) |
+| key 결과는 뒤에서부터 배치한다                          | 기준 노드가 항상 최종 자리에 있어 위치 계산이 필요 없어요                                              | [ADR-011](../../adr/ADR-011.md) |
+| 재귀로 내려가고, 칸은 `for` 반복문으로 돈다           | 코드가 트리 모양과 닮아 이해하기 쉬워요. 파서가 깊이를 512단계로 제한해 콜 스택이 넘치지 않아요        | [ADR-009](../../adr/ADR-009.md) |
+| 새 노드는 Virtual DOM → DOM 변환으로 만든다             | 렌더링 결과는 파싱한 DOM으로 만들고, 변환은 Patch에서만 써요                                           | [ADR-004](../../adr/ADR-004.md) |
+| 실제 영역 DOM에 강조용 속성을 붙이지 않는다             | 강조 표시가 두 영역 비교(FR-W15)에 영향을 주지 않아야 해요                                             | [ADR-008](../../adr/ADR-008.md) |
 | 적용 전에 자식 목록을 복사해 두고 그 목록으로 노드를 찾는다 | 앞 칸의 `REMOVE`가 뒤 칸의 인덱스를 당겨도 엉뚱한 노드를 고치지 않아요. 그래서 적용 순서를 따로 정하지 않아도 돼요 | -                            |
-| `CREATE`는 `appendChild`로 끝에 붙인다                  | Diff가 같은 인덱스끼리 비교해서 `CREATE`는 이전 자식 수보다 뒤 칸에만 나와요. 앞 칸부터 붙이면 위치가 맞아요. Phase 2에서 key로 짝지으면 `CREATE`가 중간에도 나오고 이동이 생겨, 새 순서대로 `insertBefore`로 배치하는 단계를 더해요 | [ADR-011](../adr/ADR-011.md) |
+| `CREATE`는 `appendChild`로 끝에 붙인다                  | Diff가 같은 인덱스끼리 비교해서 `CREATE`는 이전 자식 수보다 뒤 칸에만 나와요. 앞 칸부터 붙이면 위치가 맞아요. Phase 2에서 key로 짝지으면 `CREATE`가 중간에도 나오고 이동이 생겨, 새 순서대로 `insertBefore`로 배치하는 단계를 더해요 | [ADR-011](../../adr/ADR-011.md) |
 | `TEXT`는 노드를 바꾸지 않고 `nodeValue`만 고친다        | 텍스트·주석 모두 같은 API로 고치고, 노드 객체가 유지돼요(FR-E04)                                       | -                            |
 | `UPDATE`는 요소를 그대로 두고 속성과 자식만 고친다      | 바뀌지 않은 요소가 같은 DOM 객체로 남아요(FR-E04)                                                      | -                            |
 
@@ -129,9 +129,9 @@ key로 짝지은 결과를 적용해요([ADR-011](../adr/ADR-011.md)). 이동한
 | 교체                       | `<p>A</p>` → `<div>A</div>`                         | `replaceChild`로 같은 위치에 새 노드가 들어가요                                               | FR-E04        |
 | 속성 삭제                  | `<button disabled>` → `<button>`                    | `removeAttribute('disabled')`만 불러요. `button`은 같은 객체예요                              | FR-W14        |
 | 주석 내용 변경             | `<!-- a -->` → `<!-- b -->`                         | 주석 노드의 `nodeValue`만 바뀌어요                                                            | FR-W26        |
-| key 순서 바뀜              | key A, B, C → C, A, B                               | 세 노드 모두 같은 DOM 객체(`===`)로 남고 순서만 C, A, B가 돼요                                | [ADR-011](../adr/ADR-011.md) |
-| key 순서 바뀜 + 내용 변경  | key A(텍스트 a), B → B, A(텍스트 a2)                | A는 같은 객체로 옮겨지고 텍스트만 a2로 바뀌어요                                               | [ADR-011](../adr/ADR-011.md) |
-| 스크립트가 든 노드 추가    | `<script>alert(1)</script>`, `<img src=x onerror=…>` | `toDOM`으로 만든 노드를 문서에 붙이면 실행될 수 있어요. 검증 페이지가 Diff 전에 트리에서 빼서 Patch까지 오지 않아요([ADR-014](../adr/ADR-014.md), 제안됨) | -             |
+| key 순서 바뀜              | key A, B, C → C, A, B                               | 세 노드 모두 같은 DOM 객체(`===`)로 남고 순서만 C, A, B가 돼요                                | [ADR-011](../../adr/ADR-011.md) |
+| key 순서 바뀜 + 내용 변경  | key A(텍스트 a), B → B, A(텍스트 a2)                | A는 같은 객체로 옮겨지고 텍스트만 a2로 바뀌어요                                               | [ADR-011](../../adr/ADR-011.md) |
+| 스크립트가 든 노드 추가    | `<script>alert(1)</script>`, `<img src=x onerror=…>` | `toDOM`으로 만든 노드를 문서에 붙이면 실행될 수 있어요. 검증 페이지가 Diff 전에 트리에서 빼서 Patch까지 오지 않아요([ADR-014](../../adr/ADR-014.md), 제안됨) | -             |
 | 전제 조건이 깨짐           | 실제 영역이 현재 기록의 `vdom`과 다름               | 칸에 대응하는 노드가 없거나 다른 노드라 오류가 나거나 잘못 고쳐요. FR-W15로 막아요            | FR-W15        |
 
 ## 검증 방법
@@ -150,8 +150,8 @@ key로 짝지은 결과를 적용해요([ADR-011](../adr/ADR-011.md)). 이동한
 
 ## 관련 문서
 
-- [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
-- [ADR-009](../adr/ADR-009.md): 트리 순회는 재귀로 한다
-- [ADR-011](../adr/ADR-011.md): Phase 2에서 순서가 바뀐 노드는 같은 노드를 `insertBefore`로 옮긴다
-- [ADR-010](../adr/ADR-010.md): 기록 이동 때 실제 영역은 기록의 HTML 코드를 파싱한 DOM으로 바꾼다. 기록 이동에는 Patch를 쓰지 않아요
+- [요구사항 명세서](../../requirements/phase1/phase1_requirement.md)
+- [ADR-009](../../adr/ADR-009.md): 트리 순회는 재귀로 한다
+- [ADR-011](../../adr/ADR-011.md): Phase 2에서 순서가 바뀐 노드는 같은 노드를 `insertBefore`로 옮긴다
+- [ADR-010](../../adr/ADR-010.md): 기록 이동 때 실제 영역은 기록의 HTML 코드를 파싱한 DOM으로 바꾼다. 기록 이동에는 Patch를 쓰지 않아요
 - [Diff 설계](diff.md), [Virtual DOM 변환 설계](vdom.md), [변경 표시 설계](change-highlight.md)

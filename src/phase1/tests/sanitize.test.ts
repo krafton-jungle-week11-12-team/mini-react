@@ -1,4 +1,4 @@
-// 입력 걸러내기 단위 테스트 (docs/design/sanitize.md, ADR-014)
+// 입력 걸러내기 단위 테스트 (docs/design/phase1/sanitize.md, ADR-014)
 import { describe, expect, it } from 'vitest';
 import { sanitize } from '../page/sanitize';
 import { toVNode, type VElement } from '../modules/vdom';

@@ -49,8 +49,7 @@ disable-model-invocation: true
 3. `docs/technical-writing-principles.md` — 문장 기준 (`.claude/rules/docs-writing.md`가 가리키는 원칙)
 4. `docs/adr/` — 상태가 "제안됨", "승인됨"인 ADR 중 이 Phase 요구사항과 관련된 것
 5. 이미 있는 설계 문서
-   - Phase 1 설계는 `docs/design/` 바로 아래에 있어요.
-   - Phase 2부터는 `docs/design/<phase>/` 아래에 둬요.
+   - 설계 문서는 Phase마다 `docs/design/<phase>/` 아래에 있어요. (예: `docs/design/phase1/`)
    - 앞 Phase의 설계 문서도 읽어요. 새 설계가 앞 Phase의 타입과 함수(예: `VNode`, `toDOM`, `diff`)를 이어받기 때문이에요.
 6. 앞 Phase 설계와 실제 코드가 다를 수 있으니 `src/`에서 관련 타입과 함수 시그니처를 확인해요.
 

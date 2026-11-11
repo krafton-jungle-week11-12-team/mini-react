@@ -1,4 +1,4 @@
-// State History (docs/design/history.md)
+// State History (docs/design/phase1/history.md)
 // 기록을 순서대로 쌓고 현재 위치를 관리해요 (FR-W07, W17~W21, W29)
 // - 기록의 내용은 읽지 않아요. 기록 타입은 T로 받아요
 // - 범위 밖으로 이동하면 위치를 바꾸지 않고 null을 돌려줘요

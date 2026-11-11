@@ -32,7 +32,7 @@ Diff는 Virtual DOM 트리 두 개를 비교해 노드 추가, 삭제, 교체, �
 
 ## 자료구조
 
-Diff 결과는 Virtual DOM 트리와 같은 모양이에요. 같은 자리 비교(배열)에서는 자식 목록의 *i*번째 칸이 같은 부모의 *i*번째 자식에 대한 결과예요. 그래서 노드 위치를 경로로 따로 적지 않고, 결과 트리에서의 위치가 곧 노드 위치예요. key로 짝지은 자식 목록은 이 약속이 깨져서 `KEYED` 형식을 써요([ADR-011](../adr/ADR-011.md)).
+Diff 결과는 Virtual DOM 트리와 같은 모양이에요. 같은 자리 비교(배열)에서는 자식 목록의 *i*번째 칸이 같은 부모의 *i*번째 자식에 대한 결과예요. 그래서 노드 위치를 경로로 따로 적지 않고, 결과 트리에서의 위치가 곧 노드 위치예요. key로 짝지은 자식 목록은 이 약속이 깨져서 `KEYED` 형식을 써요([ADR-011](../../adr/ADR-011.md)).
 
 ```ts
 type Patch =
@@ -98,11 +98,11 @@ function diff(oldRoots: VNode[], newRoots: VNode[]): ChildPatches;
 
 ## 동작 방식
 
-`diff`는 재귀로 트리를 내려가요([ADR-009](../adr/ADR-009.md)). 내부 함수 세 개를 써요.
+`diff`는 재귀로 트리를 내려가요([ADR-009](../../adr/ADR-009.md)). 내부 함수 세 개를 써요.
 
-- `pairChildren`: 자식 목록 두 개를 노드 쌍으로 짝지어요. Phase 2에서 key 기반 비교로 바꿀 때 짝짓는 기준은 이 함수에서만 바꿔요([ADR-002](../adr/ADR-002.md)). 다만 key로 짝지으면 순서가 바뀐 노드가 생겨, 결과의 "i번째 칸 = i번째 자식" 약속이 깨져요. 그래서 결과 형식도 함께 바뀌어요([ADR-011](../adr/ADR-011.md)).
+- `pairChildren`: 자식 목록 두 개를 노드 쌍으로 짝지어요. Phase 2에서 key 기반 비교로 바꿀 때 짝짓는 기준은 이 함수에서만 바꿔요([ADR-002](../../adr/ADR-002.md)). 다만 key로 짝지으면 순서가 바뀐 노드가 생겨, 결과의 "i번째 칸 = i번째 자식" 약속이 깨져요. 그래서 결과 형식도 함께 바뀌어요([ADR-011](../../adr/ADR-011.md)).
 - `diffChildren`: key로 짝지을 수 있으면 `diffKeyed`, 아니면 짝지은 쌍마다 `diffNode`를 불러 결과 배열을 만들어요.
-- `diffKeyed`: key로 짝짓고 이동할 노드를 표시해요([ADR-011](../adr/ADR-011.md)).
+- `diffKeyed`: key로 짝짓고 이동할 노드를 표시해요([ADR-011](../../adr/ADR-011.md)).
 - `diffNode`: 노드 한 쌍을 비교해요. 둘 다 같은 요소면 `diffChildren`을 재귀로 불러 자식을 비교해요.
 
 ### `diff(oldRoots, newRoots)`
@@ -128,10 +128,10 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 - 두 목록의 노드가 하나도 빠짐없이 key를 가져요. 텍스트·주석 노드는 key가 없어서, 하나라도 섞이면 key로 짝짓지 않아요.
 - 한 목록 안에서 key가 겹치지 않아요.
 
-하나라도 어기면 같은 자리 비교로 돌아가요. Phase 1 입력은 key가 없어서 항상 같은 자리 비교예요([ADR-002](../adr/ADR-002.md)).
+하나라도 어기면 같은 자리 비교로 돌아가요. Phase 1 입력은 key가 없어서 항상 같은 자리 비교예요([ADR-002](../../adr/ADR-002.md)).
 
 1. `pairChildren(oldList, newList)`로 쌍 목록을 받아요.
-2. 쌍마다 두 노드를 `diffNode`로 비교해 결과를 같은 인덱스에 담아요. 바뀌지 않은 자리는 `null`이에요. 쌍은 `for` 반복문으로 돌아요. `map` 같은 콜백으로 돌면 재귀 한 단계마다 호출이 더 쌓여 버틸 수 있는 깊이가 줄어요([ADR-009](../adr/ADR-009.md) 결정 5번).
+2. 쌍마다 두 노드를 `diffNode`로 비교해 결과를 같은 인덱스에 담아요. 바뀌지 않은 자리는 `null`이에요. 쌍은 `for` 반복문으로 돌아요. `map` 같은 콜백으로 돌면 재귀 한 단계마다 호출이 더 쌓여 버틸 수 있는 깊이가 줄어요([ADR-009](../../adr/ADR-009.md) 결정 5번).
 3. 결과 배열을 돌려줘요.
 
 ### `diffKeyed(oldList, newList)`
@@ -155,11 +155,11 @@ function diffKeyed(oldList: VNode[], newList: VNode[]): KeyedPatches;
 | 1     | A   | 0          | 2                           | true   |
 | 2     | B   | 1          | 2                           | true   |
 
-C 하나만 옮기면 되지만 A, B가 이동으로 잡혀요. 화면 결과는 같고 이동 횟수만 늘어요([ADR-011](../adr/ADR-011.md) 선택지 C의 단점).
+C 하나만 옮기면 되지만 A, B가 이동으로 잡혀요. 화면 결과는 같고 이동 횟수만 늘어요([ADR-011](../../adr/ADR-011.md) 선택지 C의 단점).
 
 ### `diffNode(oldNode, newNode)`
 
-아래 순서로 검사하고, 해당하는 단계에서 그 노드의 비교를 끝내요. 순서는 [ADR-002](../adr/ADR-002.md)의 판단 순서를 따라요.
+아래 순서로 검사하고, 해당하는 단계에서 그 노드의 비교를 끝내요. 순서는 [ADR-002](../../adr/ADR-002.md)의 판단 순서를 따라요.
 
 1. 새 노드가 없으면 `{ type: 'REMOVE' }`
 2. 이전 노드가 없으면 `{ type: 'CREATE', vnode: newNode }`
@@ -209,16 +209,16 @@ C 하나만 옮기면 되지만 A, B가 이동으로 잡혀요. 화면 결과는
 
 | 결정                                                         | 이유                                                                          | 관련 ADR                     |
 | ------------------------------------------------------------ | ----------------------------------------------------------------------------- | ---------------------------- |
-| 이전 트리로 현재 기록의 `vdom`을 받는다                      | 한 기록의 Patch 후가 다음 기록의 Patch 전이라 따로 저장하지 않아요            | [ADR-006](../adr/ADR-006.md) |
-| 공백·주석 노드를 포함해 모든 노드를 비교한다                 | 정확성을 먼저 택해요                                                          | [ADR-007](../adr/ADR-007.md) |
-| 화면에 보이는지는 Diff 결과에 넣지 않는다                    | 변경 표시는 Diff와 분리해요                                                   | [ADR-008](../adr/ADR-008.md) |
-| 두 루트 목록(`VNode[]`)을 `diffChildren`으로 비교한다        | [Virtual DOM 변환](vdom.md)이 컨테이너를 빼고 자식 목록을 돌려줘요            | [ADR-005](../adr/ADR-005.md) |
-| 자식은 같은 인덱스끼리 비교한다                              | key가 없는 Phase 1에서 가장 단순하고, 결과 위치가 곧 노드 위치가 돼요         | [ADR-002](../adr/ADR-002.md) |
-| `kind`나 `tag`가 다르면 교체로 본다                          | 다른 종류의 노드는 고쳐 쓸 수 없어요                                          | [ADR-002](../adr/ADR-002.md) |
-| 재귀로 내려가고, 자식 쌍은 `for` 반복문으로 돈다             | 함수가 돌아올 때 자식 결과로 `UPDATE`인지 `null`인지 바로 정해요. 파서가 깊이를 512단계로 제한해 콜 스택이 넘치지 않아요 | [ADR-009](../adr/ADR-009.md) |
-| 자식이 모두 key를 갖고 key가 겹치지 않을 때만 key로 짝짓는다 | key가 없는 노드를 섞어 짝지으려면 규칙이 더 필요해요. 하나라도 어기면 같은 자리 비교로 돌아가 결과가 틀리지 않아요 | [ADR-002](../adr/ADR-002.md) |
-| key 비교에서는 뒤로 돌아간 노드만 이동으로 표시한다          | 왼쪽부터 한 번만 훑고, 흔한 변경(끝에 추가, 중간 삭제)은 이동이 최소예요       | [ADR-011](../adr/ADR-011.md) |
-| 자식 목록을 짝짓는 부분을 `pairChildren`으로 나눈다          | Phase 2에서 key 기반 비교로 바꿀 때 짝짓는 기준은 이 함수만 바꿔요. 순서가 바뀐 노드를 표현하려고 결과 형식은 함께 바뀌어요([ADR-011](../adr/ADR-011.md)) | [ADR-002](../adr/ADR-002.md) |
+| 이전 트리로 현재 기록의 `vdom`을 받는다                      | 한 기록의 Patch 후가 다음 기록의 Patch 전이라 따로 저장하지 않아요            | [ADR-006](../../adr/ADR-006.md) |
+| 공백·주석 노드를 포함해 모든 노드를 비교한다                 | 정확성을 먼저 택해요                                                          | [ADR-007](../../adr/ADR-007.md) |
+| 화면에 보이는지는 Diff 결과에 넣지 않는다                    | 변경 표시는 Diff와 분리해요                                                   | [ADR-008](../../adr/ADR-008.md) |
+| 두 루트 목록(`VNode[]`)을 `diffChildren`으로 비교한다        | [Virtual DOM 변환](vdom.md)이 컨테이너를 빼고 자식 목록을 돌려줘요            | [ADR-005](../../adr/ADR-005.md) |
+| 자식은 같은 인덱스끼리 비교한다                              | key가 없는 Phase 1에서 가장 단순하고, 결과 위치가 곧 노드 위치가 돼요         | [ADR-002](../../adr/ADR-002.md) |
+| `kind`나 `tag`가 다르면 교체로 본다                          | 다른 종류의 노드는 고쳐 쓸 수 없어요                                          | [ADR-002](../../adr/ADR-002.md) |
+| 재귀로 내려가고, 자식 쌍은 `for` 반복문으로 돈다             | 함수가 돌아올 때 자식 결과로 `UPDATE`인지 `null`인지 바로 정해요. 파서가 깊이를 512단계로 제한해 콜 스택이 넘치지 않아요 | [ADR-009](../../adr/ADR-009.md) |
+| 자식이 모두 key를 갖고 key가 겹치지 않을 때만 key로 짝짓는다 | key가 없는 노드를 섞어 짝지으려면 규칙이 더 필요해요. 하나라도 어기면 같은 자리 비교로 돌아가 결과가 틀리지 않아요 | [ADR-002](../../adr/ADR-002.md) |
+| key 비교에서는 뒤로 돌아간 노드만 이동으로 표시한다          | 왼쪽부터 한 번만 훑고, 흔한 변경(끝에 추가, 중간 삭제)은 이동이 최소예요       | [ADR-011](../../adr/ADR-011.md) |
+| 자식 목록을 짝짓는 부분을 `pairChildren`으로 나눈다          | Phase 2에서 key 기반 비교로 바꿀 때 짝짓는 기준은 이 함수만 바꿔요. 순서가 바뀐 노드를 표현하려고 결과 형식은 함께 바뀌어요([ADR-011](../../adr/ADR-011.md)) | [ADR-002](../../adr/ADR-002.md) |
 | 결과를 트리와 같은 모양으로 만든다                           | 경로를 따로 적지 않아도 Patch가 같은 모양으로 내려가며 위치를 찾아요          | -                            |
 | 텍스트와 주석의 내용 변경은 모두 `TEXT`로 본다               | 두 타입 모두 내용이 `text` 필드에 있어 같은 비교를 써요                       | -                            |
 
@@ -236,13 +236,13 @@ C 하나만 옮기면 되지만 A, B가 이동으로 잡혀요. 화면 결과는
 | 텍스트 변경             | `<li>A</li>` → `<li>B</li>`                     | `li`가 `UPDATE`, 그 자식이 `TEXT`                      | FR-E03        |
 | 주석 내용 변경          | `<!-- a -->` → `<!-- b -->`                     | `TEXT` 1개                                             | FR-E03, W26   |
 | 공백만 변경             | `<li>A</li>` → `<li> A</li>`                    | `TEXT` 1개                                             | FR-W25        |
-| 순서 바뀜               | `<li>A</li><li>B</li>` → `<li>B</li><li>A</li>` | 인덱스끼리 비교해 두 `li` 안이 각각 `TEXT`             | FR-W13 ([ADR-002](../adr/ADR-002.md)) |
-| 앞에 노드 끼워 넣기     | `<li>A</li>` → `<li>Z</li><li>A</li>`           | 첫 칸 `TEXT`(A → Z), 두 번째 칸 `CREATE`(A)            | FR-W13 ([ADR-002](../adr/ADR-002.md)) |
-| key 순서 바뀜           | key A, B, C → C, A, B                           | `KEYED`, `oldIndex` `2, 0, 1`, `move` `false, true, true` | [ADR-011](../adr/ADR-011.md) |
-| key 끝에 추가           | key A, B → A, B, X                              | `KEYED`, X 칸만 `CREATE`, 이동 없음                    | [ADR-011](../adr/ADR-011.md) |
-| key 중간 삭제           | key A, B, C → A, C                              | `KEYED`, `removes`가 `[1]`, 이동 없음                  | [ADR-011](../adr/ADR-011.md) |
-| key와 key 없는 노드가 섞임 | key A, 텍스트, key B                         | 같은 자리 비교(배열)                                   | [ADR-002](../adr/ADR-002.md) |
-| key가 겹침              | key A, A                                        | 같은 자리 비교(배열)                                   | [ADR-002](../adr/ADR-002.md) |
+| 순서 바뀜               | `<li>A</li><li>B</li>` → `<li>B</li><li>A</li>` | 인덱스끼리 비교해 두 `li` 안이 각각 `TEXT`             | FR-W13 ([ADR-002](../../adr/ADR-002.md)) |
+| 앞에 노드 끼워 넣기     | `<li>A</li>` → `<li>Z</li><li>A</li>`           | 첫 칸 `TEXT`(A → Z), 두 번째 칸 `CREATE`(A)            | FR-W13 ([ADR-002](../../adr/ADR-002.md)) |
+| key 순서 바뀜           | key A, B, C → C, A, B                           | `KEYED`, `oldIndex` `2, 0, 1`, `move` `false, true, true` | [ADR-011](../../adr/ADR-011.md) |
+| key 끝에 추가           | key A, B → A, B, X                              | `KEYED`, X 칸만 `CREATE`, 이동 없음                    | [ADR-011](../../adr/ADR-011.md) |
+| key 중간 삭제           | key A, B, C → A, C                              | `KEYED`, `removes`가 `[1]`, 이동 없음                  | [ADR-011](../../adr/ADR-011.md) |
+| key와 key 없는 노드가 섞임 | key A, 텍스트, key B                         | 같은 자리 비교(배열)                                   | [ADR-002](../../adr/ADR-002.md) |
+| key가 겹침              | key A, A                                        | 같은 자리 비교(배열)                                   | [ADR-002](../../adr/ADR-002.md) |
 | 모두 삭제               | 샘플 HTML 코드 → 빈 문자열                      | 루트 칸이 모두 `REMOVE`                                | FR-E09        |
 | 빈 문자열 → 내용 추가   | 빈 문자열 → `<p>A</p>`                          | `[CREATE]`                                             | FR-E08        |
 | 바뀐 내용 없음          | 같은 트리                                       | 모든 칸이 `null`                                       | FR-W10, W28   |
@@ -262,8 +262,8 @@ C 하나만 옮기면 되지만 A, B가 이동으로 잡혀요. 화면 결과는
 
 ## 관련 문서
 
-- [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
-- [ADR-002](../adr/ADR-002.md): Diff는 Phase 1에서 같은 자리, Phase 2에서 key로 노드를 짝짓는다. key 규칙은 이 문서의 `diffChildren`에 있어요.
-- [ADR-009](../adr/ADR-009.md): 트리 순회는 재귀로 한다
-- [ADR-011](../adr/ADR-011.md): key Diff는 뒤로 돌아간 노드만 이동으로 보고, Patch는 같은 노드를 insertBefore로 옮긴다
+- [요구사항 명세서](../../requirements/phase1/phase1_requirement.md)
+- [ADR-002](../../adr/ADR-002.md): Diff는 Phase 1에서 같은 자리, Phase 2에서 key로 노드를 짝짓는다. key 규칙은 이 문서의 `diffChildren`에 있어요.
+- [ADR-009](../../adr/ADR-009.md): 트리 순회는 재귀로 한다
+- [ADR-011](../../adr/ADR-011.md): key Diff는 뒤로 돌아간 노드만 이동으로 보고, Patch는 같은 노드를 insertBefore로 옮긴다
 - [Virtual DOM 변환 설계](vdom.md), [Patch 설계](patch.md), [변경 표시 설계](change-highlight.md)

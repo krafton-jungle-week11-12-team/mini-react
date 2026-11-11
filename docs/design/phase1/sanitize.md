@@ -6,7 +6,7 @@
 
 ## 개요
 
-입력 걸러내기는 사용자가 입력한 HTML 코드로 만든 Virtual DOM 트리에서 허용 목록 밖의 요소 노드와 속성을 빼요. 이 문서를 읽으면 무엇이 허용되고 무엇이 왜 빠지는지 알고, `src/phase1/page/sanitize.ts`를 구현하거나 허용 목록을 고칠 수 있어요. 왜 허용 목록을 쓰는지는 [ADR-014](../adr/ADR-014.md)를 봐요.
+입력 걸러내기는 사용자가 입력한 HTML 코드로 만든 Virtual DOM 트리에서 허용 목록 밖의 요소 노드와 속성을 빼요. 이 문서를 읽으면 무엇이 허용되고 무엇이 왜 빠지는지 알고, `src/phase1/page/sanitize.ts`를 구현하거나 허용 목록을 고칠 수 있어요. 왜 허용 목록을 쓰는지는 [ADR-014](../../adr/ADR-014.md)를 봐요.
 
 ## 다루는 요구사항
 
@@ -93,14 +93,14 @@ function sanitize(roots: VNode[]): SanitizeResult;
 
 | 결정 | 이유 | 관련 ADR |
 | ---- | ---- | -------- |
-| 차단 목록이 아니라 허용 목록으로 거른다 | 목록에 없는 것은 모두 빠져, 빠뜨린 위험이 생기지 않아요 | [ADR-014](../adr/ADR-014.md) (제안됨) |
-| DOM이 아니라 Virtual DOM 트리를 거른다 | 파싱한 DOM은 화면 밖 문서에 있어 화면에 닿지 않아요. 트리를 거르면 버튼 판단, 두 영역, 기록이 모두 같은 트리를 써요 | [ADR-013](../adr/ADR-013.md) (제안됨), [ADR-014](../adr/ADR-014.md) (제안됨) |
-| 허용하지 않는 요소 노드는 자식까지 뺀다 | `<script>`, `<style>`의 내용이 텍스트로 화면에 나오지 않아요. `<form>` 안의 버튼만 남기는 것처럼 뜻이 바뀐 구조도 남지 않아요 | [ADR-014](../adr/ADR-014.md) (제안됨) |
-| `name` 속성을 허용하지 않는다 | `name`은 `document`의 같은 이름 속성을 덮을 수 있어요(DOM clobbering). `toDOM`이 `document.createElement`를 쓰기 때문에 막아야 해요 | [ADR-014](../adr/ADR-014.md) (제안됨) |
-| `style`은 허용하되 외부 요청을 보낼 수 있는 값이면 통째로 뺀다 | 레이아웃 실험에 필요해요. 값 일부만 고치면 남은 CSS가 입력과 달라져 헷갈려요. 역슬래시는 CSS 이스케이프로 `url`을 숨길 수 있어 막아요 | [ADR-014](../adr/ADR-014.md) (제안됨) |
-| `position: fixed`는 거르지 않고 CSS `contain: paint`로 가둔다 | 값을 하나씩 막는 것보다 단순해요. `contain: paint`를 건 박스는 fixed 요소 노드의 기준이 되고 박스 밖을 그리지 않아요([화면 스타일 설계](style.md#렌더링-결과-박스)) | [ADR-014](../adr/ADR-014.md) (제안됨) |
-| `key`를 허용한다 | 검증 페이지에서 key 비교를 확인할 수 있어야 해요 | [ADR-011](../adr/ADR-011.md) |
-| 자식은 `for` 반복문으로 돈다 | 재귀 한 단계마다 쌓이는 호출을 줄여요 | [ADR-009](../adr/ADR-009.md) |
+| 차단 목록이 아니라 허용 목록으로 거른다 | 목록에 없는 것은 모두 빠져, 빠뜨린 위험이 생기지 않아요 | [ADR-014](../../adr/ADR-014.md) (제안됨) |
+| DOM이 아니라 Virtual DOM 트리를 거른다 | 파싱한 DOM은 화면 밖 문서에 있어 화면에 닿지 않아요. 트리를 거르면 버튼 판단, 두 영역, 기록이 모두 같은 트리를 써요 | [ADR-013](../../adr/ADR-013.md) (제안됨), [ADR-014](../../adr/ADR-014.md) (제안됨) |
+| 허용하지 않는 요소 노드는 자식까지 뺀다 | `<script>`, `<style>`의 내용이 텍스트로 화면에 나오지 않아요. `<form>` 안의 버튼만 남기는 것처럼 뜻이 바뀐 구조도 남지 않아요 | [ADR-014](../../adr/ADR-014.md) (제안됨) |
+| `name` 속성을 허용하지 않는다 | `name`은 `document`의 같은 이름 속성을 덮을 수 있어요(DOM clobbering). `toDOM`이 `document.createElement`를 쓰기 때문에 막아야 해요 | [ADR-014](../../adr/ADR-014.md) (제안됨) |
+| `style`은 허용하되 외부 요청을 보낼 수 있는 값이면 통째로 뺀다 | 레이아웃 실험에 필요해요. 값 일부만 고치면 남은 CSS가 입력과 달라져 헷갈려요. 역슬래시는 CSS 이스케이프로 `url`을 숨길 수 있어 막아요 | [ADR-014](../../adr/ADR-014.md) (제안됨) |
+| `position: fixed`는 거르지 않고 CSS `contain: paint`로 가둔다 | 값을 하나씩 막는 것보다 단순해요. `contain: paint`를 건 박스는 fixed 요소 노드의 기준이 되고 박스 밖을 그리지 않아요([화면 스타일 설계](style.md#렌더링-결과-박스)) | [ADR-014](../../adr/ADR-014.md) (제안됨) |
+| `key`를 허용한다 | 검증 페이지에서 key 비교를 확인할 수 있어야 해요 | [ADR-011](../../adr/ADR-011.md) |
+| 자식은 `for` 반복문으로 돈다 | 재귀 한 단계마다 쌓이는 호출을 줄여요 | [ADR-009](../../adr/ADR-009.md) |
 
 ## 경계 케이스
 
@@ -126,6 +126,6 @@ function sanitize(roots: VNode[]): SanitizeResult;
 
 ## 관련 문서
 
-- [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
-- [ADR-014](../adr/ADR-014.md), [ADR-013](../adr/ADR-013.md)
+- [요구사항 명세서](../../requirements/phase1/phase1_requirement.md)
+- [ADR-014](../../adr/ADR-014.md), [ADR-013](../../adr/ADR-013.md)
 - [검증 페이지 설계](page.md), [Virtual DOM 변환 설계](vdom.md), [화면 스타일 설계](style.md)
