@@ -65,6 +65,9 @@ export type Page = {
   onPatch(): void;
   onBack(): void;
   onForward(): void;
+  /** 샘플 HTML 코드로 두 영역과 State History를 처음부터 다시 만들어요 (FR-X05, sample.md) */
+  loadSample(html: string, note: string): void;
+  /** 지금 State History. loadSample 뒤에는 새로 만든 것을 가리켜요 */
   readonly history: StateHistory<HistoryEntry>;
 };
 
@@ -105,20 +108,39 @@ export function createPage<R>(
   // HTML 코드를 파싱하는 화면 밖 문서. 화면의 문서와 달리 이벤트 속성이 실행되지 않아요 (설계 결정)
   const probeDoc = el.testCode.ownerDocument.implementation.createHTMLDocument('');
   // 기록 목록 패널의 설명. 기록과 같은 순서예요. State History는 내용을 읽지 않으니 페이지가 따로 들고 있어요
-  const notes: string[] = ['샘플 HTML 코드로 로드'];
+  const notes: string[] = [];
   let lastSummary: ChangeSummary | null = null;
   // 마지막으로 보여 준 요약·오류 문구. 입력 중 안내 문구가 사라지면 이 문구로 되돌려요
   let shown = { text: '', isError: false };
 
   // ── 로드 ────────────────────────────────────────────────
-  setRealCode(sample); // 1 (FR-W02)
-  setTestCode(sample); // 1 (FR-W05)
-  el.realRoot.innerHTML = sample; // 2 (FR-W22). 샘플 HTML 코드는 실제 영역에 주어진 입력이에요
-  const firstVdom = engine.toVNode(el.realRoot); // 3 (FR-W03)
-  const history = engine.createHistory<HistoryEntry>({ html: sample, vdom: firstVdom }); // 4 (FR-W07)
-  if (!render(el.testRoot, firstVdom)) showMessage(RENDER_ERROR, true); // 5 (FR-W04)
-  updateButtons(); // 6
-  renderPanels();
+  // load가 채워요. 선언과 대입을 나눠, load 안에서 대입할 때 아직 선언 전인 상태가 되지 않게 해요
+  let history: StateHistory<HistoryEntry>;
+  load(sample, '샘플 HTML 코드로 로드');
+
+  /**
+   * 로드 단계를 실행하고 새 State History를 돌려줘요.
+   * 처음 로드와 샘플 선택(FR-X05)이 같은 단계를 거쳐요. 샘플 선택 때는 남은 강조 표시와 문구도 지워요.
+   */
+  function load(html: string, note: string): void {
+    clearHighlights();
+    lastSummary = null;
+    showMessage('', false);
+    setRealCode(html); // 1 (FR-W02)
+    setTestCode(html); // 1 (FR-W05)
+    el.realRoot.innerHTML = html; // 2 (FR-W22). 샘플 HTML 코드는 실제 영역에 주어진 입력이에요
+    const firstVdom = engine.toVNode(el.realRoot); // 3 (FR-W03)
+    history = engine.createHistory<HistoryEntry>({ html, vdom: firstVdom }); // 4 (FR-W07)
+    notes.length = 0;
+    notes.push(note);
+    if (!render(el.testRoot, firstVdom)) showMessage(RENDER_ERROR, true); // 5 (FR-W04)
+    updateButtons(); // 6
+    renderPanels();
+  }
+
+  function loadSample(html: string, note: string): void {
+    load(html, note);
+  }
 
   // ── 핸들러 ──────────────────────────────────────────────
   function onInput(): void {
@@ -337,7 +359,16 @@ export function createPage<R>(
   el.backButton.addEventListener('click', onBack);
   el.forwardButton.addEventListener('click', onForward);
 
-  return { onInput, onPatch, onBack, onForward, history };
+  return {
+    onInput,
+    onPatch,
+    onBack,
+    onForward,
+    loadSample,
+    get history() {
+      return history;
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------

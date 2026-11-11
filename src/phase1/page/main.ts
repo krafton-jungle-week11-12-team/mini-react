@@ -7,7 +7,8 @@ import { diff } from '../modules/diff';
 import { patch } from '../modules/patch';
 import { fromDiffResult, captureBefore, showChanges } from './change-highlight';
 import { createHistory } from '../modules/history';
-import { createPage, getElements, SAMPLE_HTML } from './page';
+import { createPage, getElements } from './page';
+import { renderSampleTabs, SAMPLES } from './samples';
 
 /**
  * 강조 표시 모양 (style.md "강조 표시 모양"): 옅은 보라 배경 띠가 나타나 다음 Patch나 기록 이동 전까지 남아요.
@@ -20,9 +21,16 @@ function highlight(el: Element): void {
   el.animate([off, on], { duration: 400, easing: 'ease-out', fill: 'forwards' });
 }
 
-createPage(
+const page = createPage(
   getElements(document),
-  SAMPLE_HTML,
+  SAMPLES[0].html,
   { toVNode, toDOM, diff, patch, fromDiffResult, captureBefore, showChanges, createHistory },
   { highlight },
 );
+
+// 샘플 탭 (FR-X05, sample.md). 자리가 없으면 탭 없이 동작해요
+const tabs = document.getElementById('sample-tabs');
+const hint = document.getElementById('sample-hint');
+if (tabs && hint) {
+  renderSampleTabs(tabs, hint, SAMPLES, (sample) => page.loadSample(sample.html, `샘플 "${sample.label}"로 로드`));
+}
