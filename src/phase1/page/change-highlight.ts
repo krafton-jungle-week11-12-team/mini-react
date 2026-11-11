@@ -3,8 +3,8 @@
 // - Diff 결과의 형식을 아는 함수는 fromDiffResult 하나예요. 나머지는 ChangeRecord만 써요
 // - 바뀐 노드는 Patch 결과가 아니라 두 트리에서의 위치로 실제 영역에서 직접 찾아요
 
-import type { ChildPatches, KeyedPatches, Patch, PropsPatch } from './diff';
-import type { VNode } from './vdom';
+import type { ChildPatches, KeyedPatches, Patch, PropsPatch } from '../modules/diff';
+import type { VNode } from '../modules/vdom';
 
 export type NodeKind = 'element' | 'text' | 'comment';
 

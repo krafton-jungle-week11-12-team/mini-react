@@ -6,7 +6,7 @@
 
 ## 개요
 
-props 반영은 요소 VNode의 props 하나를 실제 DOM 요소에 넣거나 빼요. 이벤트 핸들러는 `addEventListener`로, `value`, `checked`, `selected`는 property로, 나머지는 attribute로 반영해요. 이 문서를 읽으면 Phase 1의 `VNode` props 타입을 어떻게 넓히는지와 `toDOM`, `patch`가 props를 반영하는 방법을 알고 `src/phase2/impl/props.ts`를 구현할 수 있어요.
+props 반영은 요소 VNode의 props 하나를 실제 DOM 요소에 넣거나 빼요. 이벤트 핸들러는 `addEventListener`로, `value`, `checked`, `selected`는 property로, 나머지는 attribute로 반영해요. 이 문서를 읽으면 Phase 1의 `VNode` props 타입을 어떻게 넓히는지와 `toDOM`, `patch`가 props를 반영하는 방법을 알고 `src/phase2/modules/props.ts`를 구현할 수 있어요.
 
 ## 다루는 요구사항
 
@@ -57,7 +57,7 @@ type PropsPatch = {
   remove: string[];
 };
 
-// src/phase2/impl/props.ts 안에만 있는 핸들러 저장소
+// src/phase2/modules/props.ts 안에만 있는 핸들러 저장소
 const listeners: WeakMap<Element, Map<string, EventHandler>>;
 ```
 
@@ -142,7 +142,7 @@ props 이름과 값으로 세 갈래 중 하나를 골라요.
 | 이름이 `on`으로 시작하면 값이 함수가 아니어도 attribute로 만들지 않는다                    | `onClick: undefined`처럼 핸들러를 끈 경우 이전 핸들러만 지워야 해요. 문자열 `onclick` attribute는 인라인 스크립트라 만들지 않아요                         | -        |
 | attribute 갈래에서 `false`·`null`·`undefined`는 attribute를 지우고, `true`는 빈 문자열로 붙인다 | `disabled: false`를 `setAttribute('disabled', 'false')`로 붙이면 버튼이 비활성이 돼요. HTML의 boolean attribute는 있으면 켜진 것이에요               | -        |
 | 이벤트 이름은 `on` 뒤를 소문자로 바꾸는 규칙만 쓴다                                        | 요구사항 4.2의 규칙이에요. 예제 앱에 쓰는 `click`, `input`, `change`, `submit`, `keydown`은 모두 이 규칙으로 맞아요                                        | -        |
-| props 반영은 `src/phase2/impl/props.ts`에 두고 `toDOM`과 `patch`가 같이 부른다                         | 처음 만들 때와 Patch할 때 같은 규칙을 한 곳에서 지켜요                                                                                                  | -        |
+| props 반영은 `src/phase2/modules/props.ts`에 두고 `toDOM`과 `patch`가 같이 부른다                         | 처음 만들 때와 Patch할 때 같은 규칙을 한 곳에서 지켜요                                                                                                  | -        |
 
 ## 경계 케이스
 

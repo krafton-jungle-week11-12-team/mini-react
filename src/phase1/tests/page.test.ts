@@ -1,11 +1,11 @@
 /// <reference types="vite/client" />
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { captureBefore, fromDiffResult, showChanges } from '../impl/change-highlight';
-import { diff } from '../impl/diff';
-import { createHistory } from '../impl/history';
-import { createPage, getElements, SAMPLE_HTML, type EngineModules } from '../impl/page';
-import { patch } from '../impl/patch';
-import { toVNode, type VNode } from '../impl/vdom';
+import { captureBefore, fromDiffResult, showChanges } from '../page/change-highlight';
+import { diff } from '../modules/diff';
+import { createHistory } from '../modules/history';
+import { createPage, getElements, SAMPLE_HTML, type EngineModules } from '../page/page';
+import { patch } from '../modules/patch';
+import { toVNode, type VNode } from '../modules/vdom';
 import indexHtml from '../../../phase1.html?raw';
 
 // phase1.html의 body를 그대로 jsdom 문서에 넣어 요소 노드를 찾아요

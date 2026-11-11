@@ -1,6 +1,6 @@
 // Virtual DOM 변환 단위 테스트 (docs/design/vdom.md, 테스트 케이스 V1~V12, D1~D6)
 import { beforeEach, describe, expect, it } from 'vitest';
-import { toDOM, toVNode, type VElement, type VNode } from '../impl/vdom';
+import { toDOM, toVNode, type VElement, type VNode } from '../modules/vdom';
 
 // FR-W23 샘플 HTML 코드 (끝 줄바꿈 없음)
 const SAMPLE = `<div id="app">

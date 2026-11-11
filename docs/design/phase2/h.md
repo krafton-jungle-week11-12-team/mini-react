@@ -6,7 +6,7 @@
 
 ## 개요
 
-h 함수는 `h(tag, props, ...children)` 호출을 VNode로 바꿔요. 컴포넌트가 VNode 객체를 직접 쓰지 않고 트리를 만들 수 있게 해 줘요. 이 문서를 읽으면 h가 자식을 정리하는 순서, 자식 컴포넌트를 실행하는 방법, props의 `key`를 VNode의 `key` 필드로 옮기는 방법을 알고 `src/phase2/impl/h.ts`를 구현할 수 있어요.
+h 함수는 `h(tag, props, ...children)` 호출을 VNode로 바꿔요. 컴포넌트가 VNode 객체를 직접 쓰지 않고 트리를 만들 수 있게 해 줘요. 이 문서를 읽으면 h가 자식을 정리하는 순서, 자식 컴포넌트를 실행하는 방법, props의 `key`를 VNode의 `key` 필드로 옮기는 방법을 알고 `src/phase2/modules/h.ts`를 구현할 수 있어요.
 
 ## 다루는 요구사항
 
@@ -117,7 +117,7 @@ h는 내부 함수 `normalizeChildren`으로 자식을 정리해요. 인자는 �
 | props의 `key`는 VNode의 `key` 필드로 옮기고 props에서 뺀다 (요구사항 6.1 key props 처리) | key는 Diff가 짝을 찾을 때만 쓰는 표시라 attribute가 되면 안 돼요. props에 남으면 FR-P08대로 attribute로 붙어요 | [ADR-002](../../adr/ADR-002.md), [ADR-011](../../adr/ADR-011.md) |
 | `key`는 `String(key)`로 바꿔 넣는다                                             | `todo.id` 같은 숫자 key를 그대로 쓸 수 있어요. `VElement.key`가 문자열이라 Diff의 key 비교가 그대로 맞아요           | -        |
 | 자식 컴포넌트에 넘긴 `key`는 컴포넌트에 넘기지 않고, 컴포넌트가 돌려준 요소 VNode에 붙인다 | 목록은 보통 `h(TodoItem, { key, … })`로 만들어요. 트리에 컴포넌트가 남지 않으므로 key가 결과 VNode에 있어야 Diff가 읽어요 | -        |
-| h는 `src/phase2/impl/h.ts`에 둔다                                                          | 컴포넌트 코드가 import하는 진입점이라 FunctionComponent와 따로 둬요                                                 | -        |
+| h는 `src/phase2/modules/h.ts`에 둔다                                                          | 컴포넌트 코드가 import하는 진입점이라 FunctionComponent와 따로 둬요                                                 | -        |
 
 ## 경계 케이스
 

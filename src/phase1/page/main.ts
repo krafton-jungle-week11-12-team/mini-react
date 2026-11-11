@@ -2,11 +2,11 @@
 // 엔진 모듈을 import하는 곳은 여기 하나예요. 모듈을 다른 구현으로 바꿀 때는 여기만 고쳐요
 
 import './style.css';
-import { toVNode } from './vdom';
-import { diff } from './diff';
-import { patch } from './patch';
+import { toVNode } from '../modules/vdom';
+import { diff } from '../modules/diff';
+import { patch } from '../modules/patch';
 import { fromDiffResult, captureBefore, showChanges } from './change-highlight';
-import { createHistory } from './history';
+import { createHistory } from '../modules/history';
 import { createPage, getElements, SAMPLE_HTML } from './page';
 
 /**

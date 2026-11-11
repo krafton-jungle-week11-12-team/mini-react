@@ -40,20 +40,23 @@
 
 ## 폴더 구조
 
-Phase마다 구현과 테스트를 나눠 둬요. 스킬이 테스트나 구현 파일을 새로 만들 때도 이 자리에 만들어요.
+Phase마다 구현을 모듈과 웹페이지로 나누고, 테스트는 따로 둬요. 스킬이 파일을 새로 만들 때도 이 자리에 만들어요.
 
 ```
 src/
   phase1/
-    impl/    구현 (vdom, diff, patch, history, change-highlight, page, main.ts, style.css)
-    tests/   테스트 (*.test.ts)
+    modules/  엔진 모듈 (vdom, diff, patch, history)
+    page/     검증 페이지 (page, change-highlight, main.ts, style.css)
+    tests/    테스트 (*.test.ts)
   phase2/
-    impl/    구현 (component, h, props, deps, use-state, use-memo, use-effect)
-    tests/   테스트 (*.test.ts)
+    modules/  엔진 모듈 (component, h, props, deps, use-state, use-memo, use-effect)
+    page/     할 일 앱 (main.ts)
+    tests/    테스트 (*.test.ts)
 ```
 
-- 테스트는 `src/<phase>/tests/<모듈>.test.ts`, 구현은 `src/<phase>/impl/<모듈>.ts`에 둬요.
-- Phase 2는 Phase 1 엔진(`vdom`, `diff`, `patch`)을 `src/phase1/impl/`에서 가져다 써요.
+- 테스트는 `src/<phase>/tests/<모듈>.test.ts`에 둬요.
+- 엔진 모듈은 `src/<phase>/modules/`, 화면을 그리는 코드는 `src/<phase>/page/`에 둬요.
+- Phase 2는 Phase 1 엔진(`vdom`, `diff`, `patch`)을 `src/phase1/modules/`에서 가져다 써요.
 
 ## Phase 인자
 

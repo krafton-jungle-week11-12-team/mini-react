@@ -6,7 +6,7 @@
 
 ## 개요
 
-의존성 비교는 이전 deps와 이번 deps를 받아 "바뀌었다" 또는 "같다"로 판단해요. useMemo와 useEffect가 같은 함수(`depsChanged`)를 불러요. 이 문서를 읽으면 deps가 생략됐거나 길이가 바뀐 경우를 포함한 판단 순서를 알고 `src/phase2/impl/deps.ts`를 구현할 수 있어요.
+의존성 비교는 이전 deps와 이번 deps를 받아 "바뀌었다" 또는 "같다"로 판단해요. useMemo와 useEffect가 같은 함수(`depsChanged`)를 불러요. 이 문서를 읽으면 deps가 생략됐거나 길이가 바뀐 경우를 포함한 판단 순서를 알고 `src/phase2/modules/deps.ts`를 구현할 수 있어요.
 
 ## 다루는 요구사항
 
@@ -86,7 +86,7 @@ function depsChanged(prev?: Deps, next?: Deps): boolean {
 | 생략하면 오류 없이 "바뀌었다"로 본다                         | 요구사항 6.1 결정이에요. 비교할 기준이 없어요. 실제 React와 같아요                                                                        | -        |
 | 원소는 `===`가 아니라 `Object.is`로 비교한다                 | `NaN`을 같다고 봐서, state가 `NaN`일 때 매번 다시 계산하지 않아요. setState의 같은 값 판단(FR-S08)과 같은 함수예요                         | -        |
 | 원소 비교는 `some` 대신 `for` 반복문으로 하고, 다른 원소를 찾으면 바로 끝낸다 | 요구사항 6.1의 코드와 결과가 같아요. 이 저장소의 순회 방식(콜백 대신 `for`)에 맞췄어요                                                     | [ADR-009](../../adr/ADR-009.md) |
-| `depsChanged`는 `src/phase2/impl/deps.ts`에 둔다 (use-memo 요구사항 6.1) | useMemo와 useEffect가 같은 함수를 import해요. 한쪽 Hook 파일에 두면 다른 Hook이 그 파일에 기대게 돼요                                       | -        |
+| `depsChanged`는 `src/phase2/modules/deps.ts`에 둔다 (use-memo 요구사항 6.1) | useMemo와 useEffect가 같은 함수를 import해요. 한쪽 Hook 파일에 두면 다른 Hook이 그 파일에 기대게 돼요                                       | -        |
 
 ## 경계 케이스
 
