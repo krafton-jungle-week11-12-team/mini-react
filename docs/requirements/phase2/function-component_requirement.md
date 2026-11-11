@@ -4,7 +4,7 @@
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | 문서 상태 | 초안 v0.1                                                                                                                                    |
 | 작성일    | 2026-11-10                                                                                                                                   |
-| 수정일    | 2026-11-11 (임동호 요구사항 병합, 루트 형태 · 같은 값 건너뛰기 결정, 앱 작성 규칙 분리, scheduleUpdate 반영)                                                                                       |
+| 수정일    | 2026-11-11 (임동호 요구사항 병합, 루트 형태 · 같은 값 건너뛰기 결정, 앱 작성 규칙 분리, scheduleUpdate 반영, 설계 반영: FR-C12)                                                                    |
 | 작성자    | 오동환, 임동호                                                                                                                                       |
 | 근거      | Discussions #104 (mount와 Hook의 동작 원리), #105 (App이 return한 VNode는 어디로 가는가), #106 (useState와 클로저), #107 (같은 값이면 update 건너뛰기), 임동호 컴포넌트 요구사항, 2026-11-10 코어타임                           |
 | 선행 문서 | [phase1_requirement.md](../phase1/phase1_requirement.md), [h-props_requirement.md](h-props_requirement.md)                     |
@@ -104,7 +104,7 @@
 1. `hookIndex`를 0으로 되돌린다.
 2. `currentComponent`가 이 인스턴스를 가리키게 한다.
 3. 보관한 컴포넌트 함수를 `fn(props)`로 실행한다. 이 동안 useState가 호출 순서대로 `hooks[0]`, `hooks[1]`, …을 쓴다.
-4. `currentComponent`를 `null`로 되돌리고, 3단계에서 받은 VNode를 돌려준다.
+4. `currentComponent`를 `null`로 되돌리고, 3단계에서 받은 VNode를 돌려준다. 3단계가 오류를 던져도 `currentComponent`는 `null`로 되돌린다. (FR-C12)
 
 ## 5. 기능 요구사항
 
@@ -128,6 +128,7 @@
 | FR-C09 | -                 | (삭제됨)                                                                                                                        | -                                                                                                                      | 삭제됨: 막지 않기로 결정 (6.1). 대체: FR-A12 |
 | FR-C10 | -                 | (삭제됨)                                                                                                                        | -                                                                                                                      | 삭제됨: 막지 않기로 결정 (6.1). 대체: FR-A12 |
 | FR-C11 | 항상 (Ubiquitous) | FunctionComponent는 hooks 배열을 인스턴스 필드로 가져야 한다.                                                                    | 생성 직후 인스턴스에 빈 hooks 배열이 있는지 확인                                                                       | 임동호 요구사항에서 추가 |
+| FR-C12 | 오류 (If-Then)    | 만약 컴포넌트 함수가 실행 중 오류를 던지면, 시스템은 `currentComponent`를 `null`로 되돌린 뒤 그 오류를 그대로 전파해야 한다.     | 오류를 던지는 컴포넌트로 mount해 오류가 나는지, 그 뒤 `currentComponent`가 `null`이고 useState 직접 호출이 FR-T01 오류를 내는지 확인 | 설계 반영 ([FunctionComponent 설계](../../design/phase2/function-component.md)) |
 
 ### 5.2 useState
 
