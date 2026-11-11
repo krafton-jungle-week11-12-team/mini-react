@@ -130,7 +130,7 @@ phase1.html + style.css ──▶ 화면 (검증 페이지가 요소 노드를 �
 ### 렌더링 결과 박스
 
 - `realRoot`와 `testRoot`에는 **똑같은** CSS만 걸어요. 한쪽에만 거는 CSS는 두지 않아요. 같은 CSS를 받으므로 두 영역의 렌더링 결과는 같게 보이고, 비교(FR-W06, W15)에 영향이 없어요.
-- 두 박스에 거는 CSS: 글꼴 Pretendard, 글자색 `--dd-text`, `h1` 20px, `li` 14px, 안쪽 여백 위아래 16px·좌우 20px, 넘치면 `overflow: auto`예요. 높이는 영역 패널 안에서 코드 칸과 남은 높이를 반씩 나눠요.
+- 두 박스에 거는 CSS: 글꼴 Pretendard, 글자색 `--dd-text`, `h1` 20px, `li` 14px, 안쪽 여백 위아래 16px·좌우 20px, 넘치면 `overflow: auto`예요. `contain: paint`를 걸어 입력한 `style`의 `position: fixed` 같은 요소 노드가 박스 밖을 덮지 못하게 해요([ADR-014](../adr/ADR-014.md), 제안됨). 높이는 영역 패널 안에서 코드 칸과 남은 높이를 반씩 나눠요.
 
 ### 스크롤 맞추기
 

@@ -19,7 +19,7 @@
 | FR-W22 | 로드하면 샘플 HTML 코드로 만든 DOM으로 실제 영역을 렌더링해요                                       | 로드                                   |
 | FR-W23 | 샘플 HTML 코드는 정해진 구조예요                                                                    | 자료구조, 경계 케이스                  |
 | FR-W03 | 로드하면 첫 기록을 위해 실제 영역의 DOM 트리를 Virtual DOM 트리로 변환해요                          | 로드                                   |
-| FR-W04 | 로드하면 테스트 영역의 HTML 코드를 파싱한 DOM으로 테스트 영역을 렌더링해요                          | 로드                                   |
+| FR-W04 | 로드하면 첫 기록의 Virtual DOM 트리를 DOM으로 변환해 테스트 영역을 렌더링해요 (ADR-013, 제안됨)     | 로드                                   |
 | FR-W05 | 로드하면 테스트 영역에 실제 영역과 같은 HTML 코드를 보여 줘요                                       | 로드, 검증 방법                        |
 | FR-W06 | 로드하면 두 영역의 렌더링 결과가 같아요                                                             | 검증 방법                              |
 | FR-W07 | 로드하면 `{ html, vdom }`을 `history[0]`으로 저장해요                                               | 로드, 검증 방법                        |
@@ -28,8 +28,8 @@
 | FR-W10 | 테스트 영역의 HTML 코드로 만든 트리가 현재 위치 기록의 `vdom`과 같은 동안 Patch 버튼을 비활성화해요 | HTML 코드 수정, 버튼 상태, 경계 케이스 |
 | FR-W25 | 공백이나 줄바꿈만 바꿔도 바뀐 내용으로 판단해요                                                     | HTML 코드 수정, 경계 케이스            |
 | FR-W26 | 주석만 추가해도 바뀐 내용으로 판단해요                                                              | HTML 코드 수정, 경계 케이스            |
-| FR-W11 | Patch하면 수정한 HTML 코드로 만든 DOM으로 테스트 영역을 렌더링해요                                  | Patch                                  |
-| FR-W12 | Patch하면 그 DOM 트리를 새 Virtual DOM 트리로 변환해요                                              | Patch                                  |
+| FR-W11 | Patch하면 새 Virtual DOM 트리를 DOM으로 변환해 테스트 영역을 렌더링해요 (ADR-013, 제안됨)           | Patch                                  |
+| FR-W12 | Patch하면 수정한 HTML 코드를 화면 밖에서 파싱해 새 Virtual DOM 트리로 변환해요 (ADR-013, 제안됨)    | Patch                                  |
 | FR-W13 | Patch하면 현재 위치 기록의 `vdom`과 새 트리를 Diff로 비교해요                                       | Patch, 경계 케이스                     |
 | FR-W14 | Patch하면 바뀐 노드에 대해서만 DOM API를 호출해 실제 영역을 고쳐요                                  | Patch                                  |
 | FR-W15 | Patch가 끝나면 두 영역의 렌더링 결과가 같아요                                                       | Patch, 검증 방법                       |
@@ -51,10 +51,10 @@
 [요구사항 4절 "동작 흐름"](../requirements/phase1/phase1_requirement.md#4-동작-흐름)의 세 흐름과 HTML 코드 수정을 이 문서가 엮어요.
 
 ```text
-로드      : 샘플 HTML 코드 ─▶ 두 영역 렌더링 ─▶ toVNode ─▶ createHistory(첫 기록)
+로드      : 샘플 HTML 코드 ─▶ 실제 영역 렌더링 ─▶ toVNode ─▶ createHistory(첫 기록) ─▶ toDOM으로 테스트 영역 렌더링
 수정      : 입력창 ─▶ 별도 문서에서 파싱 ─▶ toVNode ─▶ diff ─▶ fromDiffResult ─▶ Patch 버튼 활성화·비활성화
-Patch     : 테스트 영역 렌더링 ─▶ toVNode ─▶ diff ─▶ fromDiffResult ─▶ captureBefore ─▶ patch ─▶ showChanges ─▶ 두 영역 비교 ─▶ push(새 기록)
-기록 이동 : back·forward ─▶ 두 영역 복원
+Patch     : 별도 문서에서 파싱 ─▶ toVNode ─▶ toDOM으로 테스트 영역 렌더링 ─▶ diff ─▶ fromDiffResult ─▶ captureBefore ─▶ patch ─▶ showChanges ─▶ 두 영역 비교 ─▶ push(새 기록)
+기록 이동 : back·forward ─▶ toDOM으로 두 영역 렌더링
 ```
 
 - 입력을 주는 곳: 사용자(HTML 코드 수정, Patch·뒤로가기·앞으로가기 버튼)
@@ -66,6 +66,7 @@ Patch     : 테스트 영역 렌더링 ─▶ toVNode ─▶ diff ─▶ fromDif
 ```ts
 type EngineModules<R> = {
   toVNode(container: Element): VNode[];
+  toDOM(vnode: VNode): Node;
   diff(oldRoots: VNode[], newRoots: VNode[]): R;
   patch(container: Element, result: R): void;
   fromDiffResult(result: R, oldRoots: VNode[]): ChangeRecord[];
@@ -100,14 +101,14 @@ type Page = {
 
 - `EngineModules<R>` — 페이지가 호출하는 엔진 함수 묶음. 이 모양만 맞으면 어떤 구현이든 넣을 수 있어요.
   - `R` — Diff 결과의 타입. 페이지는 `R`의 내용을 읽지 않고 `patch`와 `fromDiffResult`에 그대로 넘겨요. 지금 Diff에서는 `(Patch | null)[]`예요.
-  - 각 함수의 뜻과 규칙은 위 각 모듈 문서를 따라요.
+  - 각 함수의 뜻과 규칙은 위 각 모듈 문서를 따라요. `toDOM`은 두 영역을 그릴 때 써요(ADR-013).
 - `PageElements` — 화면의 요소 노드. `phase1.html`에 미리 있어요.
   - `realCode: HTMLElement` — 실제 영역의 HTML 코드를 보여 주는 요소 노드. HTML 코드는 `textContent`로만 넣어요. (예: `<pre id="real-code">`)
   - `realLines: HTMLElement` — `realCode` 왼쪽의 줄 번호 칸. 줄 번호만 `textContent`로 넣어요. (예: `<pre id="real-lines" aria-hidden="true">`)
   - `realRoot: HTMLElement` — 실제 영역 컨테이너. Patch가 고치는 곳이에요. (예: `<div id="real-root">`)
   - `testCode: HTMLTextAreaElement` — 테스트 영역의 HTML 코드 입력창. (예: `<textarea id="test-code">`)
   - `testLines: HTMLElement` — `testCode` 왼쪽의 줄 번호 칸. (예: `<pre id="test-lines" aria-hidden="true">`)
-  - `testRoot: HTMLElement` — 테스트 영역 컨테이너. 항상 `innerHTML`로 렌더링해요. (예: `<div id="test-root">`)
+  - `testRoot: HTMLElement` — 테스트 영역 컨테이너. 항상 Virtual DOM 트리를 `toDOM`으로 변환해 렌더링해요(ADR-013). (예: `<div id="test-root">`)
   - `patchButton: HTMLButtonElement` — Patch 버튼. (예: `<button id="patch">`)
   - `backButton: HTMLButtonElement` — 뒤로가기 버튼. (예: `<button id="back">`)
   - `forwardButton: HTMLButtonElement` — 앞으로가기 버튼. (예: `<button id="forward">`)
@@ -132,8 +133,8 @@ function createPage<R>(
 ```
 
 - `elements: PageElements` — 화면의 요소 노드. (예: `{ realCode: <pre id="real-code">, ... }`)
-- `sample: string` — 로드 때 두 영역에 넣을 HTML 코드. (예: `SAMPLE_HTML`)
-- `engine: EngineModules<R>` — 엔진 함수 묶음. 실제 페이지에서는 `src/phase1/page/main.ts`가 각 모듈을 import해 묶어 넘겨요. 단위 테스트에서는 가짜 함수를 넣을 수 있어요. (예: `{ toVNode, diff, patch, fromDiffResult, captureBefore, showChanges, createHistory }`)
+- `sample: string` — 로드 때 실제 영역에 넣고 두 코드 칸에 보여 줄 HTML 코드. (예: `SAMPLE_HTML`)
+- `engine: EngineModules<R>` — 엔진 함수 묶음. 실제 페이지에서는 `src/phase1/page/main.ts`가 각 모듈을 import해 묶어 넘겨요. 단위 테스트에서는 가짜 함수를 넣을 수 있어요. (예: `{ toVNode, toDOM, diff, patch, fromDiffResult, captureBefore, showChanges, createHistory }`)
 - `options: HighlightOptions` — 변경 표시에 그대로 넘기는 옵션. 강조 표시 색은 여기서 정해요. jsdom 단위 테스트에서는 `readText`를 넣어요. (예: `{ readText: el => el.textContent ?? '' }`)
 - 반환값: 이벤트 핸들러와 State History. 단위 테스트에서 핸들러를 직접 호출해요(FR-W28).
 - 부수 효과: 로드 단계를 바로 실행해요. 버튼과 입력창에 핸들러를 연결해요.
@@ -143,7 +144,7 @@ function createPage<R>(
 엔진 모듈을 import하는 곳은 `src/phase1/page/main.ts` 하나예요. 모듈을 다른 구현으로 바꿀 때는 여기만 고쳐요.
 
 ```ts
-import { toVNode } from './vdom';
+import { toVNode, toDOM } from './vdom';
 import { diff } from './diff';
 import { patch } from './patch';
 import { fromDiffResult, captureBefore, showChanges } from './change-highlight';
@@ -151,7 +152,7 @@ import { createHistory } from './history';
 import { createPage, SAMPLE_HTML } from './page';
 
 createPage(getElements(document), SAMPLE_HTML, {
-  toVNode, diff, patch, fromDiffResult, captureBefore, showChanges, createHistory,
+  toVNode, toDOM, diff, patch, fromDiffResult, captureBefore, showChanges, createHistory,
 });
 ```
 
@@ -176,45 +177,55 @@ createPage(getElements(document), SAMPLE_HTML, {
 ### 로드
 
 1. `realCode.textContent`와 `testCode.value`에 샘플 HTML 코드를 넣어요(FR-W02, W05).
-2. `realRoot.innerHTML`과 `testRoot.innerHTML`에 샘플 HTML 코드를 넣어요. 브라우저가 파싱한 DOM으로 두 영역을 렌더링해요(FR-W22, W04).
+2. `realRoot.innerHTML`에 샘플 HTML 코드를 넣어 실제 영역을 렌더링해요(FR-W22). 과제에서 샘플 HTML 코드는 실제 영역에 주어진 입력이에요.
 3. `engine.toVNode(realRoot)`로 Virtual DOM 트리를 만들어요(FR-W03).
 4. `engine.createHistory({ html: 샘플 HTML 코드, vdom })`로 첫 기록을 저장해요(FR-W07).
-5. 버튼 상태를 갱신해요. 세 버튼이 모두 비활성화돼요.
+5. 아래 "Virtual DOM 트리로 렌더링"대로 `vdom`을 `testRoot`에 그려요(FR-W04). 확인에 실패하면 `message`에 오류 문구를 보여 줘요.
+6. 버튼 상태를 갱신해요. 세 버튼이 모두 비활성화돼요.
+
+### Virtual DOM 트리로 렌더링
+
+두 영역을 그리는 방법은 하나예요(ADR-013). 로드의 실제 영역만 예외로 샘플 HTML 코드를 넣어요.
+
+1. 트리의 루트마다 `engine.toDOM`을 불러 DOM 노드를 만들고, `container.replaceChildren(...노드)`로 컨테이너의 자식을 모두 바꿔요.
+2. `engine.toVNode(container)`로 그린 DOM을 다시 읽고, 원래 트리와 `engine.diff`로 비교해요.
+3. `engine.fromDiffResult` 결과 길이가 0이 아니면 확인에 실패해요. `toDOM`이 트리를 그대로 옮기지 못한 거예요. 오류 문구는 "Virtual DOM 트리를 DOM으로 그린 결과가 원래 트리와 달라요"예요.
 
 ### HTML 코드 수정
 
 입력창의 `input` 이벤트마다 아래를 해요.
 
 1. 버튼 판단용 컨테이너를 만들어요. `document.implementation.createHTMLDocument('')`로 만든 별도 문서에서 `div`를 만들고, `innerHTML`에 입력창의 값을 넣어요.
-2. `engine.toVNode`로 변환하고, 현재 위치 기록의 `vdom`과 `engine.diff`로 비교해요.
+2. `engine.toVNode`로 변환하고 [입력 걸러내기](sanitize.md)의 `sanitize`로 허용 목록 밖의 요소 노드와 속성을 빼요(ADR-014). 거른 트리를 현재 위치 기록의 `vdom`과 `engine.diff`로 비교해요.
 3. `engine.fromDiffResult(result, 현재 위치 기록의 vdom)`의 길이가 0이면 Patch 버튼을 비활성화하고, 아니면 활성화해요(FR-W10). 공백·주석 변경도 Diff에 나오므로 버튼이 활성화돼요(FR-W25, W26).
+4. `sanitize`가 뺀 것이 있으면 `message`에 "허용하지 않는 요소·속성은 빼고 반영해요: `<script>`, onclick" 문구를 보여 줘요. 뺀 것이 없어지면 마지막으로 보여 준 요약·오류 문구로 되돌려요.
 
-테스트 영역은 이때 다시 렌더링하지 않아요. Patch 때만 렌더링해요(FR-W11).
+테스트 영역은 이때 다시 렌더링하지 않아요. Patch 때만 렌더링해요(FR-W11). 1~2단계의 파싱과 거르기는 Patch 때도 그대로 써요.
 
 ### Patch
 
 `old`는 현재 위치 기록의 `vdom`이에요.
 
 1. `html = testCode.value`로 HTML 코드를 읽어요.
-2. `testRoot.innerHTML = html`로 테스트 영역을 렌더링해요(FR-W11).
-3. `newVdom = engine.toVNode(testRoot)`로 새 트리를 만들어요(FR-W12).
+2. "HTML 코드 수정" 1~2단계처럼 별도 문서의 `div`에서 `html`을 파싱하고 `toVNode`, `sanitize`를 거쳐 새 트리 `newVdom`과 뺀 이름 `removed`를 만들어요(FR-W12, ADR-014). 파싱한 DOM은 화면에 붙이지 않아요.
+3. "Virtual DOM 트리로 렌더링"대로 `newVdom`을 `testRoot`에 그려요(FR-W11). 확인에 실패하면 아래 "오류 처리"로 가요.
 4. `result = engine.diff(old, newVdom)`로 비교해요(FR-W13).
 5. `records = engine.fromDiffResult(result, old)`로 변경 목록을 만들어요. 길이가 0이면 여기서 끝내요. 실제 영역, State History, 요약 문구를 바꾸지 않아요(FR-W28).
 6. `before = engine.captureBefore(realRoot, records, options)`로 Patch 전 정보를 읽어요.
 7. `engine.patch(realRoot, result)`로 실제 영역을 고쳐요(FR-W14).
-8. `summary = engine.showChanges(realRoot, records, before, options)`로 강조 표시하고, `summary.message`를 `message`에 보여 줘요(FR-W16, W30).
+8. `summary = engine.showChanges(realRoot, records, before, options)`로 강조 표시하고, `summary.message`를 `message`에 보여 줘요(FR-W16, W30). `removed`가 있으면 뒤에 " · " 와 "HTML 코드 수정" 4단계의 문구를 붙여요.
 9. `actual = engine.toVNode(realRoot)`로 실제 영역을 변환하고, `engine.fromDiffResult(engine.diff(actual, newVdom), actual)`의 길이가 0인지 확인해요(FR-W15). 0이 아니면 아래 "오류 처리"로 가요.
-10. `history.push({ html, vdom: newVdom })`로 새 기록을 저장해요(FR-W17).
+10. `history.push({ html, vdom: newVdom })`로 새 기록을 저장해요(FR-W17). `html`은 거르기 전 입력 원문이고, `vdom`은 거른 트리예요.
 11. `realCode.textContent = html`로 실제 영역의 HTML 코드를 바꾸고, 버튼 상태를 갱신해요.
 
 강조 표시는 다음 Patch까지 남아 있어요. 그래서 5단계 뒤(변경이 있을 때만) 지난 강조 표시를 지우고 6단계로 가요. 기록 이동과 오류 처리 때도 지워요. 강조 표시는 `animate()`로만 그리므로 실제 영역의 `getAnimations({ subtree: true })`를 모두 취소하면 지워져요. 속성은 바꾸지 않아요(FR-W27).
 
 #### 오류 처리
 
-6~8단계에서 오류가 나거나 9단계 확인에 실패하면 아래처럼 처리해요.
+3단계 확인에 실패하거나, 6~8단계에서 오류가 나거나, 9단계 확인에 실패하면 아래처럼 처리해요.
 
-1. 현재 위치 기록의 `html`을 `testRoot.innerHTML`, `realRoot.innerHTML`에 넣어 두 영역의 렌더링 결과를 Patch 전 상태로 되돌려요. 입력창(`testCode.value`)은 사용자가 고친 내용 그대로 둬요. 그래서 고친 내용을 다시 Patch할 수 있어요.
-2. `message`에 오류 문구를 보여 줘요. 6~8단계 오류면 "Patch 중 오류가 났어요: [오류 메시지]", 9단계 실패면 "Patch 후 두 영역이 달라요"예요.
+1. 현재 위치 기록의 `vdom`을 "Virtual DOM 트리로 렌더링"대로 `testRoot`, `realRoot`에 그려 두 영역의 렌더링 결과를 Patch 전 상태로 되돌려요. 입력창(`testCode.value`)은 사용자가 고친 내용 그대로 둬요. 그래서 고친 내용을 다시 Patch할 수 있어요.
+2. `message`에 오류 문구를 보여 줘요. 3단계 실패면 "Virtual DOM 트리를 DOM으로 그린 결과가 원래 트리와 달라요", 6~8단계 오류면 "Patch 중 오류가 났어요: [오류 메시지]", 9단계 실패면 "Patch 후 두 영역이 달라요"예요.
 3. State History에 저장하지 않아요. 버튼 상태를 갱신해요.
 
 ### 기록 이동 (뒤로가기, 앞으로가기)
@@ -224,13 +235,13 @@ createPage(getElements(document), SAMPLE_HTML, {
 1. `history.back()` 또는 `history.forward()`를 호출해요. `null`이면 아무것도 하지 않아요.
 2. 지난 강조 표시를 지우고, `records = engine.fromDiffResult(engine.diff(from.vdom, 이동한 기록.vdom), from.vdom)`로 두 기록을 비교해요. 실제 영역이 아직 이동 전 기록과 같은 구조라 이때 `before = engine.captureBefore(realRoot, records, options)`도 읽어요.
 3. 이동한 기록의 `html`을 `testCode.value`, `realCode.textContent`에 넣어요(FR-W19, W20).
-4. `testRoot.innerHTML`과 `realRoot.innerHTML`에 `html`을 넣어 두 영역을 렌더링해요.
+4. "Virtual DOM 트리로 렌더링"대로 이동한 기록의 `vdom`을 `testRoot`, `realRoot`에 그려요. 확인에 실패하면 요약 문구 자리에 "기록 (이동 전 위치 + 1) → (이동한 위치 + 1): " 뒤에 오류 문구를 붙여 보여 주고, 5단계를 건너뛰어요.
 5. `records`가 있으면 `engine.showChanges(realRoot, records, before, options)`로 강조 표시하고 Diff 결과 패널에 보여 줘요. 요약 문구는 "기록 (이동 전 위치 + 1) → (이동한 위치 + 1): 변경 N개 …", 바뀐 내용이 없으면 "…: 바뀐 내용 없음"이에요.
 6. 버튼 상태를 갱신해요.
 
 2단계나 5단계에서 오류가 나도 이동은 그대로 해요. 강조 표시와 Diff 결과만 보여 주지 않아요.
 
-실제 영역은 Patch를 거치지 않고 기록의 상태 전체로 바꿔요([요구사항 4.3](../requirements/phase1/phase1_requirement.md#43-뒤로가기-앞으로가기), [ADR-010](../adr/ADR-010.md)(제안됨)). 같은 HTML 코드를 같은 파서로 파싱하므로, 실제 영역의 DOM은 이동한 기록의 `vdom`과 같은 구조가 돼요. 그래서 다음 Patch도 맞게 동작해요.
+실제 영역은 Patch를 거치지 않고 기록의 상태 전체로 바꿔요([요구사항 4.3](../requirements/phase1/phase1_requirement.md#43-뒤로가기-앞으로가기), [ADR-010](../adr/ADR-010.md)(제안됨), [ADR-013](../adr/ADR-013.md)(제안됨)). 이동한 기록의 `vdom`에서 그리고 4단계에서 확인하므로, 실제 영역의 DOM은 이동한 기록의 `vdom`과 같은 구조가 돼요. 그래서 다음 Patch도 맞게 동작해요.
 
 2·5단계의 비교는 화면에 보여 주기만 해요. 실제 영역을 고치는 데 쓰지 않아요. 뒤로 가면 방향이 거꾸로라, Patch 때 추가된 노드는 `remove`로 보여요.
 
@@ -250,20 +261,21 @@ Patch 직후와 기록 이동 직후에는 입력창 값이 현재 위치 기록
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
 | 엔진 모듈은 `createPage`에 함수 묶음(`EngineModules`)으로 넘기고, import는 `src/phase1/page/main.ts` 한 곳에서만 한다                                                        | 모듈을 다른 구현으로 바꿔도 페이지 코드는 그대로예요. 단위 테스트에서 가짜 모듈을 넣을 수 있어요                                                                                                                                                           | -                                     |
 | 페이지는 Diff 결과의 내용을 읽지 않는다. 바뀐 내용이 있는지는 변경 표시의 `fromDiffResult` 결과 길이로 판단한다                                                  | Diff 결과 형식이 바뀌어도 페이지는 고치지 않아요. 형식을 아는 곳은 `fromDiffResult` 하나예요                                                                                                                                                               | -                                     |
-| 테스트 영역은 로드, Patch, 기록 이동 모두 `innerHTML`로 파싱한 DOM으로 렌더링한다                                                                                | 테스트 영역이 엔진을 거치지 않아 비교 기준이 돼요                                                                                                                                                                                                          | [ADR-004](../adr/ADR-004.md)          |
-| HTML 코드의 유효성 검사를 하지 않는다                                                                                                                            | 브라우저가 파싱하며 두 영역에 똑같이 보정해요                                                                                                                                                                                                              | [ADR-005](../adr/ADR-005.md)          |
+| 두 영역은 로드(실제 영역 제외), Patch, 기록 이동 모두 Virtual DOM 트리를 `toDOM`으로 변환해 렌더링한다. HTML 코드는 트리를 만들 때만 파싱한다 | 과제 문서가 Virtual DOM 트리로 렌더링하라고 해요. Phase 2 렌더링과 같은 경로예요. 비교 기준은 파서로 만든 트리라 엔진을 거치지 않아요 | [ADR-013](../adr/ADR-013.md) (제안됨). [ADR-004](../adr/ADR-004.md)를 대체 |
+| `toDOM`으로 그린 뒤 다시 `toVNode`로 읽어 원래 트리와 같은지 확인한다 | 두 영역을 같은 `toDOM`으로 그려 변환 버그가 양쪽에 똑같이 생겨도, 이 확인으로 화면에서 바로 드러나요 | [ADR-013](../adr/ADR-013.md) (제안됨) |
+| HTML 코드의 유효성 검사를 하지 않는다 | 브라우저가 파싱하며 보정하고, 두 영역은 보정된 트리에서 그려요 | [ADR-005](../adr/ADR-005.md) |
 | Patch 버튼은 공백·주석을 포함해 Diff에 변경이 있으면 활성화한다                                                                                                  | 버튼 상태가 Diff 결과와 항상 같아요                                                                                                                                                                                                                        | [ADR-007](../adr/ADR-007.md)          |
 | Patch 버튼 판단은 입력창의 `input` 이벤트마다 한다                                                                                                               | 샘플 크기에서는 변환과 Diff가 빨라 지연이 필요 없어요                                                                                                                                                                                                      | -                                     |
-| 버튼 판단용 파싱은 `createHTMLDocument`로 만든 별도 문서의 `div`에서 한다                                                                                        | 화면의 문서에서 파싱하면 문서에 붙이지 않은 `div`에서도 이벤트 속성(`onerror` 등)이 입력 중에 실행돼요. `<template>`은 최상위 `<tr>`을 남겨 테스트 영역의 `div`와 결과가 달라요                                                                            | -                                     |
+| 버튼 판단용 파싱과 Patch의 파싱은 `createHTMLDocument`로 만든 별도 문서의 `div`에서 한다 | 화면의 문서에서 파싱하면 문서에 붙이지 않은 `div`에서도 이벤트 속성(`onerror` 등)이 입력 중에 실행돼요. `<template>`은 최상위 `<tr>`을 남겨 `div`와 결과가 달라요. 버튼 판단과 Patch가 같은 문서에서 파싱하므로 결과가 항상 같아요 | - |
 | 변경 목록이 비면 Patch, 변경 표시, State History 저장을 하지 않고 끝낸다                                                                                         | 바뀐 내용 없이 Patch가 실행돼도 실제 영역과 State History가 바뀌지 않아요(FR-W28)                                                                                                                                                                          | -                                     |
-| Patch 후 두 영역이 같은지 페이지에서 확인한다. Patch 중 오류가 나거나 확인에 실패하면 두 영역을 현재 위치 기록의 `html`로 다시 렌더링하고 기록을 저장하지 않는다 | 요구사항 4.2의 6단계예요. 엔진 버그를 화면에서 바로 알 수 있고, 어긋난 상태가 기록으로 남지 않아요(요구사항 6절)                                                                                                                                           | -                                     |
-| 기록 이동 때도 이동 전 기록과 이동한 기록의 `vdom`을 비교해 강조 표시와 Diff 결과를 보여 준다. 비교 결과로 실제 영역을 고치지는 않는다                           | 이동해도 무엇이 바뀌었는지 볼 수 있어요. `innerHTML` 전후의 실제 영역이 두 기록과 같은 구조라 변경 표시를 Patch 때와 똑같이 쓸 수 있어요                                                                                                                   | [ADR-010](../adr/ADR-010.md) (제안됨) |
-| 기록 이동 때 실제 영역은 기록의 `html`을 `innerHTML`로 넣어 바꾼다                                                                                               | 요구사항 4.3이 "기록의 상태 전체로 바꾼다"고 정했어요. 이동한 기록의 `vdom`과 같은 구조가 돼요                                                                                                                                                             | [ADR-010](../adr/ADR-010.md) (제안됨) |
+| Patch 후 두 영역이 같은지 페이지에서 확인한다. 테스트 영역을 그리다 확인에 실패하거나, Patch 중 오류가 나거나, 두 영역 확인에 실패하면 두 영역을 현재 위치 기록의 `vdom`으로 다시 렌더링하고 기록을 저장하지 않는다 | 요구사항 4.2의 6단계예요. 엔진 버그를 화면에서 바로 알 수 있고, 어긋난 상태가 기록으로 남지 않아요(요구사항 6절) | - |
+| 기록 이동 때도 이동 전 기록과 이동한 기록의 `vdom`을 비교해 강조 표시와 Diff 결과를 보여 준다. 비교 결과로 실제 영역을 고치지는 않는다 | 이동해도 무엇이 바뀌었는지 볼 수 있어요. 다시 그리기 전후의 실제 영역이 두 기록과 같은 구조라 변경 표시를 Patch 때와 똑같이 쓸 수 있어요 | [ADR-010](../adr/ADR-010.md) (제안됨) |
+| 기록 이동 때 실제 영역은 기록의 `vdom`을 `toDOM`으로 다시 그려 바꾼다 | 요구사항 4.3이 "기록의 상태 전체로 바꾼다"고 정했어요. 이동한 기록의 `vdom`과 같은 구조가 돼요 | [ADR-010](../adr/ADR-010.md) (제안됨), [ADR-013](../adr/ADR-013.md) (제안됨) |
 | HTML 코드 입력은 기본 입력창(textarea) 수준으로 한다                                                                                                             | 에디터 구현은 범위에서 제외했어요(요구사항 2.2)                                                                                                                                                                                                            | -                                     |
 | 실제 영역의 HTML 코드 칸에는 바뀐 줄을 표시하지 않는다                                                                                                           | 엔진은 바뀐 노드만 알고 바뀐 줄은 몰라요. 줄 단위 비교를 따로 만들지 않고, 강조 표시와 Diff 결과 패널로 바뀐 부분을 보여 줘요                                                                                                                              | -                                     |
 | 지난 강조 표시는 실제 영역의 `getAnimations({ subtree: true })`를 모두 취소해 지운다. 다음 Patch(변경이 있을 때), 기록 이동, 오류 처리 때 지운다                 | 강조 표시가 다음 Patch까지 남아요([화면 스타일 설계](style.md#강조-표시-모양)). 애니메이션만 취소하므로 속성이 바뀌지 않고(FR-W27), 강조한 요소 노드를 따로 기억하지 않아도 돼요. 바뀐 내용 없는 Patch는 아무것도 바꾸지 않아야 해서 지우지 않아요(FR-W28) | -                                     |
 | 줄 번호는 코드 칸 옆 줄 번호 칸에 따로 넣는다                                                                                                                    | 코드 칸에는 HTML 코드만 남아 `textContent`와 `value`가 기록의 `html`과 그대로 같아요. 줄 번호가 복사나 비교에 섞이지 않아요                                                                                                                                | -                                     |
-| 스크립트 실행은 막지 않는다                                                                                                                                      | 요구사항 2.2가 스크립트 실행 차단을 범위에서 뺐어요. 두 영역에서 실행 여부가 다를 수 있는 점은 한계로 둬요(경계 케이스 참고)                                                                                                                               | -                                     |
+| 입력한 HTML 코드로 만든 트리는 레이아웃용 허용 목록으로 걸러, 목록 밖의 요소 노드와 속성을 빼고 반영한다. 뺀 것은 문구로 알린다 | 스크립트, 페이지 이동, 외부 요청, DOM clobbering이 화면에 닿지 않아요. 허용 목록은 [입력 걸러내기 설계](sanitize.md)에 있어요 | [ADR-014](../adr/ADR-014.md) (제안됨) |
 | 사용자가 실제 영역을 조작해 프로퍼티만 바뀐 차이(input의 `value` 등)는 맞추지 않는다                                                                             | Virtual DOM 트리는 속성만 담아서 이런 차이는 Diff에도, 9단계 확인에도 잡히지 않아요. 속성이나 노드가 바뀐 조작은 9단계 확인에서 잡혀 되돌려져요. 입력을 막는 기능은 Phase 1 범위 밖이에요                                                                  | -                                     |
 
 ## 경계 케이스
@@ -280,9 +292,9 @@ Patch 직후와 기록 이동 직후에는 입력창 값이 현재 위치 기록
 | 뒤로 이동한 위치에서 Patch       | 기록 3개에서 두 번 뒤로 이동한 뒤 Patch | 그 위치의 `vdom`과 비교해요                                                                                                                                                                                                                                                                                          | FR-W13, W18      |
 | 수정 중에 기록 이동              | 입력창을 고친 뒤 뒤로가기               | 입력창의 수정 내용이 이동한 기록의 `html`로 덮어써져요                                                                                                                                                                                                                                                               | FR-W19           |
 | 두 영역의 `id`가 겹침            | 샘플의 `id="app"`                       | 문서에 `id="app"`이 두 개 생겨요. 엔진은 `id`로 노드를 찾지 않아 영향이 없어요                                                                                                                                                                                                                                       | FR-W23           |
-| 이벤트 속성 입력                 | `<img src=x onerror=alert(1)>`          | Patch 때 두 영역에서 모두 실행될 수 있어요. 입력 중 버튼 판단용 파싱(별도 문서)에서는 스크립트도 실행되지 않고 `src`의 리소스 요청도 가지 않아요(Chromium에서 확인)                                                                                                                                                  | -                |
-| `<script>` 입력                  | `<script>alert(1)</script>`             | 테스트 영역은 `innerHTML`이라 실행되지 않아요. 실제 영역은 Patch가 `toDOM`의 `createElement`로 만든 노드라 실행돼요                                                                                                                                                                                                  | -                |
-| `<noscript>` 입력                | `<noscript><p>A</p></noscript>`         | 화면의 문서는 스크립트를 쓰는 문서라 `noscript` 안을 텍스트 하나로, 별도 문서는 스크립트를 안 쓰는 문서라 `<p>` 요소 노드로 파싱해요(Chromium에서 확인). 그래서 Patch한 뒤에도 Patch 버튼이 활성화된 채로 남아요. 눌러도 실제 비교는 화면의 문서로 해서 변경 목록이 비고 아무것도 바뀌지 않아요(FR-W28). 한계로 둬요 | FR-W10           |
+| 이벤트 속성 입력                 | `<img src=x onerror=alert(1)>`          | `img`가 허용 목록에 없어 통째로 빠지고, 안내 문구에 `<img>`가 보여요. 이벤트 속성은 허용한 요소 노드에서도 빠져요(ADR-014) | FR-W31 |
+| `<script>` 입력                  | `<script>alert(1)</script>`             | 통째로 빠져 두 영역 어디서도 실행되지 않아요. 다른 변경 없이 더하기만 하면 Patch 버튼이 비활성화돼요(ADR-014) | FR-W10, W31 |
+| `<noscript>` 입력                | `<noscript><p>A</p></noscript>`         | 허용 목록에 없어 자식까지 빠져요(ADR-014) | FR-W31 |
 
 ## 검증 방법
 
@@ -292,7 +304,8 @@ Patch 직후와 기록 이동 직후에는 입력창 값이 현재 위치 기록
   - FR-W10, W25, W26: 입력창 값을 바꾸고 `onInput()`을 호출해 Patch 버튼 상태를 확인해요.
   - FR-W28: 수정 없이 `onPatch()`를 호출해 실제 영역의 모든 노드가 같은 객체(`===`)로 남고 `history.length`가 그대로인지 확인해요. 가짜 `patch`가 호출되지 않았는지도 확인해요.
   - FR-W15: Patch 경계 케이스마다 두 영역을 `toVNode`로 변환해 변경 목록이 비는지 확인해요.
-  - 오류 처리: 오류를 던지는 가짜 `patch`를 넣고 `onPatch()`를 호출해, 두 영역이 현재 위치 기록의 `html`로 돌아가고 `history.length`가 그대로인지 확인해요.
+  - 오류 처리: 오류를 던지는 가짜 `patch`를 넣고 `onPatch()`를 호출해, 두 영역이 현재 위치 기록의 `vdom`으로 돌아가고 `history.length`가 그대로인지 확인해요.
+  - Virtual DOM 트리로 렌더링: 감시하는 `toDOM`을 넣어 로드, Patch, 기록 이동 때 불리는지 확인해요. 속성을 빼는 잘못된 `toDOM`을 넣으면 로드 때 오류 문구가 보이고, Patch 때 기록이 저장되지 않는지 확인해요.
   - FR-W19, W20: `onBack()`, `onForward()` 뒤 `testCode.value`가 `history.current().html` 원문과 같고, 두 영역을 변환한 트리가 `history.current().vdom`과 같은지 확인해요.
   - 기록 이동 비교: 이동 뒤 요약 문구가 "기록 2 → 1: 변경 N개" 형식이고, 가짜 `patch`가 호출되지 않는지 확인해요.
 - 검증 페이지 (실제 브라우저)
@@ -349,10 +362,10 @@ type PageElementsX = PageElements & {
 
 ## 정하지 않은 것
 
-- 스크립트 실행 정책을 요구사항에 반영할지: 이 문서는 "막지 않는다"로 정했어요. 요구사항 2.2의 "(협의 필요)"와 [7절](../requirements/phase1/phase1_requirement.md#7-추후-논의) 항목을 지울지 임동호·오동환이 이 문서 리뷰 때 정해요.
+- 스크립트 실행 정책을 요구사항에 반영할지: [ADR-014](../adr/ADR-014.md)(제안됨)가 승인되면 요구사항 2.2의 "스크립트 실행 차단" 행과 [7절](../requirements/phase1/phase1_requirement.md#7-추후-논의) 항목을 지워요.
 
 ## 관련 문서
 
 - [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
-- [ADR-004](../adr/ADR-004.md), [ADR-005](../adr/ADR-005.md), [ADR-007](../adr/ADR-007.md), [ADR-010](../adr/ADR-010.md)
-- [Virtual DOM 변환 설계](vdom.md), [Diff 설계](diff.md), [Patch 설계](patch.md), [State History 설계](history.md), [변경 표시 설계](change-highlight.md), [화면 스타일 설계](style.md)
+- [ADR-004](../adr/ADR-004.md), [ADR-005](../adr/ADR-005.md), [ADR-007](../adr/ADR-007.md), [ADR-010](../adr/ADR-010.md), [ADR-013](../adr/ADR-013.md), [ADR-014](../adr/ADR-014.md)
+- [입력 걸러내기 설계](sanitize.md), [Virtual DOM 변환 설계](vdom.md), [Diff 설계](diff.md), [Patch 설계](patch.md), [State History 설계](history.md), [변경 표시 설계](change-highlight.md), [화면 스타일 설계](style.md)

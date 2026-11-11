@@ -103,7 +103,7 @@ function patch(parent: Node, patches: (Patch | null)[]): void;
 | 교체                       | `<p>A</p>` → `<div>A</div>`                         | `replaceChild`로 같은 위치에 새 노드가 들어가요                                               | FR-E04        |
 | 속성 삭제                  | `<button disabled>` → `<button>`                    | `removeAttribute('disabled')`만 불러요. `button`은 같은 객체예요                              | FR-W14        |
 | 주석 내용 변경             | `<!-- a -->` → `<!-- b -->`                         | 주석 노드의 `nodeValue`만 바뀌어요                                                            | FR-W26        |
-| 스크립트가 든 노드 추가    | `<script>alert(1)</script>`, `<img src=x onerror=…>` | `toDOM`으로 만든 노드를 문서에 붙이면 실행될 수 있어요. 정책은 요구사항 7절에서 정해요        | -             |
+| 스크립트가 든 노드 추가    | `<script>alert(1)</script>`, `<img src=x onerror=…>` | `toDOM`으로 만든 노드를 문서에 붙이면 실행될 수 있어요. 검증 페이지가 Diff 전에 트리에서 빼서 Patch까지 오지 않아요([ADR-014](../adr/ADR-014.md), 제안됨) | -             |
 | 전제 조건이 깨짐           | 실제 영역이 현재 기록의 `vdom`과 다름               | 칸에 대응하는 노드가 없거나 다른 노드라 오류가 나거나 잘못 고쳐요. FR-W15로 막아요            | FR-W15        |
 
 ## 검증 방법
