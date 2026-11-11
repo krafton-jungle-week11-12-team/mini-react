@@ -12,6 +12,7 @@ declare const jsdom: { window: Window };
 vi.stubGlobal('localStorage', jsdom.window.localStorage);
 
 const LABELS = ['todos', 'text', 'filter', '보이는 목록', '남은 일 개수', '탭 제목', '저장소 쓰기'];
+const DEPS = { 3: ['todos', 'filter'], 4: ['todos'], 5: ['남은 일 개수'], 6: ['todos'] };
 
 let root: HTMLElement;
 let els: InspectorElements;
@@ -38,7 +39,7 @@ afterEach(() => {
 });
 
 function mount(): void {
-  new FunctionComponent(App, {}, els.app, { onCommit: createInspector(els, LABELS) }).mount();
+  new FunctionComponent(App, {}, els.app, { onCommit: createInspector(els, LABELS, DEPS) }).mount();
 }
 
 const field = () => els.app.querySelector('input.todo-input__field') as HTMLInputElement;
@@ -51,6 +52,13 @@ function add(value: string): void {
   (els.app.querySelector('button.todo-input__add') as HTMLButtonElement).click();
 }
 const hookResults = () => Array.from(els.hooksView.querySelectorAll('.hook-result')).map((e) => e.textContent);
+const depsLines = () =>
+  Array.from(els.hooksView.querySelectorAll('.hook-deps')).map((line) =>
+    Array.from(line.querySelectorAll('.hook-dep'))
+      .map((e) => e.textContent)
+      .join(' · '),
+  );
+const changedDeps = () => Array.from(els.hooksView.querySelectorAll('.hook-dep.is-changed')).map((e) => e.textContent);
 const diffChips = () => Array.from(els.diffView.querySelectorAll('.chip')).map((e) => e.textContent);
 
 describe('들여다보기 패널', () => {
@@ -65,6 +73,26 @@ describe('들여다보기 패널', () => {
     expect(hookResults()).toEqual(['그대로', '바뀜', '그대로', '저장값 씀', '저장값 씀', '건너뜀', '건너뜀']);
   });
 
+  it('memo·effect 칸 아래에 deps 이름과 값을 보여 주고, 바뀐 dep에만 "바뀜"을 붙여요 (FR-AX01)', () => {
+    mount();
+    expect(depsLines()).toEqual([
+      "todos [] · filter 'all'",
+      'todos []',
+      '남은 일 개수 0',
+      'todos []',
+    ]);
+    expect(changedDeps()).toEqual([]); // 첫 렌더링에는 비교할 지난 값이 없어요
+
+    type('우');
+    expect(changedDeps()).toEqual([]); // text는 어느 deps에도 없어요
+
+    add('우유');
+    expect(changedDeps()).toEqual([]); // 마지막 update는 setText('')예요
+
+    (els.app.querySelector('input.todo-item__check') as HTMLInputElement).click();
+    expect(changedDeps()).toEqual(['todos [#1] 바뀜', 'todos [#1] 바뀜', '남은 일 개수 0 바뀜', 'todos [#1] 바뀜']);
+  });
+
   it('입력할 때는 실행 기록이 늘지 않고, 추가할 때는 늘어나요 (FR-AX03)', () => {
     mount();
     const afterMount = els.logView.children.length;
@@ -75,7 +103,7 @@ describe('들여다보기 패널', () => {
 
     add('우유');
     expect(els.logView.children.length).toBeGreaterThan(afterMount);
-    expect(els.logSummary.textContent).toBe('#5 memo 0/2 · effect 0/2'); // 마지막 update는 setText('')예요
+    expect(els.logSummary.textContent).toBe('R5 memo 0/2 · effect 0/2'); // 마지막 update는 setText('')예요
   });
 
   it('체크 한 번의 Diff에는 핸들러 변경이 빠지고 그 항목의 변경만 나와요 (FR-AX02)', () => {
