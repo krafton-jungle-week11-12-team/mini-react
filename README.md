@@ -25,15 +25,15 @@ flowchart LR
     REQ --> DES
 ```
 
-| 구분              | 단계                     | 역할                                                                 | 산출물 위치          |
-| ----------------- | ------------------------ | -------------------------------------------------------------------- | -------------------- |
-| Human in the loop | Requirements A, B        | 사람이 각자 과제를 읽고 요구사항을 따로 써요.                         | `docs/requirements/` |
-| Human in the loop | Requirements (합침)      | 사람이 두 요구사항을 함께 비교해 하나로 합쳐요.                       | `docs/requirements/` |
-| Human on the loop | Design                   | AI가 쓰고, 사람은 PR에서 검토해요.                                    | `docs/design/`       |
-| Human on the loop | ADR                      | AI가 선택지를 비교해 정리하고, 사람이 결정해요.                       | `docs/adr/`          |
-| Human on the loop | Test (Red)               | AI가 실패하는 테스트를 쓰고, 사람은 PR에서 검토해요.                  | `src/**/*.test.ts`   |
-| Human on the loop | Implementation           | AI가 테스트를 통과하도록 구현하고, 사람은 PR에서 검토해요.            | `src/`               |
-| Human on the loop | Test (Green)             | AI가 모든 테스트 통과를 확인하고, 사람이 검토한 뒤 머지해요.          | `src/**/*.test.ts`   |
+| 단계                     | 역할                                                                 | 산출물 위치          |
+| ------------------------ | -------------------------------------------------------------------- | -------------------- |
+| Requirements A, B        | 사람이 각자 과제를 읽고 요구사항을 따로 써요.                         | `docs/requirements/` |
+| Requirements (합침)      | 사람이 두 요구사항을 함께 비교해 하나로 합쳐요.                       | `docs/requirements/` |
+| Design                   | AI가 쓰고, 사람은 PR에서 검토해요.                                    | `docs/design/`       |
+| ADR                      | AI가 선택지를 비교해 정리하고, 사람이 결정해요.                       | `docs/adr/`          |
+| Test (Red)               | AI가 실패하는 테스트를 쓰고, 사람은 PR에서 검토해요.                  | `src/**/*.test.ts`   |
+| Implementation           | AI가 테스트를 통과하도록 구현하고, 사람은 PR에서 검토해요.            | `src/`               |
+| Test (Green)             | AI가 모든 테스트 통과를 확인하고, 사람이 검토한 뒤 머지해요.          | `src/**/*.test.ts`   |
 
 - **Human in the loop**: 사람이 직접 쓰고 판단해야 다음 단계로 넘어가요. 무엇을 만들지 정하는 요구사항 단계예요.
 - **Human on the loop**: AI가 알아서 진행하고, 사람은 결과를 지켜보다가 문제가 있을 때 개입해요. 요구사항이 정해진 뒤의 설계, ADR, 테스트, 구현이 여기에 해당해요.
