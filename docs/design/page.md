@@ -101,7 +101,7 @@ type Page = {
 - `EngineModules<R>` — 페이지가 호출하는 엔진 함수 묶음. 이 모양만 맞으면 어떤 구현이든 넣을 수 있어요.
   - `R` — Diff 결과의 타입. 페이지는 `R`의 내용을 읽지 않고 `patch`와 `fromDiffResult`에 그대로 넘겨요. 지금 Diff에서는 `(Patch | null)[]`예요.
   - 각 함수의 뜻과 규칙은 위 각 모듈 문서를 따라요.
-- `PageElements` — 화면의 요소 노드. `index.html`에 미리 있어요.
+- `PageElements` — 화면의 요소 노드. `phase1.html`에 미리 있어요.
   - `realCode: HTMLElement` — 실제 영역의 HTML 코드를 보여 주는 요소 노드. HTML 코드는 `textContent`로만 넣어요. (예: `<pre id="real-code">`)
   - `realLines: HTMLElement` — `realCode` 왼쪽의 줄 번호 칸. 줄 번호만 `textContent`로 넣어요. (예: `<pre id="real-lines" aria-hidden="true">`)
   - `realRoot: HTMLElement` — 실제 영역 컨테이너. Patch가 고치는 곳이에요. (예: `<div id="real-root">`)
@@ -133,14 +133,14 @@ function createPage<R>(
 
 - `elements: PageElements` — 화면의 요소 노드. (예: `{ realCode: <pre id="real-code">, ... }`)
 - `sample: string` — 로드 때 두 영역에 넣을 HTML 코드. (예: `SAMPLE_HTML`)
-- `engine: EngineModules<R>` — 엔진 함수 묶음. 실제 페이지에서는 `src/main.ts`가 각 모듈을 import해 묶어 넘겨요. 단위 테스트에서는 가짜 함수를 넣을 수 있어요. (예: `{ toVNode, diff, patch, fromDiffResult, captureBefore, showChanges, createHistory }`)
+- `engine: EngineModules<R>` — 엔진 함수 묶음. 실제 페이지에서는 `src/phase1/main.ts`가 각 모듈을 import해 묶어 넘겨요. 단위 테스트에서는 가짜 함수를 넣을 수 있어요. (예: `{ toVNode, diff, patch, fromDiffResult, captureBefore, showChanges, createHistory }`)
 - `options: HighlightOptions` — 변경 표시에 그대로 넘기는 옵션. 강조 표시 색은 여기서 정해요. jsdom 단위 테스트에서는 `readText`를 넣어요. (예: `{ readText: el => el.textContent ?? '' }`)
 - 반환값: 이벤트 핸들러와 State History. 단위 테스트에서 핸들러를 직접 호출해요(FR-W28).
 - 부수 효과: 로드 단계를 바로 실행해요. 버튼과 입력창에 핸들러를 연결해요.
 
-### 모듈을 묶는 곳 (`src/main.ts`)
+### 모듈을 묶는 곳 (`src/phase1/main.ts`)
 
-엔진 모듈을 import하는 곳은 `src/main.ts` 하나예요. 모듈을 다른 구현으로 바꿀 때는 여기만 고쳐요.
+엔진 모듈을 import하는 곳은 `src/phase1/main.ts` 하나예요. 모듈을 다른 구현으로 바꿀 때는 여기만 고쳐요.
 
 ```ts
 import { toVNode } from './vdom';
@@ -157,10 +157,10 @@ createPage(getElements(document), SAMPLE_HTML, {
 
 | 바꾸는 모듈               | 고칠 곳                                              |
 | ------------------------- | ---------------------------------------------------- |
-| Diff (결과 형식은 그대로) | `src/main.ts`의 import                               |
-| Diff (결과 형식도 바뀜)   | `src/main.ts`의 import, 변경 표시의 `fromDiffResult` |
-| Patch                     | `src/main.ts`의 import                               |
-| State History             | `src/main.ts`의 import                               |
+| Diff (결과 형식은 그대로) | `src/phase1/main.ts`의 import                               |
+| Diff (결과 형식도 바뀜)   | `src/phase1/main.ts`의 import, 변경 표시의 `fromDiffResult` |
+| Patch                     | `src/phase1/main.ts`의 import                               |
+| State History             | `src/phase1/main.ts`의 import                               |
 | 강조 표시 방법            | `createPage`의 `options.highlight`                   |
 
 ## 동작 방식
@@ -170,7 +170,7 @@ createPage(getElements(document), SAMPLE_HTML, {
 - 실제 영역의 HTML 코드는 `<pre>`로 보여 줘요. 입력창이 아니라서 수정할 수 없어요(FR-W24). 현재 위치 기록의 `html`을 보여 줘요.
 - 테스트 영역의 HTML 코드는 `<textarea>`로 수정해요(FR-W08).
 - 두 영역은 너비가 같고 나란히 놓여요(FR-W01). 요구사항 2.2는 이 수준만 요구해요. 배치, 색, 글자 같은 생김새는 [화면 스타일 설계](style.md)에서 다뤄요.
-- `index.html`은 `<!DOCTYPE html>`로 시작해요. 그래야 버튼 판단용 문서와 화면의 문서가 같은 모드(no-quirks)로 파싱해요.
+- `phase1.html`은 `<!DOCTYPE html>`로 시작해요. 그래야 버튼 판단용 문서와 화면의 문서가 같은 모드(no-quirks)로 파싱해요.
 - 두 영역 컨테이너(`realRoot`, `testRoot`)에는 **똑같은** CSS만 걸어요. 한쪽에만 거는 CSS는 두지 않아요. 두 영역의 렌더링 결과가 같아 보여야 비교가 돼요(FR-W06, W15). 값은 [화면 스타일 설계](style.md#렌더링-결과-박스)를 따라요.
 
 ### 로드
@@ -248,7 +248,7 @@ Patch 직후와 기록 이동 직후에는 입력창 값이 현재 위치 기록
 
 | 결정                                                                                                                                                             | 이유                                                                                                                                                                                                                                                       | 관련 ADR                              |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| 엔진 모듈은 `createPage`에 함수 묶음(`EngineModules`)으로 넘기고, import는 `src/main.ts` 한 곳에서만 한다                                                        | 모듈을 다른 구현으로 바꿔도 페이지 코드는 그대로예요. 단위 테스트에서 가짜 모듈을 넣을 수 있어요                                                                                                                                                           | -                                     |
+| 엔진 모듈은 `createPage`에 함수 묶음(`EngineModules`)으로 넘기고, import는 `src/phase1/main.ts` 한 곳에서만 한다                                                        | 모듈을 다른 구현으로 바꿔도 페이지 코드는 그대로예요. 단위 테스트에서 가짜 모듈을 넣을 수 있어요                                                                                                                                                           | -                                     |
 | 페이지는 Diff 결과의 내용을 읽지 않는다. 바뀐 내용이 있는지는 변경 표시의 `fromDiffResult` 결과 길이로 판단한다                                                  | Diff 결과 형식이 바뀌어도 페이지는 고치지 않아요. 형식을 아는 곳은 `fromDiffResult` 하나예요                                                                                                                                                               | -                                     |
 | 테스트 영역은 로드, Patch, 기록 이동 모두 `innerHTML`로 파싱한 DOM으로 렌더링한다                                                                                | 테스트 영역이 엔진을 거치지 않아 비교 기준이 돼요                                                                                                                                                                                                          | [ADR-004](../adr/ADR-004.md)          |
 | HTML 코드의 유효성 검사를 하지 않는다                                                                                                                            | 브라우저가 파싱하며 두 영역에 똑같이 보정해요                                                                                                                                                                                                              | [ADR-005](../adr/ADR-005.md)          |
@@ -339,7 +339,7 @@ type PageElementsX = PageElements & {
 
 - 두 영역 컨테이너(`realRoot`, `testRoot`)와 두 HTML 코드 칸(`realCode`, `testCode`)은 스크롤을 함께 움직여요. 규칙은 [화면 스타일 설계](style.md#스크롤-맞추기)를 따라요.
 - 줄 번호 칸(`realLines`, `testLines`)은 옆 코드 칸의 `scrollTop`을 그대로 따라가요.
-- 스크롤 이벤트는 `createPage`가 연결해요. `src/main.ts`는 모듈을 묶어 넘기기만 해요.
+- 스크롤 이벤트는 `createPage`가 연결해요. `src/phase1/main.ts`는 모듈을 묶어 넘기기만 해요.
 
 ### HTML 코드 칸
 

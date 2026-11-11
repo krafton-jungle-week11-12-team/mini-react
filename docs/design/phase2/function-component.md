@@ -223,7 +223,7 @@ function getCurrentComponent(): FunctionComponent | null;
 - 배칭(`queueMicrotask`로 모아 한 번 update): 요구사항 6.2. 정하면 `scheduleUpdate`만 고쳐요.
 - 렌더링 중 setState를 막을지: [useMemo 요구사항 7절](../../requirements/phase2/use-memo_requirement.md#7-추후-논의). 렌더링 중 표시를 두고 오류를 던질지 정해요.
 - 자식 컴포넌트의 Hook 호출을 감지할지: 요구사항 7절. h가 자식 컴포넌트를 실행하는 동안 표시를 두는 방법이 후보예요.
-- Phase 2 예제 앱과 `main.ts` 위치: 지금 `src/main.ts`는 Phase 1 검증 페이지예요. Phase 2 예제 앱의 진입점을 새로 둘지 팀에서 정해요.
+- Phase 2 예제 앱의 진입점과 페이지 구성: FunctionComponent 설계에서 다루지 않아요. 최종 웹 페이지 설계(#93, `docs/design/app.md`)에서 다뤄요.
 
 ## 관련 문서
 

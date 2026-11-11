@@ -6,9 +6,9 @@ import { createHistory } from './history';
 import { createPage, getElements, SAMPLE_HTML, type EngineModules } from './page';
 import { patch } from './patch';
 import { toVNode, type VNode } from './vdom';
-import indexHtml from '../index.html?raw';
+import indexHtml from '../phase1.html?raw';
 
-// index.html의 body를 그대로 jsdom 문서에 넣어 요소 노드를 찾아요
+// phase1.html의 body를 그대로 jsdom 문서에 넣어 요소 노드를 찾아요
 const body = indexHtml.slice(indexHtml.indexOf('<body>') + 6, indexHtml.indexOf('</body>'));
 
 type Result = ReturnType<typeof diff>;

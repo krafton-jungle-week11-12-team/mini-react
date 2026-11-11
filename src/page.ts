@@ -1,6 +1,6 @@
 // 검증 페이지 (docs/design/page.md)
 // 로드·HTML 코드 수정·Patch·기록 이동 때 엔진 모듈을 순서대로 호출해요
-// - 엔진 모듈은 import하지 않고 EngineModules로 넘겨받아요. import는 src/main.ts 한 곳에서만 해요
+// - 엔진 모듈은 import하지 않고 EngineModules로 넘겨받아요. import는 src/phase1/main.ts 한 곳에서만 해요
 // - Diff 결과(R)의 내용은 읽지 않아요. 바뀐 내용이 있는지는 fromDiffResult 결과 길이로 판단해요
 
 import type { ChangeRecord, ChangeSummary, HighlightOptions, TextBefore } from './change-highlight';
@@ -56,7 +56,7 @@ export type Page = {
   readonly history: StateHistory<HistoryEntry>;
 };
 
-/** index.html에서 화면의 요소 노드를 id로 찾아요 (style.md "인터페이스"). */
+/** phase1.html에서 화면의 요소 노드를 id로 찾아요 (style.md "인터페이스"). */
 export function getElements(doc: Document): PageElements & Partial<PageElementsX> {
   const must = <T extends HTMLElement>(id: string): T => {
     const el = doc.getElementById(id);
