@@ -37,7 +37,7 @@ function patch(parent: Node, patches: ChildPatches): void;
 ```
 
 - `parent: Node` — 자식을 고칠 부모 DOM 노드. 처음에는 실제 영역 컨테이너를 넣고, `UPDATE`를 만나면 그 요소를 넣어 재귀로 불러요. (예: 실제 영역 컨테이너, `<ul class="todo">`)
-- `patches: ChildPatches` — `parent`의 자식 목록에 대한 Diff 결과. 배열이면 *i*번째 칸이 `parent`의 *i*번째 자식에 대한 결과예요. `KeyedPatches`면 칸이 새 순서를 따르고, 칸마다 이전 몇 번 자식인지(`oldIndex`) 담아요. 처음에는 [`diff`](diff.md)의 반환값을 그대로 넣어요. (예: `[null, { type: 'TEXT', text: 'B' }]`)
+- `patches: ChildPatches` — `parent`의 자식 목록에 대한 Diff 결과. 배열이면 *i*번째 칸이 `parent`의 *i*번째 자식에 대한 결과예요. `KeyedPatches`면 칸이 새 순서를 따르고, 칸마다 이전 몇 번 자식인지(`oldIndex`) 담아요. 형식은 [Diff 설계](diff.md)의 자료구조를 봐요. 처음에는 [`diff`](diff.md)의 반환값을 그대로 넣어요. (예: `[null, { type: 'TEXT', text: 'B' }]`, `{ type: 'KEYED', children: [{ oldIndex: 1, move: false, patch: null }], removes: [0] }`)
 - 반환값: 없음.
 - 부수 효과: `parent` 아래의 DOM을 고쳐요. 바뀐 노드에 대해서만 DOM API를 불러요.
 
