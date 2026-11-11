@@ -130,14 +130,14 @@
 샘플 HTML 코드:
 
 ```html
-<div id="app">
-  <h1 class="title">할 일 목록</h1>
-  <ul class="todo">
-    <li>장보기</li>
-    <li>운동하기</li>
-  </ul>
-  <button type="button">추가</button>
-</div>
+<div id="app"
+  ><h1 class="title">할 일 목록</h1
+  ><ul class="todo"
+    ><li>장보기</li
+    ><li>운동하기</li
+  ></ul
+  ><button type="button">추가</button
+></div>
 ```
 
 #### HTML 코드 수정

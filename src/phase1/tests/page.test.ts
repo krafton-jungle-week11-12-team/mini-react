@@ -20,6 +20,14 @@ function engine(overrides: Partial<EngineModules<Result>> = {}): EngineModules<R
 /** jsdom에는 innerText가 없어 textContent로 읽어요. */
 const options = { readText: (el: Element) => el.textContent ?? '', highlight: vi.fn() };
 
+/** 샘플을 파싱해 다시 쓴 HTML. 태그 안 줄바꿈(`
+  >`)은 innerHTML에서 사라져 원문과 글자가 달라요 */
+function parsed(html: string): string {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  return div.innerHTML;
+}
+
 function setup(overrides: Partial<EngineModules<Result>> = {}) {
   const el = getElements(document);
   const page = createPage(el, SAMPLE_HTML, engine(overrides), options);
@@ -135,7 +143,7 @@ describe('Virtual DOM 트리로 렌더링 (ADR-013)', () => {
 });
 
 describe('입력 걸러내기 (ADR-014)', () => {
-  const withScript = SAMPLE_HTML.replace('<li>장보기</li>', '<li onclick="alert(1)">장보기</li><script>window.__ran = true</script>');
+  const withScript = SAMPLE_HTML.replace('<li>장보기</li', '<li onclick="alert(1)">장보기</li><script>window.__ran = true</script');
 
   it('입력 중 뺄 것이 있으면 안내하고, 없어지면 원래 문구로 돌아가요', () => {
     const { el, type } = setup();
@@ -187,7 +195,7 @@ describe('HTML 코드 수정 (Patch 버튼 상태)', () => {
 
   it('공백이나 줄바꿈만 바꿔도 활성화돼요 (FR-W25)', () => {
     const { el, type } = setup();
-    type(SAMPLE_HTML.replace('  <h1', '    <h1'));
+    type(SAMPLE_HTML.replace('할 일 목록</h1', '할 일 목록 </h1'));
     expect(el.patchButton.disabled).toBe(false);
   });
 
@@ -199,7 +207,7 @@ describe('HTML 코드 수정 (Patch 버튼 상태)', () => {
 
   it('HTML 코드는 달라도 DOM이 같으면 비활성화돼요 (FR-W10)', () => {
     const { el, type } = setup();
-    type(SAMPLE_HTML.replace('</li>', '</LI>'));
+    type(SAMPLE_HTML.replace('</li', '</LI'));
     expect(el.patchButton.disabled).toBe(true);
   });
 
@@ -266,8 +274,8 @@ describe('Patch', () => {
     type(edited);
     page.onPatch();
     expect(page.history.length).toBe(1);
-    expect(el.realRoot.innerHTML).toBe(SAMPLE_HTML);
-    expect(el.testRoot.innerHTML).toBe(SAMPLE_HTML);
+    expect(el.realRoot.innerHTML).toBe(parsed(SAMPLE_HTML));
+    expect(el.testRoot.innerHTML).toBe(parsed(SAMPLE_HTML));
     expect(el.testCode.value).toBe(edited); // 입력창은 그대로
     expect(el.message.textContent).toBe('Patch 중 오류가 났어요: 테스트 오류');
     expect(el.message.classList.contains('is-error')).toBe(true);
@@ -286,7 +294,7 @@ describe('Patch', () => {
     const animated = options.highlight.mock.calls.map(([target]) => target as Element);
     expect(animated.length).toBeGreaterThan(0);
     for (const target of animated) expect(el.realRoot.contains(target)).toBe(false); // 떨어져 나간 옛 노드예요
-    expect(el.realRoot.innerHTML).toBe(SAMPLE_HTML);
+    expect(el.realRoot.innerHTML).toBe(parsed(SAMPLE_HTML));
     expect(page.history.length).toBe(1);
   });
 
