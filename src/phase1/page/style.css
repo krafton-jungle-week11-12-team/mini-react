@@ -173,6 +173,24 @@ textarea {
   color: var(--dd-text-sub);
 }
 
+.test-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--dd-text-sub);
+  cursor: pointer;
+}
+
+.test-mode input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--dd-primary);
+  cursor: pointer;
+}
+
 .dd-row {
   min-height: 0;
   display: grid;
