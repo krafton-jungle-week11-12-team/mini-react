@@ -69,7 +69,7 @@
 | mount                 | 처음 화면을 그리는 것. VNode를 DOM으로 만들어 컨테이너에 붙인다.                                                     |
 | update                | state가 바뀐 뒤 다시 그리는 것. 이전 VNode와 새 VNode를 Diff로 비교해 Patch한다.                                     |
 | prevVNode             | 지금 화면을 그린 VNode. 다음 update에서 Diff의 비교 기준이 된다.                                                     |
-| hooks 배열            | state를 컴포넌트 함수 바깥(인스턴스)에 보관하는 배열. Hook마다 한 칸을 쓴다.                                         |
+| hooks 배열            | state를 컴포넌트 함수 바깥(인스턴스)에 보관하는 배열. Hook마다 한 칸을 쓰고, 칸에는 어느 Hook의 칸인지 나타내는 `kind`를 함께 저장한다. (예: `{ kind: 'state', value: 0 }`)                                         |
 | hookIndex             | 다음 Hook이 쓸 칸 번호. Hook이 호출될 때마다 1씩 늘고, 렌더링을 시작할 때 0으로 되돌린다.                             |
 | currentComponent      | 지금 렌더링 중인 FunctionComponent를 가리키는 전역 변수. Hook이 어느 인스턴스의 hooks 배열을 쓸지 찾는 데 쓴다.     |
 | 함수형 업데이트       | setState에 값 대신 함수(`prev => prev + 1`)를 넘기는 것. setState가 실행되는 순간의 state 값으로 계산한다.          |
@@ -90,9 +90,9 @@
 ### 4.2 setState와 update
 
 1. 사용자 동작(클릭, 입력)으로 핸들러가 setState를 부른다.
-2. setState가 새 값을 정한다. 함수를 넘겼으면 그 순간의 `hooks[i]`로 함수를 실행한 결과가 새 값이다.
-3. 새 값이 지금 값(`hooks[i]`)과 `Object.is`로 같으면 칸을 바꾸지 않고 여기서 끝낸다. (6절)
-4. setState가 자기 칸(`hooks[i]`)을 새 값으로 바꾼다.
+2. setState가 새 값을 정한다. 함수를 넘겼으면 그 순간의 `hooks[i].value`로 함수를 실행한 결과가 새 값이다.
+3. 새 값이 지금 값(`hooks[i].value`)과 `Object.is`로 같으면 칸을 바꾸지 않고 여기서 끝낸다. (6절)
+4. setState가 자기 칸의 값(`hooks[i].value`)을 새 값으로 바꾼다.
 5. setState가 `scheduleUpdate()`를 부른다. effect 실행 중이 아니면 `update()`를 바로 부르고, effect 실행 중이면 update를 예약만 한다. 예약된 update는 effect가 다 끝난 뒤 한 번 실행한다. ([useEffect 4.3](use-effect_requirement.md#43-effect-안의-setstate)) (배칭은 미정, 6절)
 6. 렌더링한다. (4.3)
 7. `prevVNode`와 새 VNode를 각각 `[ ]`로 감싸 Diff로 비교하고(`diff([prevVNode], [vnode])`), 그 결과로 컨테이너 안의 바뀐 노드만 Patch한다(`patch(container, result)`). (루트 형태, 6절)
@@ -133,10 +133,10 @@
 
 | ID     | 유형              | 요구사항                                                                                                                   | 확인 방법 (초안)                                                                                                       | 비고                                  |
 | ------ | ----------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| FR-S01 | 이벤트 (When)     | 첫 렌더링에서 useState가 호출되면, 시스템은 비어 있는 자기 칸에 초깃값을 저장하고 그 값을 돌려줘야 한다.                    | `useState(0)`이 첫 렌더링에서 0을 돌려주고 `hooks[0]`이 0인지 확인                                                     |                                       |
+| FR-S01 | 이벤트 (When)     | 첫 렌더링에서 useState가 호출되면, 시스템은 비어 있는 자기 칸에 초깃값을 저장하고 그 값을 돌려줘야 한다.                    | `useState(0)`이 첫 렌더링에서 0을 돌려주고 `hooks[0]`이 `{ kind: 'state', value: 0 }`인지 확인                                                     |                                       |
 | FR-S02 | 이벤트 (When)     | 리렌더링에서 useState가 호출되면, 시스템은 초깃값을 무시하고 자기 칸에 저장된 값을 돌려줘야 한다.                           | setState(5) 뒤 리렌더링에서 `useState(0)`이 5를 돌려주는지 확인                                                         |                                       |
 | FR-S03 | 항상 (Ubiquitous) | 시스템은 한 렌더링 안에서 useState가 호출된 순서대로 칸을 나눠 줘야 한다.                                                   | `count`, `text` 두 state를 쓰는 컴포넌트에서 한쪽을 바꿔도 다른 쪽 값이 그대로인지 확인                                  |                                       |
-| FR-S04 | 이벤트 (When)     | 값을 넘겨 setState가 호출되면, 시스템은 자기 칸을 그 값으로 바꿔야 한다.                                                    | `setText('')` 뒤 `hooks[i]`가 `''`인지 확인                                                                            |                                       |
+| FR-S04 | 이벤트 (When)     | 값을 넘겨 setState가 호출되면, 시스템은 자기 칸을 그 값으로 바꿔야 한다.                                                    | `setText('')` 뒤 `hooks[i].value`가 `''`인지 확인                                                                            |                                       |
 | FR-S05 | 이벤트 (When)     | 함수를 넘겨 setState가 호출되면, 시스템은 그 순간 자기 칸의 값을 인자로 함수를 실행하고, 결과로 칸을 바꿔야 한다.           | 한 핸들러에서 `setCount(prev => prev + 1)`을 두 번 부르면 2가 되는지 확인. 같은 자리에서 `setCount(count + 1)`을 두 번 부르면 1이 되는 것과 비교 | stale closure 대응                    |
 | FR-S06 | 이벤트 (When)     | setState가 칸을 바꾸면, 시스템은 update를 실행해야 한다.                                                                     | 버튼 클릭으로 setState를 부른 뒤 화면의 값이 바뀌는지 확인                                                             | 배칭 미정 (6절). effect 실행 중이면 예약 ([use-effect FR-F13, F14](use-effect_requirement.md#54-effect-안의-setstate)) |
 | FR-S07 | 항상 (Ubiquitous) | 시스템은 렌더링이 끝난 뒤(`currentComponent`가 `null`인 때) 호출된 setState도 자기 인스턴스의 자기 칸을 바꿔야 한다.        | mount 후 클릭 핸들러에서 setState를 불러 해당 칸이 바뀌는지 확인                                                       | setState가 인스턴스와 칸 번호를 클로저로 기억 |
@@ -148,6 +148,7 @@
 | ------ | ----------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---- |
 | FR-T01 | 오류 (If-Then)    | 만약 렌더링 밖(`currentComponent`가 `null`인 때)에서 Hook이 호출되면, 시스템은 오류를 던져야 한다.               | mount 전과 mount 후에 useState를 직접 호출하면 오류가 나는지 확인                                          |      |
 | FR-T02 | 항상 (Ubiquitous) | 시스템은 setState가 호출될 때만 update를 실행해야 한다.                                                            | 핸들러에서 state 변수를 직접 바꾸거나 배열에 `push`해도 화면이 바뀌지 않는지 확인                           | 그래서 state는 setState로만 바꾼다 (#106) |
+| FR-T03 | 오류 (If-Then)    | 만약 Hook이 자기 칸에서 다른 Hook의 `kind`를 가진 칸을 꺼내면, 시스템은 오류를 던져야 한다.                              | useState를 조건문 안에 두어 두 번째 렌더링에서 호출 순서가 바뀌게 한 뒤, 칸이 어긋날 때 오류가 나는지 확인 | 칸 타입 결정(6.1)에 따라 추가 |
 
 ### 5.4 앱 작성 규칙
 
@@ -188,6 +189,20 @@
   - effect 실행 중이 아니면 `update()`를 바로 부른다. effect 실행 중이면 예약만 하고, effect가 다 끝난 뒤 update를 한 번 실행한다.
   - 근거: effect 실행 중에 update를 바로 부르면 update 안에서 update가 불려, 새 렌더링의 effect가 이전 렌더링의 남은 effect보다 먼저 실행된다.
   - 배칭을 넣을 때도 이 함수만 고친다. (6.2)
+
+- hooks 칸의 타입: 모든 칸을 `kind`로 구분하는 유니언으로 둔다. ([use-memo 6.1](use-memo_requirement.md#61-결정된-항목))
+
+  ```ts
+  type HookSlot =
+    | { kind: 'state'; value: unknown }
+    | { kind: 'memo'; value: unknown; deps: unknown[] | undefined }
+    | { kind: 'effect'; deps: unknown[] | undefined; cleanup: (() => void) | undefined };
+  hooks: HookSlot[] = [];
+  ```
+
+  - 근거: 한 배열에 모양이 다른 칸이 섞여도, `kind`를 확인하면 TypeScript가 칸의 모양을 정확히 알아 실수를 잡아 준다. 호출 순서가 바뀌어 칸이 어긋나면 `kind`가 맞지 않아 바로 알아챌 수 있다. (FR-T03)
+  - 고려한 다른 선택지: `unknown[]`로 두고 Hook마다 꺼낼 때 단언(`as`)한다. 코드는 짧지만, 칸이 어긋나도 TypeScript와 시스템 모두 알아채지 못한다.
+  - 대가: useState 칸이 값 그대로가 아니라 `{ kind: 'state', value }`가 되어, 칸의 값을 읽을 때 `.value`를 거쳐야 한다.
 
 ### 6.2 미정 항목
 
