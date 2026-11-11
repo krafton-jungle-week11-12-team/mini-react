@@ -80,7 +80,7 @@ type PropsPatch = {
 - `KeyedPatches` — key로 짝지은 자식 목록의 결과. (예: `[A, B, C]` → `[C, A, B]`이면 `children`의 `oldIndex`가 `2, 0, 1`, `move`가 `false, true, true`)
   - `children: KeyedChild[]` — 새 목록 순서의 칸. 길이는 새 자식 수예요.
   - `removes: number[]` — 새 목록에 같은 key가 없어 지울 이전 노드의 인덱스. (예: `[1]`)
-- `KeyedChild` — key 비교 결과의 칸 하나.
+- `KeyedChild` — key 비교 결과의 칸 하나. 새 목록의 노드 하나에 대응해요. (예: `{ oldIndex: 2, move: false, patch: null }`)
   - `oldIndex: number | null` — 짝지은 이전 노드의 인덱스. 이전 목록에 같은 key가 없으면 `null`이고, 이때 `patch`는 `CREATE`예요. (예: `2`)
   - `move: boolean` — 이전 위치가 `lastPlacedIndex`보다 앞이라 자리를 옮겨야 하는지. 인덱스만 밀린 노드는 `false`예요. (예: `true`)
   - `patch: Patch | null` — 짝지은 두 노드의 내용 변경. 이동과 함께 있을 수 있어요. 바뀌지 않았으면 `null`이에요. (예: `{ type: 'TEXT', text: 'B' }`)
