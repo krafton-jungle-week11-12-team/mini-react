@@ -1,0 +1,35 @@
+# 스킬 목록
+
+이 저장소의 스킬과 쓰는 순서를 정리해요. 이 문서를 읽으면 어떤 스킬을 언제 부르고, 각 스킬이 어떤 파일을 고치는지 알 수 있어요.
+
+스킬을 새로 만들거나 고치면 아래 표도 함께 고쳐요. 작성 규칙은 [스킬 작성 규칙](../rules/skill-writing.md)을 따라요.
+
+## 스킬
+
+| 명령어 | 하는 일 | 고치는 파일 | 읽고 보고만 하는 파일 |
+| ------ | ------- | ----------- | --------------------- |
+| `/design-doc <phase> [모듈 이름]` | 요구사항 문서가 완성됐는지 확인하고, 모듈별 설계 문서를 쓴 뒤 연결성을 검증해요. 사용자가 고르면 설계에서 바뀐 점을 요구사항에 반영해요. | `docs/design/`, `docs/requirements/<phase>/` (7단계에서 사용자가 고를 때만) | `docs/adr/`, `src/` |
+| `/doc-check <phase>` 또는 `/doc-check <문서 경로...>` | 요구사항, 설계, ADR, 스킬 문서가 템플릿 형식을 지키는지와 문서끼리 맞는지 검증해요. 경로를 주면 그 문서만 검증해요. | 없음 | `docs/requirements/`, `docs/design/`, `docs/adr/`, `.claude/skills/`, `src/` |
+| `/testcase-doc <phase> [요구사항 문서 경로 또는 ID]` | 요구사항을 바탕으로 요구사항 ID별 테스트 케이스 문서를 쓰고, 추가하면 좋을 케이스를 물어 반영해요. 템플릿이 없으면 먼저 만들어요. Claude도 알아서 불러요. | `docs/testcase/` | `docs/requirements/`, `docs/design/`, `docs/adr/`, `src/` |
+| `/skill-writing <스킬 이름> [할 일]` | 스킬 작성 규칙과 템플릿대로 스킬을 만들거나 고치고, 이 표를 갱신한 뒤 doc-check로 검수해요. 호출 방식은 항상 사용자에게 물어요. | `.claude/skills/<스킬 이름>/SKILL.md`, `.claude/skills/README.md` | `.claude/rules/`, 다른 스킬, `docs/` 템플릿 |
+
+## 쓰는 순서
+
+한 Phase는 아래 순서로 진행해요.
+
+```text
+요구사항 작성 → /design-doc <phase> → /doc-check <phase> → /testcase-doc <phase> → 구현
+```
+
+- `/doc-check`는 `/design-doc` 없이 사람이 직접 쓰거나 고친 문서를 검증할 때도 써요. ADR을 쓰거나 상태를 바꾼 뒤에는 `/doc-check docs/adr/ADR-<번호>.md`로 요구사항 비고와 맞는지 확인해요.
+- 다른 스킬은 모두 결과를 주기 전에 쓰거나 고친 문서를 `doc-check` 절차로 검수해요.
+- `/doc-check`에서 문제가 나오면 고친 뒤 `/doc-check`를 다시 돌려요.
+
+## Phase 인자
+
+Phase를 받는 스킬은 모두 아래처럼 읽어요. 각 스킬에 다시 쓰지 않고 이 절을 가리켜요.
+
+- 첫 단어가 Phase예요. `phase1`, `phase2`처럼 `docs/requirements/` 아래 폴더 이름으로 써요.
+- 숫자만 오면 `phase<숫자>`로 읽어요. (예: `2` → `phase2`)
+- Phase가 비어 있거나 `docs/requirements/<phase>/` 폴더가 없으면, `docs/requirements/` 아래 폴더 목록을 보여 주고 AskUserQuestion으로 어느 Phase인지 물어요. 추측해서 진행하지 않아요.
+- 설계 문서 위치는 Phase 1만 `docs/design/` 바로 아래이고, Phase 2부터는 `docs/design/<phase>/` 아래예요.
