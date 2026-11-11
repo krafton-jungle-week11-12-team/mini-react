@@ -13,7 +13,7 @@ disable-model-invocation: true
 
 ## 0. 입력 확인
 
-- 첫 단어는 Phase예요. `.claude/skills/README.md`의 "Phase 인자" 절대로 읽어요.
+- 첫 단어는 Phase예요. 요구사항 문서를 모아 둔 `docs/requirements/` 아래 폴더 이름과 같게 입력해요. (예: `phase2`) 자세한 규칙은 `.claude/skills/README.md`의 "Phase 인자" 절을 읽어요.
 
 ## 1. 요구사항 문서 확인
 
