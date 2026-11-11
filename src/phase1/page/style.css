@@ -108,8 +108,54 @@ textarea {
   min-height: 0;
   padding: 20px 24px;
   display: grid;
-  grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-rows: auto minmax(0, 3fr) minmax(0, 2fr);
   gap: 20px;
+}
+
+/* ── 샘플 탭 (FR-X05, sample.md) ─────────────────────────── */
+
+.dd-samples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.sample-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sample-tab {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--dd-card-line);
+  border-radius: 999px;
+  background: var(--dd-card);
+  color: var(--dd-text-sub);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sample-tab:hover {
+  border-color: var(--dd-primary);
+  color: var(--dd-primary-text);
+}
+
+.sample-tab[aria-selected='true'] {
+  border-color: var(--dd-primary);
+  background: var(--dd-primary);
+  color: #ffffff;
+}
+
+.sample-hint {
+  margin: 0;
+  flex: 1 1 280px;
+  font-size: 13px;
+  color: var(--dd-text-sub);
 }
 
 .dd-row {
