@@ -173,22 +173,23 @@ textarea {
   color: var(--dd-text-sub);
 }
 
-.test-mode {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.sample-write {
   margin-left: auto;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--dd-primary);
+  border-radius: 999px;
+  background: var(--dd-card);
+  color: var(--dd-primary-text);
+  font: inherit;
   font-size: 13px;
-  color: var(--dd-text-sub);
+  font-weight: 600;
   cursor: pointer;
 }
 
-.test-mode input {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  accent-color: var(--dd-primary);
-  cursor: pointer;
+.sample-write:hover {
+  background: var(--dd-primary);
+  color: #ffffff;
 }
 
 .dd-row {

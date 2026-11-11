@@ -8,8 +8,8 @@ import { patch } from '../modules/patch';
 import { fromDiffResult, captureBefore, showChanges } from './change-highlight';
 import { createHistory } from '../modules/history';
 import { createPage, getElements } from './page';
-import { renderSampleTabs, SAMPLES, type Sample } from './samples';
-import { TEST_DONE_HINT, TEST_STEPS, loadTestMode, nextStep, saveTestMode } from './test-mode';
+import { renderSampleTabs, SAMPLES } from './samples';
+import { SAMPLE_STEPS, STEPS_DONE_HINT, nextStep } from './sample-steps';
 
 /**
  * 강조 표시 모양 (style.md "강조 표시 모양"): 옅은 보라 배경 띠가 나타나 다음 Patch나 기록 이동 전까지 남아요.
@@ -32,55 +32,21 @@ const page = createPage(
 // 샘플 탭 (FR-X05, sample.md). 자리가 없으면 탭 없이 동작해요
 const tabs = document.getElementById('sample-tabs');
 const hint = document.getElementById('sample-hint');
-const testToggle = document.getElementById('test-mode') as HTMLInputElement | null;
-const el = getElements(document);
-let selectedSample: Sample = SAMPLES[0];
-
 if (tabs && hint) {
-  renderSampleTabs(tabs, hint, SAMPLES, (sample) => {
-    selectedSample = sample;
-    // 테스트 모드 중에 샘플을 고르면 테스트 모드를 끄고 그 샘플로 돌아가요
-    if (testToggle?.checked) {
-      testToggle.checked = false;
-      saveTestMode(false);
-    }
-    page.loadSample(sample.html, `샘플 "${sample.label}"로 로드`);
-  });
+  renderSampleTabs(tabs, hint, SAMPLES, (sample) => page.loadSample(sample.html, `샘플 "${sample.label}"로 로드`));
 }
 
-// ── 시연용 테스트 모드 ─────────────────────────────────────
-// 체크하면 0단계로 로드하고, Patch·기록 이동 뒤마다 다음 단계 HTML 코드를 입력창에 채워요
-
-/** 지금 기록의 다음 단계를 입력창에 넣고 안내를 바꿔요. 테스트 모드가 꺼져 있으면 아무것도 하지 않아요. */
-function fillNextStep(): void {
-  if (!testToggle?.checked) return;
+// 시연용 샘플 코드 작성 (sample-steps.ts). 단계에 없는 코드면 0단계로 로드하고, 단계 중이면 다음 단계 HTML 코드를 입력창에 넣어요
+const writeButton = document.getElementById('sample-write');
+const el = getElements(document);
+writeButton?.addEventListener('click', () => {
   const next = nextStep(page.history.current().html);
-  if (next !== null) {
+  if (next === SAMPLE_STEPS[0]) {
+    // 단계에 없는 코드면 실제 영역까지 0단계로 새로 로드해요
+    page.loadSample(next.html, '샘플 코드 작성으로 0단계 로드');
+  } else if (next !== null) {
     el.testCode.value = next.html;
     page.onInput(); // 줄 번호와 Patch 버튼 상태를 맞춰요
   }
-  if (hint) hint.textContent = next?.hint ?? TEST_DONE_HINT;
-}
-
-function startTestMode(): void {
-  page.loadSample(TEST_STEPS[0].html, '테스트 모드로 로드');
-  fillNextStep();
-}
-
-if (testToggle) {
-  testToggle.checked = loadTestMode();
-  testToggle.addEventListener('change', () => {
-    saveTestMode(testToggle.checked);
-    if (testToggle.checked) {
-      startTestMode();
-    } else {
-      page.loadSample(selectedSample.html, `샘플 "${selectedSample.label}"로 로드`);
-      if (hint) hint.textContent = selectedSample.hint;
-    }
-  });
-  // createPage가 먼저 연결한 핸들러가 Patch·이동을 끝낸 뒤 다음 단계를 채워요
-  el.patchButton.addEventListener('click', fillNextStep);
-  el.backButton.addEventListener('click', fillNextStep);
-  el.forwardButton.addEventListener('click', fillNextStep);
-  if (testToggle.checked) startTestMode();
-}
+  if (hint) hint.textContent = next?.hint ?? STEPS_DONE_HINT;
+});
