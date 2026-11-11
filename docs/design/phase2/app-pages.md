@@ -58,7 +58,7 @@ phase2.html
 
 ### 할 일 앱 페이지 (`src/phase2/page/main.ts`)
 
-1. `./style.css`를 import해요. (모양은 [화면 스타일 설계](style.md))
+1. `./style.css`를 import해요. (모양은 [화면 스타일 설계](style/style.md))
 2. `document.getElementById('app')`로 컨테이너를 찾아요.
 3. `new FunctionComponent(App, {}, container)`로 인스턴스를 하나 만들어요.
 4. `mount()`를 한 번 불러요. 이 뒤로 화면은 setState만 바꿔요. ([FR-A12](../../requirements/phase2/function-component_requirement.md#54-앱-작성-규칙))
