@@ -3,6 +3,8 @@
 // - toDOM:   VNode 하나 → 새 DOM 노드 (FR-E02). Patch가 새 노드를 만들 때만 써요 (ADR-004)
 // 두 함수 모두 재귀로 순회하고, 자식은 for 반복문으로 돌아요 (ADR-009)
 
+import { setProp } from '../../phase2/modules/props';
+
 export type VNode = VElement | VText | VComment;
 
 export type VElement = {
@@ -42,7 +44,8 @@ export function toDOM(vnode: VNode): Node {
     case 'element': {
       const element = document.createElement(vnode.tag);
       for (const [name, value] of Object.entries(vnode.props)) {
-        element.setAttribute(name, value);
+        // 이벤트 핸들러·property·attribute를 나눠 반영해요 (Phase 2 props 설계)
+        setProp(element, name, value);
       }
       // 콜백 대신 for 반복문: 재귀 한 단계마다 쌓이는 호출을 줄여요 (ADR-009 결정 5)
       for (let i = 0; i < vnode.children.length; i++) {
