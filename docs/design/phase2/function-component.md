@@ -36,6 +36,7 @@ FunctionComponent는 루트 컴포넌트 함수를 맡아 처음 화면을 그�
 | FR-A10 | 자식에서 state를 바꿀 동작이 필요하면 루트는 state를 바꾸는 함수를 props로 넘겨요                    | 검증 방법                 |
 | FR-A11 | 자식 요소에서 사용자 이벤트가 생기면 props로 받은 함수를 호출해 부모에 알려요                        | 검증 방법                 |
 | FR-A12 | 앱은 `main.ts`에서 mount를 한 번만 호출하고, update를 직접 호출하지 않아요                          | 인터페이스, 경계 케이스   |
+| FR-SX02 | (2차) `onCommit`을 받으면 mount와 update가 끝날 때마다 렌더링 정보를 넘겨 불러요                   | 자료구조 (`CommitInfo`), 인터페이스, 동작 방식 |
 
 ## 위치와 흐름
 
@@ -64,9 +65,24 @@ class FunctionComponent<P extends object = Record<string, unknown>> {
   pendingEffects: PendingEffect[];
   isRunningEffects: boolean;
   needsUpdate: boolean;
+  renderCount: number;
 }
 
 type HookSlot = StateSlot | MemoSlot | EffectSlot;
+
+// 2차 관찰 지점 (FR-SX02)
+type CommitInfo = {
+  count: number;
+  hooks: readonly HookSlot[];
+  patches: ChildPatches | null;
+  oldVNode: VNode | null;
+  newVNode: VNode;
+  effectsRan: readonly number[];
+};
+
+type FunctionComponentOptions = {
+  onCommit?: (info: CommitInfo) => void;
+};
 
 // src/phase2/modules/component.ts 안의 모듈 변수
 let currentComponent: FunctionComponent | null;
@@ -82,13 +98,21 @@ let currentComponent: FunctionComponent | null;
 - `pendingEffects: PendingEffect[]` — 이번 렌더링에서 실행할 effect 목록. 타입은 [useEffect 설계](use-effect.md)에 있어요. (예: `[{ i: 2, effect }]`)
 - `isRunningEffects: boolean` — effect 실행 중 표시. 켜져 있으면 setState가 update를 예약만 해요. (예: `false`)
 - `needsUpdate: boolean` — effect 실행 중 예약된 update가 있는지. (예: `true`)
+- `renderCount: number` — 컴포넌트 함수를 실행한 횟수. 생성 때 `0`이고 렌더링마다 1 늘어요. (예: mount 뒤 `1`)
+- `CommitInfo` — `onCommit`에 넘기는 값. 한 번의 mount나 update에서 일어난 일을 담아요. (FR-SX02)
+  - `count` — 이번 렌더링까지의 `renderCount`. (예: `5`)
+  - `hooks` — 이번 렌더링이 끝난 `hooks` 배열 그대로. 칸 객체를 복사하지 않아, 받는 쪽은 바뀐 값을 비교하려면 값을 따로 기억해야 해요. useMemo가 다시 계산한 칸은 새 칸 객체예요. (예: `[{ kind: 'state', value: [] }, …]`)
+  - `patches` — update의 Diff 결과. mount면 `null`이에요. (예: `[{ type: 'UPDATE', … }]`)
+  - `oldVNode`, `newVNode` — Diff에 넘긴 이전·새 VNode. mount면 `oldVNode`는 `null`이에요.
+  - `effectsRan` — 이번에 실행한 effect의 칸 번호. (예: `[5, 6]`)
+- `FunctionComponentOptions` — 생성자의 넷째 인자. `onCommit`만 있어요. 넘기지 않으면 1차와 같아요.
 - `currentComponent: FunctionComponent | null` — 지금 렌더링 중인 인스턴스. 렌더링 밖에서는 `null`이에요. (예: 렌더링 중 `app`, 클릭 핸들러 안에서 `null`)
 
 ## 인터페이스
 
 ```ts
 class FunctionComponent<P extends object = Record<string, unknown>> {
-  constructor(fn: Component<P>, props: P, container: Element);
+  constructor(fn: Component<P>, props: P, container: Element, options?: FunctionComponentOptions);
   mount(): void;
   update(): void;
   scheduleUpdate(): void;
@@ -102,6 +126,7 @@ function getCurrentComponent(): FunctionComponent | null;
 - `fn: Component<P>` — 루트 컴포넌트 함수. 실행하지 않고 보관해요. (예: `App`)
 - `props: P` — 루트 컴포넌트에 넘길 props. (예: `{}`)
 - `container: Element` — 붙일 곳. (예: `#app`)
+- `options?: FunctionComponentOptions` — (2차) 관찰 지점. `{ onCommit }`을 넘기면 mount와 update가 끝날 때마다 불러요. 생략하면 부르지 않아요. (예: `{ onCommit: showPanel }`) (FR-SX02)
 - 반환값: 인스턴스. `hooks`는 `[]`, `prevVNode`는 `null`이에요.
 - 부수 효과: 없음. (FR-C01)
 
@@ -129,7 +154,7 @@ function getCurrentComponent(): FunctionComponent | null;
 
 ### 렌더링 (내부 함수 `render`)
 
-1. `hookIndex`를 0으로 되돌려요. (FR-C06)
+1. `hookIndex`를 0으로 되돌리고 `renderCount`를 1 늘려요. (FR-C06)
 2. `currentComponent`를 이 인스턴스로 바꿔요. (FR-C07)
 3. `fn(props)`를 실행해요. 이 동안 Hook이 `hooks[0]`, `hooks[1]`, …을 차례로 써요.
 4. `finally`에서 `currentComponent`를 `null`로 되돌려요. 3단계가 오류를 던져도 되돌려요. (FR-C08, C12)
@@ -151,10 +176,12 @@ function getCurrentComponent(): FunctionComponent | null;
 
 ### effect 실행과 예약된 update (내부 함수 `commitEffects`)
 
-1. `isRunningEffects = true`
-2. `runEffects(this)`를 불러요. ([useEffect 설계](use-effect.md))
-3. `isRunningEffects = false`
-4. `needsUpdate`가 켜져 있으면 끄고 `update()`를 한 번 불러요. 이 update 안에서 다시 1~4단계가 돌아요.
+1. 실행할 effect의 칸 번호(`pendingEffects`의 `i`)를 적어 둬요. (FR-SX02)
+2. `isRunningEffects = true`
+3. `runEffects(this)`를 불러요. ([useEffect 설계](use-effect.md))
+4. `isRunningEffects = false`
+5. (2차) `onCommit`이 있으면 `{ count, hooks, patches, oldVNode, newVNode, effectsRan }`을 넘겨 불러요. mount는 `patches`와 `oldVNode`를 `null`로 넘겨요. (FR-SX02)
+6. `needsUpdate`가 켜져 있으면 끄고 `update()`를 한 번 불러요. 이 update 안에서 다시 1~6단계가 돌아요.
 
 ### scheduleUpdate
 
@@ -198,6 +225,9 @@ function getCurrentComponent(): FunctionComponent | null;
 | 배칭은 넣지 않고, effect 실행 중이 아니면 setState마다 `update()`를 바로 부른다                  | 요구사항 6.2 미정 항목이에요. 넣을 때는 `scheduleUpdate`만 고쳐요                                                             | -        |
 | mount 두 번, mount 전 update를 막지 않는다                                                     | 요구사항 6.1 결정이에요. FR-C09, C10은 삭제되고 FR-A12 앱 작성 규칙으로 옮겼어요                                               | -        |
 | FunctionComponent와 `getCurrentComponent`는 `src/phase2/modules/component.ts`에 둔다                          | Hook 파일들이 이 파일만 import하면 돼요                                                                                       | -        |
+| (2차) 관찰 지점은 생성자의 선택 인자 `onCommit` 하나로 둔다 (할 일 앱 요구사항 6.1)               | 넘기지 않으면 1차와 같아 기존 코드와 테스트를 고치지 않아요. Diff 결과를 그대로 넘겨 Phase 1 변경 표시를 재사용해요              | -        |
+| `onCommit`은 effect 실행 뒤, 예약된 update 전에 부른다                                            | effect 실행까지 끝나야 실행 기록(FR-AX03)이 완성돼요. 예약된 update는 자기 `onCommit`을 따로 불러요                              | -        |
+| `hooks`는 복사하지 않고 그대로 넘긴다                                                              | 렌더링마다 배열을 복사하지 않아요. useMemo가 다시 계산하면 칸 객체가 바뀌어, 받는 쪽이 객체 비교로 다시 계산을 알 수 있어요      | -        |
 
 ## 경계 케이스
 
@@ -211,6 +241,8 @@ function getCurrentComponent(): FunctionComponent | null;
 | mount를 두 번 부름                 | `app.mount(); app.mount();`                                 | 막지 않아요. 두 번째 렌더링이 hooks를 이어 쓰고 컨테이너를 다시 채워요. 앱 작성 규칙 위반이에요 | FR-C09, FR-A12 |
 | mount 전 update를 부름             | `app.update()`                                               | 막지 않아요. `prevVNode`가 `null`이라 Diff에서 오류가 나요. 앱 작성 규칙 위반이에요          | FR-C10, FR-A12 |
 | 자식 컴포넌트에서 Hook을 부름      | `function Item() { useState(0); }`                           | 막지 않아요. 루트의 다음 칸을 차지해, 자식 수가 바뀌면 칸이 밀려요                           | FR-A05        |
+| `onCommit` 없이 생성              | `new FunctionComponent(App, {}, el)`                         | 1차와 같아요. 관찰 콜백을 부르지 않아요                                                     | FR-SX02       |
+| 예약된 update가 있음 (2차)         | mount의 effect에서 setState                                  | `onCommit`이 mount(`count: 1`)와 예약된 update(`count: 2`)로 두 번 불려요                   | FR-SX02       |
 | 렌더링 중 setState                 | `App` 본문에서 `setCount(1)`                                 | 막지 않아요. `update()`가 렌더링 안에서 불려 렌더링이 겹쳐요. 정하지 않은 것에 남겨요        | -             |
 
 ## 검증 방법
