@@ -2,7 +2,7 @@
 // 엔진 모듈을 import하는 곳은 여기 하나예요. 모듈을 다른 구현으로 바꿀 때는 여기만 고쳐요
 
 import './style.css';
-import { toVNode } from '../modules/vdom';
+import { toVNode, toDOM } from '../modules/vdom';
 import { diff } from '../modules/diff';
 import { patch } from '../modules/patch';
 import { fromDiffResult, captureBefore, showChanges } from './change-highlight';
@@ -23,6 +23,6 @@ function highlight(el: Element): void {
 createPage(
   getElements(document),
   SAMPLE_HTML,
-  { toVNode, diff, patch, fromDiffResult, captureBefore, showChanges, createHistory },
+  { toVNode, toDOM, diff, patch, fromDiffResult, captureBefore, showChanges, createHistory },
   { highlight },
 );

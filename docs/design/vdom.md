@@ -23,11 +23,11 @@ Virtual DOM 변환은 영역 컨테이너 아래의 DOM 트리를 Virtual DOM �
 
 ```text
 영역 컨테이너의 DOM 트리 ──(toVNode)──▶ VNode[] ──▶ Diff, State History
-VNode ──(toDOM)──▶ 새 DOM 노드 ──▶ Patch
+VNode ──(toDOM)──▶ 새 DOM 노드 ──▶ Patch, 검증 페이지의 두 영역
 ```
 
-- 입력을 주는 곳: 검증 페이지(로드 때 실제 영역, Patch 때 테스트 영역. 요구사항 4.1의 4단계, 4.2의 3단계), Patch(새 노드가 필요할 때)
-- 출력을 받는 곳: [Diff](diff.md), [State History](history.md), [Patch](patch.md)
+- 입력을 주는 곳: 검증 페이지(로드 때 실제 영역, Patch 때 별도 문서에서 파싱한 HTML 코드. 요구사항 4.1의 4단계, 4.2의 3단계), Patch(새 노드가 필요할 때), 검증 페이지(두 영역을 그릴 때, [ADR-013](../adr/ADR-013.md) 제안됨)
+- 출력을 받는 곳: [Diff](diff.md), [State History](history.md), [Patch](patch.md), [검증 페이지](page.md)
 
 ## 자료구조
 

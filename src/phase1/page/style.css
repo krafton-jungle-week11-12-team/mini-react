@@ -327,6 +327,8 @@ textarea.code:focus-visible {
   background: #ffffff;
   font-family: var(--dd-sans);
   color: var(--dd-text);
+  /* 입력한 style의 position: fixed 같은 요소 노드가 영역 밖을 덮지 못하게 가둬요 (ADR-014) */
+  contain: paint;
 }
 
 .render-root h1 {
