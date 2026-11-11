@@ -7,6 +7,10 @@ paths:
 
 문서를 쓰거나 고칠 때는 [테크니컬 라이팅 원칙](../../docs/technical-writing-principles.md)을 따라요.
 
+## 결과를 주기 전 검수
+
+스킬을 쓰지 않고 문서를 쓰거나 고쳤어도, 결과를 주기 전에 [doc-check](../skills/doc-check/SKILL.md) 절차대로 이번에 쓰거나 고친 문서를 검수해요. 이번에 고친 문서의 문제는 고치고 다시 검수한 뒤, 검수 결과 표를 함께 보여 줘요.
+
 ## ADR과 요구사항이 충돌할 때
 
 ADR의 결정이 `docs/requirements/`의 요구사항과 다르면, ADR이 승인될 때까지 요구사항 본문은 그대로 두고 비고에만 표시해요. 기준은 ADR의 "영향받는 요구사항" 표예요. 형식은 [ADR 템플릿](../../docs/adr/TEMPLATE.md)을 봐요.
