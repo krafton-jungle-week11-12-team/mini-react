@@ -12,7 +12,7 @@ argument-hint: "[phase1 | phase2 | ...] [테스트 파일 경로 또는 요구�
 
 ## 0. 입력 확인
 
-- 첫 단어는 Phase예요. `.claude/skills/README.md`의 "Phase 인자" 절대로 읽어요.
+- 첫 단어는 Phase예요. `.claude/skills/README.md`의 "Phase 인자" 절에 적힌 대로 읽어요.
 - 둘째 단어부터는 대상이에요. 테스트 파일 경로(예: `src/diff.test.ts`)나 요구사항 ID(예: `FR-E03`)를 받아요. 요구사항 ID면 테스트 주석에 그 ID가 있는 케이스를 대상으로 해요. 없으면 그 Phase 요구사항 ID가 적힌 테스트 전체를 대상으로 해요.
 - 준 경로가 없거나, 그 ID가 적힌 테스트가 없으면 멈추고 알려요. 테스트가 없으면 `/make-testcase`를 먼저 돌리라고 안내해요.
 
