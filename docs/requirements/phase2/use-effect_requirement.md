@@ -4,7 +4,7 @@
 | --------- | ------------------------------------------------------------------------------------------------------- |
 | 문서 상태 | 초안 v0.1                                                                                               |
 | 작성일    | 2026-11-11                                                                                              |
-| 수정일    | 2026-11-11 (hooks 칸 kind 반영, 설계 반영: 실행 대기 목록 위치 · cleanup 저장 규칙)                      |
+| 수정일    | 2026-11-11 (hooks 칸 kind 반영, 설계 반영: 실행 대기 목록 위치 · cleanup 저장 규칙, 2차 추가 기능 5.5 추가)                      |
 | 작성자    | 오동환                                                                                                  |
 | 근거      | Discussions #118 (useEffect 개념 정리)                                                                  |
 | 선행 문서 | [function-component_requirement.md](function-component_requirement.md), [use-memo_requirement.md](use-memo_requirement.md) (의존성 비교) |
@@ -41,7 +41,7 @@
 | 렌더링 밖 호출 막기               | 모든 Hook에 같은 규칙이므로 [FR-T01](function-component_requirement.md#53-state-제약)을 따른다.                                                        |
 | unmount와 unmount 때의 cleanup    | 우리 구현에서는 unmount가 일어나지 않는다. 루트 컴포넌트는 한 번 mount하면 떼어 내는 API가 없고, 자식 컴포넌트는 인스턴스가 없는 일반 함수라 Hook이 없다. 그래서 deps가 `[]`인 effect의 cleanup은 호출되지 않는다. (6.1) |
 | 페인트 뒤 실행 보장               | effect는 patch 직후 동기로 실행하므로 페인트 전에 실행된다. 실제 React의 `useLayoutEffect`에 가깝다. (6.1)                                              |
-| 연속 update 횟수 제한             | effect 안의 setState로 생기는 무한 루프는 앱 코드의 실수로 본다. 선택 항목으로 둔다. (7절)                                                             |
+| 연속 update 횟수 제한             | effect 안의 setState로 생기는 무한 루프는 앱 코드의 실수로 본다. 선택 항목으로 둔다. (5.5 FR-FX01)                                                             |
 | effect · cleanup이 던진 오류 처리 | 오류를 잡지 않고 그대로 전파한다. (7절)                                                                                                                |
 | useLayoutEffect                   | Phase 2 범위가 아니다.                                                                                                                                 |
 
@@ -195,6 +195,15 @@ effect 실행 중에 setState가 update를 바로 부르면, 새 렌더링의 ef
 | FR-F15 | 항상 (Ubiquitous) | 시스템은 effect 실행 중 예약된 update를 mount나 update가 끝나기 전에 마쳐야 한다.                                                    | `mount()` 바로 다음 줄에서 화면이 effect가 setState한 값인지 확인                                                                                       | 페인트 전에 끝남 (4.3)                      |
 | FR-F16 | 오류 (If-Then)    | 만약 effect 안의 setState가 지금 값과 같은 값으로 호출되면, 시스템은 update를 예약하지 않아야 한다.                                 | mount의 effect에서 지금 값과 같은 값으로 setState한 뒤 렌더링 횟수가 1인지 확인                                                                          | 같은 값 건너뛰기 ([FR-S08](function-component_requirement.md#52-usestate)) |
 
+
+### 5.5 2차 추가 기능
+
+> 5.1~5.4를 모두 만족한 뒤 구현한다. 포함하지 않아도 Phase 2는 완료로 본다.
+
+| ID      | 유형         | 요구사항                                                                                                                                   | 확인 방법 (초안)                                                                          | 비고 |
+| ------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ---- |
+| FR-FX01 | 선택 (Where) | 연속 update 횟수 제한이 포함되면, effect가 일으킨 update가 사용자 동작 없이 이어져 정한 횟수를 넘을 때 시스템은 update를 멈추고 오류를 던져야 한다. | `useEffect(() => setCount(count + 1), [count])`를 mount해 오류가 나고, 렌더링 횟수가 정한 횟수에서 멈추는지 확인 | 정한 횟수는 설계에서 정한다. 실제 React는 50번 |
+
 ## 6. 설계로 넘기는 항목
 
 > ([#118](https://github.com/orgs/krafton-jungle-week11-12-team/discussions/118) "10. 요구사항·설계로 넘길 것")
@@ -267,7 +276,7 @@ effect 실행 중에 setState가 update를 바로 부르면, 새 렌더링의 ef
 
 ## 7. 추후 논의
 
-- 연속 update 횟수 제한: `useEffect(() => setCount(count + 1), [count])` 같은 무한 루프를 막을지. 실제 React는 연속 update가 50번을 넘으면 오류를 던진다. 차별점 후보다.
+- 연속 update 횟수 제한: `useEffect(() => setCount(count + 1), [count])` 같은 무한 루프를 막는다. 2차 추가 기능(5.5 FR-FX01)으로 정했다. 차별점 후보다.
 - `unmount()` 추가: 루트를 떼어 내며 남은 cleanup을 모두 부르는 API를 둘지. 차별점 후보다.
 - effect나 cleanup이 오류를 던질 때: 지금은 그대로 전파되어 남은 effect가 실행되지 않고 "effect 실행 중" 표시가 켜진 채 남을 수 있다. `try`/`finally`로 표시를 끌지 정한다.
 - useState 지연 초기화: 저장된 값을 effect에서 불러오면(`useEffect(() => setTodos(load()), [])`) 첫 화면이 빈 목록으로 한 번 그려진다. 지연 초기화(`useState(() => load())`)를 FR-S에 넣을지 [use-memo 7절](use-memo_requirement.md#7-추후-논의)과 함께 정한다.
