@@ -11,9 +11,8 @@ disable-model-invocation: true
 
 ## 0. 입력 확인
 
-- 첫 단어는 Phase예요. (예: `phase1`, `phase2`, `2`) 숫자만 오면 `phase<숫자>`로 읽어요.
+- 첫 단어는 Phase예요. `.claude/skills/README.md`의 "Phase 인자" 절대로 읽어요.
 - 둘째 단어부터는 설계할 모듈 이름이에요. 없으면 그 Phase의 요구사항 문서 전체를 대상으로 해요.
-- Phase가 비어 있거나 `docs/requirements/<phase>/` 폴더가 없으면, `docs/requirements/` 아래 폴더 목록을 보여 주고 AskUserQuestion으로 어느 Phase인지 물어요. 추측해서 진행하지 않아요.
 
 ## 1. 요구사항 문서 완성 확인
 
@@ -129,6 +128,8 @@ disable-model-invocation: true
 - 기존 문서, 앞 Phase 문서를 고쳐야 하는 문제는 고치지 않고 보고만 해요.
 - 요구사항 문서를 고쳐야 하는 문제는 "요구사항 반영 목록"에 더하고 7단계에서 다뤄요.
 
+마지막으로 `.claude/skills/doc-check/SKILL.md`를 읽고, 이번에 쓰거나 고친 설계 문서 경로를 입력으로 그 절차대로 검수해요. 이번에 쓴 문서의 문제는 고치고 다시 검수해요. 결과 표는 6단계 보고에 넣어요.
+
 ## 6. 마지막 보고
 
 - 작성·수정한 파일 목록
@@ -157,4 +158,4 @@ disable-model-invocation: true
 5. 헤더 표의 "수정일"에 날짜와 반영 내용을 적어요.
 6. ADR과 충돌하는 항목은 본문을 고치지 않고 `.claude/rules/docs-writing.md`의 ADR 절차대로 비고에만 표시해요.
 7. 새 ID를 설계 문서의 "다루는 요구사항" 표와 경계 케이스에 넣고, 설계 문서의 "요구사항 미정 항목" 같은 표현을 "요구사항 6.1"로 바꿔요.
-8. 5단계 검증 1~3번과 8번(링크)을 다시 돌려 결과를 보고해요.
+8. 5단계 검증 1~3번과 8번(링크)을 다시 돌리고, 고친 요구사항 문서 경로를 입력으로 `.claude/skills/doc-check/SKILL.md` 절차대로 검수해서 결과를 보고해요.
