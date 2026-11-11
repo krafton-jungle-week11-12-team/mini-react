@@ -73,9 +73,10 @@ function sanitizeList(list: VNode[], removed: Set<string>): VNode[] {
 }
 
 function sanitizeElement(node: VElement, removed: Set<string>): VElement {
-  const props: Record<string, string> = {};
+  const props: VElement['props'] = {};
   for (const [name, value] of Object.entries(node.props)) {
-    if (isAllowedAttr(name, value)) props[name] = value;
+    // 입력 HTML에서 온 속성 값은 문자열이에요. 문자열이 아닌 값(함수 등)은 허용하지 않아요
+    if (typeof value === 'string' && isAllowedAttr(name, value)) props[name] = value;
     else removed.add(name);
   }
   const clean: VElement = { kind: 'element', tag: node.tag, props, children: sanitizeList(node.children, removed) };

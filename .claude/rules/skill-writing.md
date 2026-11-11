@@ -25,7 +25,7 @@ paths:
 - **경로**: 저장소 루트 기준 경로로 쓰고, 적은 경로가 실제로 있는지 `ls`로 확인해요.
 - **기준이 되는 파일**: 결과물 형식은 `docs/` 아래 템플릿(`docs/design/TEMPLATE.md`, `docs/adr/TEMPLATE.md` 등)을 가리켜요. 스킬 안에 형식을 새로 정의하지 않아요.
 - **결과 보고**: 확인·검증 결과는 표로 보여 주고, 문제 위치는 `파일:줄`로 적어요.
-- **doc-check 검수**: 모든 스킬은 결과를 주기 전에 이번에 쓰거나 고친 문서를 `doc-check`로 검수해요. `doc-check`는 사용자만 부를 수 있는 스킬이라, 스킬 본문에는 "`.claude/skills/doc-check/SKILL.md`를 읽고 그 절차대로 검수해요"라고 써요. 이번에 쓴 문서의 문제는 고치고 다시 검수해요. `doc-check` 자신은 빼요.
+- **doc-check는 부르지 않기**: `doc-check`는 사용자가 `/doc-check`로 부를 때만 실행해요. 스킬 본문에서 `doc-check`를 부르거나 `.claude/skills/doc-check/SKILL.md` 절차를 빌려 쓰지 않아요.
 
 ## 다 쓴 뒤
 

@@ -99,7 +99,7 @@ function sanitize(roots: VNode[]): SanitizeResult;
 | `name` 속성을 허용하지 않는다 | `name`은 `document`의 같은 이름 속성을 덮을 수 있어요(DOM clobbering). `toDOM`이 `document.createElement`를 쓰기 때문에 막아야 해요 | [ADR-014](../adr/ADR-014.md) (제안됨) |
 | `style`은 허용하되 외부 요청을 보낼 수 있는 값이면 통째로 뺀다 | 레이아웃 실험에 필요해요. 값 일부만 고치면 남은 CSS가 입력과 달라져 헷갈려요. 역슬래시는 CSS 이스케이프로 `url`을 숨길 수 있어 막아요 | [ADR-014](../adr/ADR-014.md) (제안됨) |
 | `position: fixed`는 거르지 않고 CSS `contain: paint`로 가둔다 | 값을 하나씩 막는 것보다 단순해요. `contain: paint`를 건 박스는 fixed 요소 노드의 기준이 되고 박스 밖을 그리지 않아요([화면 스타일 설계](style.md#렌더링-결과-박스)) | [ADR-014](../adr/ADR-014.md) (제안됨) |
-| `key`를 허용한다 | 검증 페이지에서 key 비교를 확인할 수 있어야 해요 | [ADR-011](../adr/ADR-011.md) (제안됨) |
+| `key`를 허용한다 | 검증 페이지에서 key 비교를 확인할 수 있어야 해요 | [ADR-011](../adr/ADR-011.md) |
 | 자식은 `for` 반복문으로 돈다 | 재귀 한 단계마다 쌓이는 호출을 줄여요 | [ADR-009](../adr/ADR-009.md) |
 
 ## 경계 케이스
