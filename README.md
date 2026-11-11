@@ -1,4 +1,5 @@
 # w11-12-mini-react
+https://krafton-jungle-week11-12-team.github.io/mini-react/
 
 Vanilla TypeScript로 Virtual DOM + Diff + Patch(Phase 1)와 Component · State · Hooks(Phase 2)를 직접 구현한 미니 리액트예요.
 
