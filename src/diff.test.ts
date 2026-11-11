@@ -21,6 +21,13 @@ function vnodes(html: string): VNode[] {
   return toVNode(container);
 }
 
+// key가 없는 입력은 같은 인덱스 비교 결과(배열)가 나와요 (ADR-002). 칸을 직접 읽는 테스트에서 써요
+function diffArray(oldRoots: VNode[], newRoots: VNode[]): (Patch | null)[] {
+  const result = diff(oldRoots, newRoots);
+  if (!Array.isArray(result)) throw new Error('같은 인덱스 비교 결과가 아니에요');
+  return result;
+}
+
 // 속성 변경이 없는 UPDATE
 function update(children: (Patch | null)[]): Patch {
   return { type: 'UPDATE', props: { set: {}, remove: [] }, children };
@@ -69,7 +76,7 @@ describe('diff 다섯 가지 변경 (FR-E03)', () => {
 
   it('F7 교체(태그가 다름): REPLACE 하나이고 자식은 비교하지 않는다', () => {
     const newRoots = vnodes('<div>A</div>');
-    const result = diff(vnodes('<p>A</p>'), newRoots);
+    const result = diffArray(vnodes('<p>A</p>'), newRoots);
     expect(result).toEqual([{ type: 'REPLACE', vnode: newRoots[0] }]);
     expect(result[0]).not.toHaveProperty('children');
   });
@@ -86,7 +93,7 @@ describe('diff 다섯 가지 변경 (FR-E03)', () => {
 
   it('F10 CREATE·REPLACE의 vnode는 새 트리의 노드를 그대로 담는다', () => {
     const newRoots = vnodes('<div>A</div><p>B</p>');
-    const result = diff(vnodes('<p>A</p>'), newRoots);
+    const result = diffArray(vnodes('<p>A</p>'), newRoots);
     expect((result[0] as { vnode: VNode }).vnode).toBe(newRoots[0]);
     expect((result[1] as { vnode: VNode }).vnode).toBe(newRoots[1]);
   });
@@ -154,7 +161,7 @@ describe('diff 경계 케이스', () => {
 
   it('F20 모두 삭제: 샘플 → 빈 문자열이면 루트 칸이 모두 REMOVE다 (FR-E09)', () => {
     const oldRoots = vnodes(SAMPLE);
-    const result = diff(oldRoots, vnodes(''));
+    const result = diffArray(oldRoots, vnodes(''));
     expect(result).toHaveLength(oldRoots.length);
     expect(result.every((p) => p?.type === 'REMOVE')).toBe(true);
   });
@@ -165,7 +172,7 @@ describe('diff 경계 케이스', () => {
   });
 
   it('F22 바뀐 내용 없음: 샘플을 그대로 비교하면 모든 칸이 null이다 (FR-W10, W28)', () => {
-    const result = diff(vnodes(SAMPLE), vnodes(SAMPLE));
+    const result = diffArray(vnodes(SAMPLE), vnodes(SAMPLE));
     expect(result.length).toBeGreaterThan(0);
     expect(result.every((p) => p === null)).toBe(true);
   });

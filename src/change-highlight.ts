@@ -3,14 +3,14 @@
 // - Diff 결과의 형식을 아는 함수는 fromDiffResult 하나예요. 나머지는 ChangeRecord만 써요
 // - 바뀐 노드는 Patch 결과가 아니라 두 트리에서의 위치로 실제 영역에서 직접 찾아요
 
-import type { Patch, PropsPatch } from './diff';
+import type { ChildPatches, KeyedPatches, Patch, PropsPatch } from './diff';
 import type { VNode } from './vdom';
 
 export type NodeKind = 'element' | 'text' | 'comment';
 
 /** 변경으로 세는 칸 하나. 경로는 childNodes 인덱스를 루트부터 차례로 담고, []는 영역 컨테이너예요. */
 export type ChangeRecord = {
-  kind: 'create' | 'remove' | 'replace' | 'text' | 'props';
+  kind: 'create' | 'remove' | 'replace' | 'text' | 'props' | 'move';
   oldPath: number[] | null;
   newPath: number[] | null;
   parentOldPath: number[];
@@ -45,52 +45,108 @@ export type HighlightOptions = {
  * 한 자식 목록의 칸을 앞에서부터 처리한 뒤 그 아래 자식 목록으로 내려가요.
  * 자식만 바뀐 UPDATE는 세지 않고, 속성이 바뀐 UPDATE는 1개로 세요.
  */
-export function fromDiffResult(result: (Patch | null)[], oldRoots: VNode[]): ChangeRecord[] {
+export function fromDiffResult(result: ChildPatches, oldRoots: VNode[]): ChangeRecord[] {
   const records: ChangeRecord[] = [];
-  collect(result, oldRoots, [], records);
+  collect(result, oldRoots, [], [], records);
   return records;
 }
 
-/** 한 자식 목록의 칸을 처리하고, UPDATE 칸은 처리가 끝난 뒤 차례로 내려가요. */
-function collect(patches: (Patch | null)[], oldList: VNode[], parentPath: number[], out: ChangeRecord[]): void {
-  const updates: [number, Extract<Patch, { type: 'UPDATE' }>][] = [];
+type UpdatePatch = Extract<Patch, { type: 'UPDATE' }>;
+/** 내려갈 UPDATE 칸: [이전 노드, 이전 트리 경로, 새 트리 경로, 칸] */
+type PendingUpdate = [VNode | undefined, number[], number[], UpdatePatch];
 
-  for (let i = 0; i < patches.length; i++) {
-    const p = patches[i];
-    if (p === null) continue;
-    const path = [...parentPath, i];
-    const oldNode = oldList[i];
+/**
+ * 한 자식 목록의 칸을 처리하고, UPDATE 칸은 처리가 끝난 뒤 차례로 내려가요.
+ * 같은 자리 비교면 두 부모 경로가 같고, key 비교에서 부모가 이동했으면 달라요 (ADR-011).
+ */
+function collect(
+  patches: ChildPatches,
+  oldList: VNode[],
+  parentOldPath: number[],
+  parentNewPath: number[],
+  out: ChangeRecord[],
+): void {
+  const updates: PendingUpdate[] = [];
+  const parents: [number[], number[]] = [parentOldPath, parentNewPath];
 
-    switch (p.type) {
-      case 'CREATE':
-        out.push(record('create', null, path, parentPath, null, p.vnode.kind, describe(p.vnode)));
-        break;
-      case 'REMOVE':
-        out.push(record('remove', path, null, parentPath, kindOf(oldNode), null, ''));
-        break;
-      case 'REPLACE':
-        out.push(record('replace', path, path, parentPath, kindOf(oldNode), p.vnode.kind, describe(p.vnode)));
-        break;
-      case 'TEXT': {
-        // 텍스트와 주석 모두 TEXT로 와요. 노드 종류는 이전 트리에서 읽어요
-        const kind = kindOf(oldNode);
-        out.push(record('text', path, path, parentPath, kind, kind, p.text));
-        break;
-      }
-      case 'UPDATE':
-        if (hasPropsChange(p.props)) {
-          out.push(record('props', path, path, parentPath, 'element', 'element', describeProps(p.props)));
-        }
-        updates.push([i, p]);
-        break;
+  if (Array.isArray(patches)) {
+    for (let i = 0; i < patches.length; i++) {
+      const p = patches[i];
+      if (p === null) continue;
+      addRecord(p, oldList[i], [...parentOldPath, i], [...parentNewPath, i], parents, out, updates);
     }
+  } else {
+    collectKeyed(patches, oldList, parents, out, updates);
   }
 
   for (let k = 0; k < updates.length; k++) {
-    const [i, p] = updates[k];
-    const oldNode = oldList[i];
+    const [oldNode, oldPath, newPath, p] = updates[k];
     const children = oldNode !== undefined && oldNode.kind === 'element' ? oldNode.children : [];
-    collect(p.children, children, [...parentPath, i], out); // 재귀
+    collect(p.children, children, oldPath, newPath, out); // 재귀
+  }
+}
+
+/** key로 짝지은 칸: 삭제를 먼저 담고, 새 목록 순서대로 추가·이동·내용 변경을 담아요. */
+function collectKeyed(
+  keyed: KeyedPatches,
+  oldList: VNode[],
+  parents: [number[], number[]],
+  out: ChangeRecord[],
+  updates: PendingUpdate[],
+): void {
+  const [parentOldPath, parentNewPath] = parents;
+  for (let k = 0; k < keyed.removes.length; k++) {
+    const index = keyed.removes[k];
+    addRecord({ type: 'REMOVE' }, oldList[index], [...parentOldPath, index], null, parents, out, updates);
+  }
+  for (let i = 0; i < keyed.children.length; i++) {
+    const c = keyed.children[i];
+    const newPath = [...parentNewPath, i];
+    if (c.oldIndex === null) {
+      if (c.patch !== null) addRecord(c.patch, undefined, null, newPath, parents, out, updates);
+      continue;
+    }
+    const oldNode = oldList[c.oldIndex];
+    const oldPath = [...parentOldPath, c.oldIndex];
+    if (c.move) {
+      out.push(record('move', oldPath, newPath, parents, kindOf(oldNode), kindOf(oldNode), describe(oldNode)));
+    }
+    if (c.patch !== null) addRecord(c.patch, oldNode, oldPath, newPath, parents, out, updates);
+  }
+}
+
+/** 칸 하나를 변경 기록으로 바꿔요. UPDATE는 속성이 바뀌었을 때만 담고, 자식은 나중에 내려가요. */
+function addRecord(
+  p: Patch,
+  oldNode: VNode | undefined,
+  oldPath: number[] | null,
+  newPath: number[] | null,
+  parents: [number[], number[]],
+  out: ChangeRecord[],
+  updates: PendingUpdate[],
+): void {
+  switch (p.type) {
+    case 'CREATE':
+      out.push(record('create', null, newPath, parents, null, p.vnode.kind, describe(p.vnode)));
+      return;
+    case 'REMOVE':
+      out.push(record('remove', oldPath, null, parents, kindOf(oldNode), null, ''));
+      return;
+    case 'REPLACE':
+      out.push(record('replace', oldPath, newPath, parents, kindOf(oldNode), p.vnode.kind, describe(p.vnode)));
+      return;
+    case 'TEXT': {
+      // 텍스트와 주석 모두 TEXT로 와요. 노드 종류는 이전 트리에서 읽어요
+      const kind = kindOf(oldNode);
+      out.push(record('text', oldPath, newPath, parents, kind, kind, p.text));
+      return;
+    }
+    case 'UPDATE':
+      if (hasPropsChange(p.props)) {
+        out.push(record('props', oldPath, newPath, parents, 'element', 'element', describeProps(p.props)));
+      }
+      updates.push([oldNode, oldPath ?? [], newPath ?? [], p]);
+      return;
   }
 }
 
@@ -98,18 +154,18 @@ function record(
   kind: ChangeRecord['kind'],
   oldPath: number[] | null,
   newPath: number[] | null,
-  parentPath: number[],
+  parents: [number[], number[]],
   oldNodeKind: NodeKind | null,
   newNodeKind: NodeKind | null,
   detail: string,
 ): ChangeRecord {
-  // 같은 자리 비교(ADR-002)라 두 트리에서 부모 위치가 같아요
+  // 같은 자리 비교(ADR-002)면 두 부모 경로가 같아요. key 비교에서 부모가 이동했으면 달라요 (ADR-011)
   return {
     kind,
     oldPath,
     newPath,
-    parentOldPath: parentPath,
-    parentNewPath: parentPath,
+    parentOldPath: parents[0],
+    parentNewPath: parents[1],
     oldNodeKind,
     newNodeKind,
     detail,
@@ -156,6 +212,8 @@ type Rule =
 /** ChangeRecord의 kind와 두 노드 종류로만 판단해요 (변경 표시 설계 "보이는지 판단하는 규칙" 표). */
 function ruleOf(r: ChangeRecord): Rule {
   if (r.kind === 'props') return { type: 'element', target: 'new' };
+  // 이동한 요소 노드는 자리가 바뀌어 항상 보여요. 텍스트·주석 노드의 이동은 아래 규칙을 따라요 (ADR-011)
+  if (r.kind === 'move' && r.newNodeKind === 'element') return { type: 'element', target: 'new' };
   if ((r.kind === 'create' || r.kind === 'replace') && r.newNodeKind === 'element') {
     return { type: 'element', target: 'new' };
   }
