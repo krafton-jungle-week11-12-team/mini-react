@@ -6,7 +6,7 @@
 
 ## 개요
 
-useEffect는 렌더링 중에 effect를 등록만 해 두고, mount·update가 DOM 반영을 마친 뒤 실행해요. 다시 실행하기 전에는 이전 effect가 돌려준 cleanup을 먼저 불러요. 이 문서를 읽으면 effect 칸과 실행 대기 목록의 모양, `runEffects`가 cleanup과 effect를 부르는 순서를 알고 `src/use-effect.ts`를 구현할 수 있어요.
+useEffect는 렌더링 중에 effect를 등록만 해 두고, mount·update가 DOM 반영을 마친 뒤 실행해요. 다시 실행하기 전에는 이전 effect가 돌려준 cleanup을 먼저 불러요. 이 문서를 읽으면 effect 칸과 실행 대기 목록의 모양, `runEffects`가 cleanup과 effect를 부르는 순서를 알고 `src/phase2/use-effect.ts`를 구현할 수 있어요.
 
 ## 다루는 요구사항
 
@@ -147,7 +147,7 @@ function runEffects(component: FunctionComponent): void;
 | `runEffects`는 cleanup과 effect 실행만 하고, 실행 중 표시와 예약된 update는 FunctionComponent가 다룬다 | update 예약은 `scheduleUpdate`와 함께 있어야 해요. 그래서 FR-F13~F15는 [FunctionComponent 설계](function-component.md)의 `commitEffects`에서 지켜요 | -        |
 | 실행 대기 목록은 인스턴스 필드(`pendingEffects`)로 둔다 (요구사항 6.1)         | [FunctionComponent 설계](function-component.md)의 결정을 따라요                                                                              | -        |
 | unmount를 두지 않는다. deps가 `[]`인 effect의 cleanup은 불리지 않는다                       | 요구사항 6.1 결정이에요. 루트를 떼어 내는 API가 없고, 자식 컴포넌트에는 Hook이 없어요                                                        | -        |
-| useEffect와 `runEffects`는 `src/use-effect.ts`에 둔다                                       | 등록과 실행이 같은 칸 모양(`EffectSlot`)을 써요                                                                                              | -        |
+| useEffect와 `runEffects`는 `src/phase2/use-effect.ts`에 둔다                                       | 등록과 실행이 같은 칸 모양(`EffectSlot`)을 써요                                                                                              | -        |
 
 ## 경계 케이스
 

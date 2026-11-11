@@ -2,7 +2,7 @@
 // 기준은 docs/requirements/phase2/h-props_requirement.md 5.1절 FR-H01~H09의 확인 방법이에요.
 import { describe, expect, it } from 'vitest';
 import { h } from './h';
-import { toDOM, type VNode } from './vdom';
+import { toDOM, type VNode } from '../vdom';
 
 const text = (t: string): VNode => ({ kind: 'text', text: t });
 
