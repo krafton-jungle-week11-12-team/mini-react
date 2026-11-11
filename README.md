@@ -32,29 +32,29 @@ flowchart LR
         direction LR
         REQA["Requirements A"] --> REQ["Requirements (합침)"]
         REQB["Requirements B"] --> REQ
-        REQ --> DES["Design"]
-        DES --> ADR["ADR"]
     end
 
     subgraph HOTL["Human on the loop"]
         direction LR
-        RED["Test (Red)"] --> IMPL["Implementation"]
+        DES["Design"] --> ADR["ADR"]
+        DES --> RED["Test (Red)"]
+        RED --> IMPL["Implementation"]
         IMPL --> GREEN["Test (Green)"]
     end
 
-    DES --> RED
+    REQ --> DES
 ```
 
 | 단계                           | 사람의 역할                                                                           | 산출물 위치            |
 | ------------------------------ | ------------------------------------------------------------------------------------- | ---------------------- |
 | Requirements                   | 각자 과제를 읽고 요구사항을 따로 쓴 뒤(Requirements A, B), 함께 비교해 하나로 합쳐요. | `docs/requirements/` |
-| Design                         | AI와 함께 쓰고, 사람이 판단·승인해요.                                                | `docs/design/`       |
+| Design                         | AI가 쓰고, 사람은 PR에서 검토해요.                                                    | `docs/design/`       |
 | ADR                            | 선택지를 비교하고 사람이 결정해요.                                                    | `docs/adr/`          |
 | Test (Red)                     | AI가 쓰고, 사람은 PR에서 검토해요.                                                    | `src/**/*.test.ts`   |
 | Implementation → Test (Green) | AI가 테스트를 통과시키고, 사람은 PR에서 검토한 뒤 머지해요.                           | `src/`               |
 
-- **Human in the loop**: 단계마다 사람이 직접 판단하고 승인해야 다음 단계로 넘어가요. 무엇을 만들지 정하는 앞 단계예요.
-- **Human on the loop**: AI가 알아서 진행하고, 사람은 결과를 지켜보다가 문제가 있을 때 개입해요. 요구사항과 설계가 정해진 뒤의 테스트와 구현이 여기에 해당해요.
+- **Human in the loop**: 사람이 직접 쓰고 판단해야 다음 단계로 넘어가요. 무엇을 만들지 정하는 요구사항 단계예요.
+- **Human on the loop**: AI가 알아서 진행하고, 사람은 결과를 지켜보다가 문제가 있을 때 개입해요. 요구사항이 정해진 뒤의 설계, ADR, 테스트, 구현이 여기에 해당해요.
 
 ### 리뷰 봇
 
