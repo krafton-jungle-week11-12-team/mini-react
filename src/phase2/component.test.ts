@@ -4,7 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FunctionComponent, getCurrentComponent } from './component';
 import { useState } from './use-state';
-import { toVNode, type VNode } from './vdom';
+import { toVNode, type VNode } from '../vdom';
 
 // h 없이 VNode를 만들어요. 이 문서의 요구사항이 h에 기대지 않게 하려는 거예요
 const text = (t: string): VNode => ({ kind: 'text', text: t });

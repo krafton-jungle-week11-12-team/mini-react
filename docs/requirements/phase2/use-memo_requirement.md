@@ -162,7 +162,7 @@ deps 배열 자체는 렌더링마다 새로 만들어지므로, 배열끼리가
 - 첫 렌더링은 별도 플래그 없이 칸이 비어 있는지(`undefined`)로 판단한다. useState가 초깃값을 첫 렌더링에만 쓰는 방식과 같다.
 
 - hooks 칸의 타입: 모든 칸을 `kind`로 구분하는 유니언으로 둔다. 메모 칸은 `{ kind: 'memo', value, deps }`다. 타입 정의와 근거는 [FunctionComponent 6.1](function-component_requirement.md#61-결정된-항목)에 둔다.
-- `depsChanged`는 `src/deps.ts`에 둔다. ([의존성 비교 설계](../../design/phase2/deps.md))
+- `depsChanged`는 `src/phase2/deps.ts`에 둔다. ([의존성 비교 설계](../../design/phase2/deps.md))
   - 근거: useMemo와 useEffect가 같은 함수를 import한다. 한쪽 Hook 파일에 두면 다른 Hook이 그 파일에 기대게 된다.
 
 ### 6.2 미정 항목
