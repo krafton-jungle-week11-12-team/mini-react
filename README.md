@@ -70,11 +70,6 @@ flowchart LR
 | 5    | `/test-final`       | 테스트·타입 검사·빌드·문서 정합성을 확인해 최종 판정          | 2차 구현 → 최종 검증      |
 | 6    | `/doc-check`        | 문서가 템플릿 형식을 지키는지, 문서끼리 서로 맞는지 점검      | 한 사이클 끝난 뒤         |
 
-#### 그 외
-
-- `/ddalkkak-guhyeon` : 위 1~5단계를 한 번에 이어서 실행
-- `/skill-writing` : 새 스킬(커맨드) 작성 보조
-
 ### 리뷰 봇
 
 GitHub Claude App이 Discussions, Issues, PR 댓글에서 리뷰와 피드백을 남겨요.
