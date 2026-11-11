@@ -3,6 +3,8 @@
 import { depsChanged, type Deps } from './deps';
 import { claimHook } from './use-state';
 
+export type MemoSlot = { kind: 'memo'; value: unknown; deps: Deps | undefined };
+
 export function useMemo<T>(compute: () => T, deps?: Deps): T {
   const { component, i, slot } = claimHook('memo');
   // 첫 렌더링은 칸이 비어 있는지로 판단해요 (요구사항 6.1)

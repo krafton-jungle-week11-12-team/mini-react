@@ -4,6 +4,7 @@
 // - 자식은 같은 인덱스끼리 짝지어요 (ADR-002)
 // - 자식 목록의 노드가 모두 key를 가지면 key로 짝짓고, 순서가 바뀐 노드는 React 방식으로 이동을 표시해요 (ADR-011)
 
+import type { Props } from '../../phase2/modules/props';
 import type { VNode } from './vdom';
 
 /** Diff 결과 한 칸. 결과는 Virtual DOM 트리와 같은 모양이고, 바뀌지 않은 자리는 null이에요. */
@@ -40,7 +41,7 @@ export type KeyedChild = {
 
 /** UPDATE에서 바뀐 속성. set은 새로 생기거나 바뀐 속성의 새 값, remove는 없어진 속성 이름이에요. */
 export type PropsPatch = {
-  set: Record<string, string>;
+  set: Props;
   remove: string[];
 };
 
@@ -174,8 +175,8 @@ function diffNode(oldNode: VNode | undefined, newNode: VNode | undefined): Patch
 }
 
 /** 두 props의 속성 이름을 합쳐 비교해요. 새 쪽에만 있거나 값이 다르면 set, 이전 쪽에만 있으면 remove예요. */
-function diffProps(oldProps: Record<string, string>, newProps: Record<string, string>): PropsPatch {
-  const set: Record<string, string> = {};
+function diffProps(oldProps: Props, newProps: Props): PropsPatch {
+  const set: Props = {};
   const remove: string[] = [];
 
   for (const name of Object.keys(newProps)) {
