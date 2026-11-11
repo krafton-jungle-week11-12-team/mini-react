@@ -170,9 +170,9 @@ createPage(getElements(document), SAMPLE_HTML, {
 
 - 실제 영역의 HTML 코드는 `<pre>`로 보여 줘요. 입력창이 아니라서 수정할 수 없어요(FR-W24). 현재 위치 기록의 `html`을 보여 줘요.
 - 테스트 영역의 HTML 코드는 `<textarea>`로 수정해요(FR-W08).
-- 두 영역은 너비가 같고 나란히 놓여요(FR-W01). 요구사항 2.2는 이 수준만 요구해요. 배치, 색, 글자 같은 생김새는 [화면 스타일 설계](style.md)에서 다뤄요.
+- 두 영역은 너비가 같고 나란히 놓여요(FR-W01). 요구사항 2.2는 이 수준만 요구해요. 배치, 색, 글자 같은 생김새는 [화면 스타일 설계](style/style.md)에서 다뤄요.
 - `phase1.html`은 `<!DOCTYPE html>`로 시작해요. 그래야 버튼 판단용 문서와 화면의 문서가 같은 모드(no-quirks)로 파싱해요.
-- 두 영역 컨테이너(`realRoot`, `testRoot`)에는 **똑같은** CSS만 걸어요. 한쪽에만 거는 CSS는 두지 않아요. 두 영역의 렌더링 결과가 같아 보여야 비교가 돼요(FR-W06, W15). 값은 [화면 스타일 설계](style.md#렌더링-결과-박스)를 따라요.
+- 두 영역 컨테이너(`realRoot`, `testRoot`)에는 **똑같은** CSS만 걸어요. 한쪽에만 거는 CSS는 두지 않아요. 두 영역의 렌더링 결과가 같아 보여야 비교가 돼요(FR-W06, W15). 값은 [화면 스타일 설계](style/style.md#렌더링-결과-박스)를 따라요.
 
 ### 로드
 
@@ -273,7 +273,7 @@ Patch 직후와 기록 이동 직후에는 입력창 값이 현재 위치 기록
 | 기록 이동 때 실제 영역은 기록의 `vdom`을 `toDOM`으로 다시 그려 바꾼다 | 요구사항 4.3이 "기록의 상태 전체로 바꾼다"고 정했어요. 이동한 기록의 `vdom`과 같은 구조가 돼요 | [ADR-010](../../adr/ADR-010.md), [ADR-013](../../adr/ADR-013.md) (제안됨) |
 | HTML 코드 입력은 기본 입력창(textarea) 수준으로 한다                                                                                                             | 에디터 구현은 범위에서 제외했어요(요구사항 2.2)                                                                                                                                                                                                            | -                                     |
 | 실제 영역의 HTML 코드 칸에는 바뀐 줄을 표시하지 않는다                                                                                                           | 엔진은 바뀐 노드만 알고 바뀐 줄은 몰라요. 줄 단위 비교를 따로 만들지 않고, 강조 표시와 Diff 결과 패널로 바뀐 부분을 보여 줘요                                                                                                                              | -                                     |
-| 지난 강조 표시는 실제 영역의 `getAnimations({ subtree: true })`를 모두 취소해 지운다. 다음 Patch(변경이 있을 때), 기록 이동, 오류 처리 때 지운다                 | 강조 표시가 다음 Patch까지 남아요([화면 스타일 설계](style.md#강조-표시-모양)). 애니메이션만 취소하므로 속성이 바뀌지 않고(FR-W27), 강조한 요소 노드를 따로 기억하지 않아도 돼요. 바뀐 내용 없는 Patch는 아무것도 바꾸지 않아야 해서 지우지 않아요(FR-W28) | -                                     |
+| 지난 강조 표시는 실제 영역의 `getAnimations({ subtree: true })`를 모두 취소해 지운다. 다음 Patch(변경이 있을 때), 기록 이동, 오류 처리 때 지운다                 | 강조 표시가 다음 Patch까지 남아요([화면 스타일 설계](style/style.md#강조-표시-모양)). 애니메이션만 취소하므로 속성이 바뀌지 않고(FR-W27), 강조한 요소 노드를 따로 기억하지 않아도 돼요. 바뀐 내용 없는 Patch는 아무것도 바꾸지 않아야 해서 지우지 않아요(FR-W28) | -                                     |
 | 줄 번호는 코드 칸 옆 줄 번호 칸에 따로 넣는다                                                                                                                    | 코드 칸에는 HTML 코드만 남아 `textContent`와 `value`가 기록의 `html`과 그대로 같아요. 줄 번호가 복사나 비교에 섞이지 않아요                                                                                                                                | -                                     |
 | 입력한 HTML 코드로 만든 트리는 레이아웃용 허용 목록으로 걸러, 목록 밖의 요소 노드와 속성을 빼고 반영한다. 뺀 것은 문구로 알린다 | 스크립트, 페이지 이동, 외부 요청, DOM clobbering이 화면에 닿지 않아요. 허용 목록은 [입력 걸러내기 설계](sanitize.md)에 있어요 | [ADR-014](../../adr/ADR-014.md) (제안됨) |
 | 사용자가 실제 영역을 조작해 프로퍼티만 바뀐 차이(input의 `value` 등)는 맞추지 않는다                                                                             | Virtual DOM 트리는 속성만 담아서 이런 차이는 Diff에도, 9단계 확인에도 잡히지 않아요. 속성이나 노드가 바뀐 조작은 9단계 확인에서 잡혀 되돌려져요. 입력을 막는 기능은 Phase 1 범위 밖이에요                                                                  | -                                     |
@@ -314,11 +314,11 @@ Patch 직후와 기록 이동 직후에는 입력창 값이 현재 위치 기록
 
 ## 2차 추가 기능
 
-이 절은 요구사항 5.3의 2차 추가 기능(FR-X01, X03, X04)의 동작이에요. 5.1, 5.2를 모두 만족한 뒤 구현해요. 이 절을 빼도 위 기본 흐름은 그대로 동작해요. 배치, 색, 글자 같은 생김새는 [화면 스타일 설계](style.md)에서 다뤄요.
+이 절은 요구사항 5.3의 2차 추가 기능(FR-X01, X03, X04)의 동작이에요. 5.1, 5.2를 모두 만족한 뒤 구현해요. 이 절을 빼도 위 기본 흐름은 그대로 동작해요. 배치, 색, 글자 같은 생김새는 [화면 스타일 설계](style/style.md)에서 다뤄요.
 
 ### 더하는 요소 노드
 
-2차 기능에서는 `PageElements`에 아래 칸을 더해요. `id`는 [화면 스타일 설계](style.md#인터페이스)를 따라요.
+2차 기능에서는 `PageElements`에 아래 칸을 더해요. `id`는 [화면 스타일 설계](style/style.md#인터페이스)를 따라요.
 
 ```ts
 type PageElementsX = PageElements & {
@@ -350,7 +350,7 @@ type PageElementsX = PageElements & {
 
 ### 스크롤 맞추기
 
-- 두 영역 컨테이너(`realRoot`, `testRoot`)와 두 HTML 코드 칸(`realCode`, `testCode`)은 스크롤을 함께 움직여요. 규칙은 [화면 스타일 설계](style.md#스크롤-맞추기)를 따라요.
+- 두 영역 컨테이너(`realRoot`, `testRoot`)와 두 HTML 코드 칸(`realCode`, `testCode`)은 스크롤을 함께 움직여요. 규칙은 [화면 스타일 설계](style/style.md#스크롤-맞추기)를 따라요.
 - 줄 번호 칸(`realLines`, `testLines`)은 옆 코드 칸의 `scrollTop`을 그대로 따라가요.
 - 스크롤 이벤트는 `createPage`가 연결해요. `src/phase1/page/main.ts`는 모듈을 묶어 넘기기만 해요.
 
@@ -368,4 +368,4 @@ type PageElementsX = PageElements & {
 
 - [요구사항 명세서](../../requirements/phase1/phase1_requirement.md)
 - [ADR-004](../../adr/ADR-004.md), [ADR-005](../../adr/ADR-005.md), [ADR-007](../../adr/ADR-007.md), [ADR-010](../../adr/ADR-010.md), [ADR-013](../../adr/ADR-013.md), [ADR-014](../../adr/ADR-014.md)
-- [입력 걸러내기 설계](sanitize.md), [Virtual DOM 변환 설계](vdom.md), [Diff 설계](diff.md), [Patch 설계](patch.md), [State History 설계](history.md), [변경 표시 설계](change-highlight.md), [화면 스타일 설계](style.md)
+- [입력 걸러내기 설계](sanitize.md), [Virtual DOM 변환 설계](vdom.md), [Diff 설계](diff.md), [Patch 설계](patch.md), [State History 설계](history.md), [변경 표시 설계](change-highlight.md), [화면 스타일 설계](style/style.md)

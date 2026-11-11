@@ -169,5 +169,5 @@ if (tabs && hint) renderSampleTabs(tabs, hint, SAMPLES, (s) => page.loadSample(s
 ## 관련 문서
 
 - [요구사항 명세서](../../requirements/phase1/phase1_requirement.md)
-- [검증 페이지 설계](page.md), [화면 스타일 설계](style.md), [State History 설계](history.md), [Diff 설계](diff.md)
+- [검증 페이지 설계](page.md), [화면 스타일 설계](style/style.md), [State History 설계](history.md), [Diff 설계](diff.md)
 - [ADR-002](../../adr/ADR-002.md), [ADR-007](../../adr/ADR-007.md), [ADR-011](../../adr/ADR-011.md)

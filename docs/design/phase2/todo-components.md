@@ -6,7 +6,7 @@
 
 ## 개요
 
-자식 컴포넌트는 루트 컴포넌트 `App`에게 받은 props만으로 입력 영역, 필터 영역, 목록, 아래 영역을 그리고, 사용자 동작은 props로 받은 함수를 불러 알려요. Hook을 부르지 않고 같은 props에 늘 같은 VNode를 돌려줘요. 이 문서를 읽으면 컴포넌트 다섯 개의 props와 VNode 모양, 목록 항목에 key를 붙이는 곳, 요소마다 붙이는 class를 알고 `src/phase2/page/components.ts`를 구현할 수 있어요. class 이름과 모양은 [화면 스타일 설계](style.md)가 정하고, 이 문서는 그 이름을 어느 요소에 붙이는지 정해요.
+자식 컴포넌트는 루트 컴포넌트 `App`에게 받은 props만으로 입력 영역, 필터 영역, 목록, 아래 영역을 그리고, 사용자 동작은 props로 받은 함수를 불러 알려요. Hook을 부르지 않고 같은 props에 늘 같은 VNode를 돌려줘요. 이 문서를 읽으면 컴포넌트 다섯 개의 props와 VNode 모양, 목록 항목에 key를 붙이는 곳, 요소마다 붙이는 class를 알고 `src/phase2/page/components.ts`를 구현할 수 있어요. class 이름과 모양은 [화면 스타일 설계](style/style.md)가 정하고, 이 문서는 그 이름을 어느 요소에 붙이는지 정해요.
 
 ## 다루는 요구사항
 
@@ -89,7 +89,7 @@ type FooterProps = {
 - `onClearDone` — App의 `clearDone`.
 - 모든 props 타입에는 h가 넣는 `children: VNode[]`가 더해져요. 이 컴포넌트들은 `children`을 쓰지 않아요.
 
-App이 그리는 VNode 트리와 class 이름이에요. 이름은 [화면 스타일 설계의 "앱 컴포넌트가 붙이는 class"](style.md#앱-컴포넌트가-붙이는-class) 표를 따르고, `style.css`는 이 class 이름에만 모양을 붙여요.
+App이 그리는 VNode 트리와 class 이름이에요. 이름은 [화면 스타일 설계의 "앱 컴포넌트가 붙이는 class"](style/style.md#앱-컴포넌트가-붙이는-class) 표를 따르고, `style.css`는 이 class 이름에만 모양을 붙여요.
 
 ```text
 div.todo-app
@@ -188,7 +188,7 @@ function emptyMessage(filter: Filter): string;
 | IME 조합 중은 `isComposing`과 `keyCode === 229`를 함께 본다                                  | Safari는 조합을 끝내는 Enter의 `keydown`에서 `isComposing`이 `false`이고 `keyCode`만 229예요. 하나만 보면 Safari에서 두 번 추가돼요             | -        |
 | `form`을 쓰지 않고 `keydown`으로 Enter를 받는다                                              | `form`의 submit은 IME 조합 중 Enter를 걸러 내지 못하고, 페이지 이동을 막는 처리가 더 필요해요                                                   | -        |
 | 모양은 class로만 바꾸고 `style` props를 쓰지 않는다                                          | Diff 결과에 `class` 하나만 나와 발표에서 읽기 쉬워요. 모양은 `src/phase2/page/style.css` 한 곳에서 바꿔요                                         | -        |
-| class 이름은 [화면 스타일 설계](style.md)의 표를 그대로 쓴다                                  | 모양과 이름을 한 문서에서 정해야 `style.css`와 컴포넌트가 어긋나지 않아요. 상태 class(`is-done`, `is-selected`)만 붙었다 떨어져 테스트가 찾기 쉬워요 | -        |
+| class 이름은 [화면 스타일 설계](style/style.md)의 표를 그대로 쓴다                                  | 모양과 이름을 한 문서에서 정해야 `style.css`와 컴포넌트가 어긋나지 않아요. 상태 class(`is-done`, `is-selected`)만 붙었다 떨어져 테스트가 찾기 쉬워요 | -        |
 
 ## 경계 케이스
 
@@ -214,5 +214,5 @@ function emptyMessage(filter: Filter): string;
 
 - [요구사항 명세서: 할 일 앱](../../requirements/phase2/app_requirement.md)
 - [할 일 앱 루트 컴포넌트 설계](todo-app.md), [페이지 구성 설계](app-pages.md)
-- [화면 스타일 설계](style.md), [h 함수 설계](h.md), [props 반영 설계](props.md), [Diff 설계 (Phase 1)](../phase1/diff.md)
+- [화면 스타일 설계](style/style.md), [h 함수 설계](h.md), [props 반영 설계](props.md), [Diff 설계 (Phase 1)](../phase1/diff.md)
 - [ADR-011](../../adr/ADR-011.md)

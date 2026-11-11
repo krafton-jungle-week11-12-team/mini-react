@@ -6,7 +6,7 @@
 
 ## 개요
 
-화면 스타일은 할 일 앱 페이지(`phase2.html`)의 배치, 색, 글자, 강조 표시 모양을 정해요. 이 문서를 읽으면 `phase2.html`의 틀과 `src/phase2/page/style.css`를 만들고, 앱 컴포넌트가 `h`로 요소를 만들 때 붙일 class를 알 수 있어요. 색과 글꼴, 패널 모양은 [Phase 1 화면 스타일 설계](../phase1/style.md)를 그대로 이어받아요. 디자인 초안은 [Design 캔버스 - 할 일 앱 목업](https://claude.ai/artifact/V2jvdEPSK1xHFLYEZX8wcs)의 "2차 — 들여다보기 + 순서 바꾸기 (Phase 1 스타일)" 아트보드예요.
+화면 스타일은 할 일 앱 페이지(`phase2.html`)의 배치, 색, 글자, 강조 표시 모양을 정해요. 이 문서를 읽으면 `phase2.html`의 틀과 `src/phase2/page/style.css`를 만들고, 앱 컴포넌트가 `h`로 요소를 만들 때 붙일 class를 알 수 있어요. 색과 글꼴, 패널 모양은 [Phase 1 화면 스타일 설계](../../phase1/style/style.md)를 그대로 이어받아요. 디자인 초안은 [Design 캔버스 - 할 일 앱 목업](https://claude.ai/artifact/V2jvdEPSK1xHFLYEZX8wcs)의 "2차 — 들여다보기 + 순서 바꾸기 (Phase 1 스타일)" 아트보드예요.
 
 ## 다루는 요구사항
 
@@ -42,7 +42,7 @@ phase2.html + style.css ──▶ 페이지 틀 (머리글, 패널)
 
 ```css
 :root {
-  /* Phase 1과 같아요 (docs/design/phase1/style.md) */
+  /* Phase 1과 같아요 (docs/design/phase1/style/style.md) */
   --dd-red: #e03131;
   --dd-blue: #1971c2;
   --dd-blue-line: #a5d8ff;
@@ -249,8 +249,8 @@ Phase 1과 같아요. 페이지 이름은 Pretendard 800 27px, 패널 제목은 
 | 앱은 Phase 1 렌더링 결과 박스 안에 그린다                                                | 어디까지가 mini-react가 그린 결과인지 모양으로 구분돼요                                                                                        | -                                   |
 | 렌더링 횟수는 머리글에 둔다                                                              | Phase 1 기록 위치(`historyLabel`)와 같은 자리라 "지금 몇 번째 상태인가"를 같은 곳에서 읽어요                                                    | -                                   |
 | 앱 컴포넌트는 `class`만 붙이고 모양은 `style.css`가 정한다                                | 컴포넌트 코드가 `h` 호출과 Hook에 집중해 발표에서 읽기 쉬워요. 모양을 바꿀 때 컴포넌트를 고치지 않아요                                           | -                                   |
-| 강조 표시는 `element.animate()`로만 칠하고, 앱 컨테이너에 노드나 속성을 더하지 않는다      | DOM이 VNode와 어긋나면 다음 Patch가 틀린 노드를 고쳐요. `animate()`는 속성을 바꾸지 않아요                                                     | [ADR-008](../../adr/ADR-008.md)     |
-| 이동한 노드는 노랑 띠, 내용이 바뀐 노드는 보라 띠로 칠한다                               | Phase 1 Diff 칩 색(MOVE 노랑, 기본 보라)과 같아 앱과 패널을 색으로 짝지어요. "같은 노드가 자리만 옮겼다"는 것을 내용 변경과 나눠 보여 줘요       | [ADR-011](../../adr/ADR-011.md)     |
+| 강조 표시는 `element.animate()`로만 칠하고, 앱 컨테이너에 노드나 속성을 더하지 않는다      | DOM이 VNode와 어긋나면 다음 Patch가 틀린 노드를 고쳐요. `animate()`는 속성을 바꾸지 않아요                                                     | [ADR-008](../../../adr/ADR-008.md)     |
+| 이동한 노드는 노랑 띠, 내용이 바뀐 노드는 보라 띠로 칠한다                               | Phase 1 Diff 칩 색(MOVE 노랑, 기본 보라)과 같아 앱과 패널을 색으로 짝지어요. "같은 노드가 자리만 옮겼다"는 것을 내용 변경과 나눠 보여 줘요       | [ADR-011](../../../adr/ADR-011.md)     |
 | CSS 변수는 Phase 1과 같은 이름·값으로 `src/phase2/page/style.css`에 둔다                  | Phase 1 페이지 구조(`src/phase1/page/style.css`)와 짝을 맞춰요. 공통 파일로 뺄지는 "정하지 않은 것"에 남겨요                                    | -                                   |
 
 ## 경계 케이스
@@ -282,8 +282,8 @@ Phase 1과 같아요. 페이지 이름은 Pretendard 800 27px, 패널 제목은 
 
 ## 관련 문서
 
-- [요구사항 명세서: 할 일 앱](../../requirements/app_requirement.md)
-- [Phase 1 화면 스타일 설계](../phase1/style.md)
-- [Phase 1 변경 표시 설계](../phase1/change-highlight.md)
-- [props 설계](props.md)
-- [ADR-008](../../adr/ADR-008.md), [ADR-011](../../adr/ADR-011.md)
+- [요구사항 명세서: 할 일 앱](../../../requirements/phase2/app_requirement.md)
+- [Phase 1 화면 스타일 설계](../../phase1/style/style.md)
+- [Phase 1 변경 표시 설계](../../phase1/change-highlight.md)
+- [props 설계](../props.md)
+- [ADR-008](../../../adr/ADR-008.md), [ADR-011](../../../adr/ADR-011.md)
