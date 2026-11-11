@@ -76,9 +76,9 @@ AI 리뷰어의 피드백은 사람이 함께 확인하고, 반영할지는 사�
 
 1번 워크플로우에서 AI가 사람의 작업 흐름과 최대한 맞춰 일하려면, 팀이 무엇을 이야기하고 정했는지 AI도 알아야 해요. 그래서 아래 기록을 GitHub에 남겨요. AI에게는 일종의 학습 자료예요.
 
-아래 기록은 모두 GitHub에서 `#번호`로 가리킬 수 있어요. 이슈, PR, Discussion에서 `#번호`로 연결해 두면 AI가 그 기록을 따라 읽고 작업의 컨텍스트로 써요.
+아래 기록은 모두 GitHub에서 `#123` 같은 번호 링크로 가리킬 수 있어요. 이슈, PR, Discussion에 번호 링크를 남겨 두면 AI가 그 기록을 따라 읽고 작업의 컨텍스트로 써요.
 
-![Discussions 기록이 #번호로 연결되어 AI 작업 컨텍스트가 되는 흐름](docs/images/discussions.png)
+![Discussions 기록이 번호 링크로 연결되어 AI 작업 컨텍스트가 되는 흐름](docs/images/discussions.png)
 
 팀의 대화와 학습은 Discussions에 모아요.
 
