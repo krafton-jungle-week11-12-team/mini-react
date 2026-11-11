@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { captureBefore, fromDiffResult, showChanges } from '../page/change-highlight';
 import { diff } from '../modules/diff';
 import { createHistory } from '../modules/history';
-import { createPage, getElements, SAMPLE_HTML, type EngineModules } from '../page/page';
+import { createPage, getElements, removedMessage, RENDER_ERROR, SAMPLE_HTML, type EngineModules } from '../page/page';
 import { patch } from '../modules/patch';
-import { toVNode, type VNode } from '../modules/vdom';
+import { toDOM, toVNode, type VNode } from '../modules/vdom';
 import indexHtml from '../../../phase1.html?raw';
 
 // phase1.html의 body를 그대로 jsdom 문서에 넣어 요소 노드를 찾아요
@@ -14,7 +14,7 @@ const body = indexHtml.slice(indexHtml.indexOf('<body>') + 6, indexHtml.indexOf(
 type Result = ReturnType<typeof diff>;
 
 function engine(overrides: Partial<EngineModules<Result>> = {}): EngineModules<Result> {
-  return { toVNode, diff, patch, fromDiffResult, captureBefore, showChanges, createHistory, ...overrides };
+  return { toVNode, toDOM, diff, patch, fromDiffResult, captureBefore, showChanges, createHistory, ...overrides };
 }
 
 /** jsdom에는 innerText가 없어 textContent로 읽어요. */
@@ -73,6 +73,106 @@ describe('로드', () => {
     const { el } = setup();
     expect(el.realLines.textContent).toBe('1\n2\n3\n4\n5\n6\n7\n8');
     expect(el.testLines.textContent).toBe(el.realLines.textContent);
+  });
+});
+
+describe('Virtual DOM 트리로 렌더링 (ADR-013)', () => {
+  /** 요소 노드의 속성을 빼고 만드는 잘못된 toDOM이에요 */
+  const lossyToDOM = (vnode: VNode): Node => {
+    const node = toDOM(vnode);
+    if (!(node instanceof Element)) return node;
+    for (const target of [node, ...Array.from(node.querySelectorAll('*'))]) {
+      for (const name of target.getAttributeNames()) target.removeAttribute(name);
+    }
+    return node;
+  };
+
+  it('로드 때 테스트 영역은 첫 기록의 vdom을 toDOM으로 그려요 (FR-W04)', () => {
+    const spy = vi.fn(toDOM);
+    const { el, page } = setup({ toDOM: spy });
+    expect(spy).toHaveBeenCalled();
+    expect(sameTree(toVNode(el.testRoot), page.history.current().vdom)).toBe(true);
+    expect(el.message.textContent).toBe('');
+  });
+
+  it('Patch 때 테스트 영역은 새 vdom을 toDOM으로 그려요 (FR-W11, W12)', () => {
+    const spy = vi.fn(toDOM);
+    const { el, page, type } = setup({ toDOM: spy });
+    spy.mockClear();
+    type(SAMPLE_HTML.replace('장보기', '빨래하기'));
+    page.onPatch();
+    expect(spy).toHaveBeenCalled();
+    expect(el.testRoot.querySelector('li')?.textContent).toBe('빨래하기');
+    expect(sameAreas(el)).toBe(true);
+  });
+
+  it('기록 이동 때 두 영역을 기록의 vdom으로 그려요 (FR-W19)', () => {
+    const spy = vi.fn(toDOM);
+    const { page, type } = setup({ toDOM: spy });
+    type(SAMPLE_HTML.replace('장보기', 'A'));
+    page.onPatch();
+    spy.mockClear();
+    page.onBack();
+    const roots = page.history.current().vdom.length;
+    expect(spy.mock.calls.filter(([v]) => page.history.current().vdom.includes(v)).length).toBe(roots * 2);
+  });
+
+  it('로드 때 그린 결과가 원래 트리와 다르면 오류 문구를 보여 줘요', () => {
+    const { el } = setup({ toDOM: lossyToDOM });
+    expect(el.message.textContent).toBe(RENDER_ERROR);
+    expect(el.message.classList.contains('is-error')).toBe(true);
+  });
+
+  it('Patch 때 그린 결과가 원래 트리와 다르면 저장하지 않아요', () => {
+    let lossy = false;
+    const { el, page, type } = setup({ toDOM: (v) => (lossy ? lossyToDOM(v) : toDOM(v)) });
+    type(SAMPLE_HTML.replace('장보기', '빨래하기'));
+    lossy = true;
+    page.onPatch();
+    expect(page.history.length).toBe(1);
+    expect(el.message.textContent).toBe(RENDER_ERROR);
+  });
+});
+
+describe('입력 걸러내기 (ADR-014)', () => {
+  const withScript = SAMPLE_HTML.replace('<li>장보기</li>', '<li onclick="alert(1)">장보기</li><script>window.__ran = true</script>');
+
+  it('입력 중 뺄 것이 있으면 안내하고, 없어지면 원래 문구로 돌아가요', () => {
+    const { el, type } = setup();
+    type(withScript);
+    expect(el.message.textContent).toBe(removedMessage(['onclick', '<script>']));
+    type(SAMPLE_HTML);
+    expect(el.message.textContent).toBe('');
+  });
+
+  it('스크립트와 이벤트 속성만 더하면 바뀐 내용이 없어 Patch 버튼이 비활성화돼요', () => {
+    const { el, type } = setup();
+    type(withScript);
+    expect(el.patchButton.disabled).toBe(true);
+  });
+
+  it('Patch하면 뺀 트리로 두 영역을 그리고, 기록의 html은 입력 원문을 남겨요', () => {
+    const { el, page, type } = setup();
+    const html = withScript.replace('운동하기', '공부하기');
+    type(html);
+    page.onPatch();
+    expect(page.history.length).toBe(2);
+    expect(page.history.current().html).toBe(html);
+    for (const root of [el.realRoot, el.testRoot]) {
+      expect(root.querySelector('script')).toBeNull();
+      expect(root.querySelector('[onclick]')).toBeNull();
+    }
+    expect(sameAreas(el)).toBe(true);
+    expect(el.message.textContent).toBe(`변경 1개 · ${removedMessage(['onclick', '<script>'])}`);
+  });
+
+  it('기록 이동 뒤에도 Patch 버튼은 걸러낸 트리로 판단해요', () => {
+    const { el, page, type } = setup();
+    type(withScript.replace('운동하기', '공부하기'));
+    page.onPatch();
+    page.onBack();
+    page.onForward();
+    expect(el.patchButton.disabled).toBe(true);
   });
 });
 
@@ -174,7 +274,7 @@ describe('Patch', () => {
   });
 
   it('강조 표시 뒤 오류가 나도 되돌린 영역의 새 요소 노드는 강조 표시 대상이 아니에요', () => {
-    // showChanges가 강조 표시까지 한 뒤 오류를 던지는 경우. 되돌리면 innerHTML로 새 노드가 생겨요
+    // showChanges가 강조 표시까지 한 뒤 오류를 던지는 경우. 되돌리면 toDOM으로 새 노드가 생겨요
     const { el, page, type } = setup({
       showChanges: (...args) => {
         showChanges(...args);

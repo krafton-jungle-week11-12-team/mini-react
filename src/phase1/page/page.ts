@@ -2,10 +2,13 @@
 // 로드·HTML 코드 수정·Patch·기록 이동 때 엔진 모듈을 순서대로 호출해요
 // - 엔진 모듈은 import하지 않고 EngineModules로 넘겨받아요. import는 src/phase1/main.ts 한 곳에서만 해요
 // - Diff 결과(R)의 내용은 읽지 않아요. 바뀐 내용이 있는지는 fromDiffResult 결과 길이로 판단해요
+// - 화면은 Virtual DOM 트리를 toDOM으로 변환해 그려요. HTML 코드는 트리를 만들 때만 파싱해요 (ADR-013)
+// - 입력한 HTML 코드로 만든 트리는 허용 목록으로 걸러요. 스크립트, 페이지 이동, 외부 요청은 화면에 닿지 않아요 (ADR-014)
 
 import type { ChangeRecord, ChangeSummary, HighlightOptions, TextBefore } from './change-highlight';
 import type { HistoryEntry, StateHistory } from '../modules/history';
 import type { VNode } from '../modules/vdom';
+import { sanitize, type SanitizeResult } from './sanitize';
 
 /** 요구사항 FR-W23의 샘플 HTML 코드. 끝에 줄바꿈을 붙이지 않아요. */
 export const SAMPLE_HTML = `<div id="app">
@@ -17,8 +20,17 @@ export const SAMPLE_HTML = `<div id="app">
   <button type="button">추가</button>
 </div>`;
 
+/** toDOM으로 그린 영역을 다시 읽은 트리가 원래 트리와 다를 때 보여 주는 오류 문구예요 (ADR-013). */
+export const RENDER_ERROR = 'Virtual DOM 트리를 DOM으로 그린 결과가 원래 트리와 달라요';
+
+/** 입력에서 뺀 요소 노드와 속성을 알리는 문구예요 (ADR-014). (예: "허용하지 않는 요소·속성은 빼고 반영해요: <script>, onclick") */
+export function removedMessage(removed: string[]): string {
+  return `허용하지 않는 요소·속성은 빼고 반영해요: ${removed.join(', ')}`;
+}
+
 export type EngineModules<R> = {
   toVNode(container: Element): VNode[];
+  toDOM(vnode: VNode): Node;
   diff(oldRoots: VNode[], newRoots: VNode[]): R;
   patch(container: Element, result: R): void;
   fromDiffResult(result: R, oldRoots: VNode[]): ChangeRecord[];
@@ -90,32 +102,41 @@ export function createPage<R>(
   options?: HighlightOptions,
 ): Page {
   const el = elements;
-  // 버튼 판단용 파싱 문서. 화면의 문서와 달리 이벤트 속성이 실행되지 않아요 (설계 결정)
+  // HTML 코드를 파싱하는 화면 밖 문서. 화면의 문서와 달리 이벤트 속성이 실행되지 않아요 (설계 결정)
   const probeDoc = el.testCode.ownerDocument.implementation.createHTMLDocument('');
   // 기록 목록 패널의 설명. 기록과 같은 순서예요. State History는 내용을 읽지 않으니 페이지가 따로 들고 있어요
   const notes: string[] = ['샘플 HTML 코드로 로드'];
   let lastSummary: ChangeSummary | null = null;
+  // 마지막으로 보여 준 요약·오류 문구. 입력 중 안내 문구가 사라지면 이 문구로 되돌려요
+  let shown = { text: '', isError: false };
 
   // ── 로드 ────────────────────────────────────────────────
   setRealCode(sample); // 1 (FR-W02)
   setTestCode(sample); // 1 (FR-W05)
-  el.realRoot.innerHTML = sample; // 2 (FR-W22)
-  el.testRoot.innerHTML = sample; // 2 (FR-W04)
-  const history = engine.createHistory<HistoryEntry>({ html: sample, vdom: engine.toVNode(el.realRoot) }); // 3, 4 (FR-W03, W07)
-  updateButtons(); // 5
+  el.realRoot.innerHTML = sample; // 2 (FR-W22). 샘플 HTML 코드는 실제 영역에 주어진 입력이에요
+  const firstVdom = engine.toVNode(el.realRoot); // 3 (FR-W03)
+  const history = engine.createHistory<HistoryEntry>({ html: sample, vdom: firstVdom }); // 4 (FR-W07)
+  if (!render(el.testRoot, firstVdom)) showMessage(RENDER_ERROR, true); // 5 (FR-W04)
+  updateButtons(); // 6
   renderPanels();
 
   // ── 핸들러 ──────────────────────────────────────────────
   function onInput(): void {
     setLines(el.testLines, el.testCode.value);
-    updatePatchButton(); // 입력 때는 뒤로·앞으로 버튼 상태가 바뀌지 않아요
+    const parsed = parse(el.testCode.value);
+    el.patchButton.disabled = !differs(parsed.roots); // 입력 때는 뒤로·앞으로 버튼 상태가 바뀌지 않아요
+    if (parsed.removed.length > 0) paintMessage(removedMessage(parsed.removed), false); // ADR-014
+    else paintMessage(shown.text, shown.isError);
   }
 
   function onPatch(): void {
     const old = history.current().vdom;
     const html = el.testCode.value; // 1
-    el.testRoot.innerHTML = html; // 2 (FR-W11)
-    const newVdom = engine.toVNode(el.testRoot); // 3 (FR-W12)
+    const { roots: newVdom, removed } = parse(html); // 2 (FR-W12). 화면 밖 문서에서 파싱하고 걸러요 (ADR-014)
+    if (!render(el.testRoot, newVdom)) { // 3 (FR-W11)
+      fail(RENDER_ERROR);
+      return;
+    }
     const result = engine.diff(old, newVdom); // 4 (FR-W13)
     const records = engine.fromDiffResult(result, old); // 5
     if (records.length === 0) return; // FR-W28: 실제 영역, State History, 요약 문구를 바꾸지 않아요
@@ -141,7 +162,7 @@ export function createPage<R>(
     history.push({ html, vdom: newVdom }); // 10 (FR-W17)
     addNote(`Patch, ${summary.message}`);
     lastSummary = summary;
-    showMessage(summary.message, false);
+    showMessage(removed.length > 0 ? `${summary.message} · ${removedMessage(removed)}` : summary.message, false);
     setRealCode(html); // 11
     updateButtons();
     renderPanels();
@@ -161,7 +182,7 @@ export function createPage<R>(
 
   // ── 단계 ────────────────────────────────────────────────
   /**
-   * 기록 이동: 두 영역을 기록의 상태 전체로 바꿔요 (FR-W19, W20, ADR-010).
+   * 기록 이동: 두 영역을 기록의 vdom으로 다시 그려 상태 전체를 바꿔요 (FR-W19, W20, ADR-010, ADR-013).
    * 실제 영역은 Patch를 거치지 않아요. 대신 이동 전 기록과 이동한 기록의 vdom을 비교해
    * 무엇이 바뀌었는지 강조 표시, 요약 문구, Diff 패널로 보여 줘요. 이 비교 결과는 보여 주기만 해요.
    */
@@ -181,12 +202,18 @@ export function createPage<R>(
 
     setTestCode(entry.html); // 3
     setRealCode(entry.html); // 3
-    el.testRoot.innerHTML = entry.html; // 4
-    el.realRoot.innerHTML = entry.html; // 4
+    const rendered = render(el.testRoot, entry.vdom) && render(el.realRoot, entry.vdom); // 4
 
-    // 5. innerHTML로 바꾼 실제 영역은 이동한 기록과 같은 구조라 강조할 요소 노드를 찾을 수 있어요
+    // 5. 다시 그린 실제 영역은 이동한 기록과 같은 구조라 강조할 요소 노드를 찾을 수 있어요
     lastSummary = null;
     let text = `기록 ${fromIndex + 1} → ${history.index + 1}`;
+    if (!rendered) {
+      clearHighlights();
+      showMessage(`${text}: ${RENDER_ERROR}`, true);
+      updateButtons();
+      renderPanels();
+      return;
+    }
     if (records.length > 0) {
       try {
         const summary = engine.showChanges(el.realRoot, records, before, options);
@@ -203,24 +230,44 @@ export function createPage<R>(
     renderPanels();
   }
 
-  /** 오류 처리: 두 영역을 현재 위치 기록으로 되돌리고 기록은 저장하지 않아요. 입력창은 그대로 둬요. */
+  /** 오류 처리: 두 영역을 현재 위치 기록의 vdom으로 다시 그리고 기록은 저장하지 않아요. 입력창은 그대로 둬요. */
   function fail(text: string): void {
-    const { html } = history.current();
+    const { vdom } = history.current();
     clearHighlights();
-    el.testRoot.innerHTML = html;
-    el.realRoot.innerHTML = html;
+    render(el.testRoot, vdom);
+    render(el.realRoot, vdom);
     showMessage(text, true);
     lastSummary = null;
     updateButtons();
     renderPanels();
   }
 
-  /** 입력창 값으로 만든 트리가 현재 위치 기록의 vdom과 다른지 판단해요. 별도 문서의 div에서 파싱해요. */
-  function hasChanges(html: string): boolean {
+  /**
+   * HTML 코드를 화면 밖 문서의 div에서 파싱해 Virtual DOM 트리로 바꾸고, 허용 목록으로 걸러요 (ADR-014).
+   * 파싱한 DOM은 화면에 붙이지 않아요.
+   */
+  function parse(html: string): SanitizeResult {
     const div = probeDoc.createElement('div');
     div.innerHTML = html;
+    return sanitize(engine.toVNode(div));
+  }
+
+  /**
+   * Virtual DOM 트리를 toDOM으로 변환해 컨테이너의 자식을 모두 바꿔요 (ADR-013).
+   * 그린 DOM을 다시 트리로 읽어 원래 트리와 같은지 돌려줘요. 다르면 toDOM이 트리를 그대로 옮기지 못한 거예요.
+   */
+  function render(container: Element, vdom: VNode[]): boolean {
+    const nodes: Node[] = [];
+    for (let i = 0; i < vdom.length; i++) nodes.push(engine.toDOM(vdom[i]));
+    container.replaceChildren(...nodes);
+    const drawn = engine.toVNode(container);
+    return engine.fromDiffResult(engine.diff(vdom, drawn), vdom).length === 0;
+  }
+
+  /** 입력창 값으로 만든 트리가 현재 위치 기록의 vdom과 다른지 판단해요. */
+  function differs(roots: VNode[]): boolean {
     const old = history.current().vdom;
-    return engine.fromDiffResult(engine.diff(old, engine.toVNode(div)), old).length > 0;
+    return engine.fromDiffResult(engine.diff(old, roots), old).length > 0;
   }
 
   /**
@@ -245,7 +292,7 @@ export function createPage<R>(
 
   /** 입력창 값이 현재 위치 기록과 같은 동안 Patch 버튼을 비활성화해요 (FR-W10, W25, W26). */
   function updatePatchButton(): void {
-    el.patchButton.disabled = !hasChanges(el.testCode.value);
+    el.patchButton.disabled = !differs(parse(el.testCode.value).roots);
   }
 
   function updateButtons(): void {
@@ -265,6 +312,12 @@ export function createPage<R>(
   }
 
   function showMessage(text: string, isError: boolean): void {
+    shown = { text, isError };
+    paintMessage(text, isError);
+  }
+
+  /** 문구를 화면에 그리기만 해요. 입력 중 안내 문구는 shown에 남기지 않아요. */
+  function paintMessage(text: string, isError: boolean): void {
     el.message.textContent = text;
     el.message.classList.toggle('is-error', isError);
   }

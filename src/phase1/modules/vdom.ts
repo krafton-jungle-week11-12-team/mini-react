@@ -1,6 +1,6 @@
 // Virtual DOM 변환 (docs/design/vdom.md)
 // - toVNode: 영역 컨테이너 아래의 DOM 트리 → VNode 배열 (FR-E01, E05~E08)
-// - toDOM:   VNode 하나 → 새 DOM 노드 (FR-E02). Patch가 새 노드를 만들 때만 써요 (ADR-004)
+// - toDOM:   VNode 하나 → 새 DOM 노드 (FR-E02). Patch가 새 노드를 만들 때와 검증 페이지가 두 영역을 그릴 때 써요 (ADR-013)
 // 두 함수 모두 재귀로 순회하고, 자식은 for 반복문으로 돌아요 (ADR-009)
 
 import { setProp } from '../../phase2/modules/props';
