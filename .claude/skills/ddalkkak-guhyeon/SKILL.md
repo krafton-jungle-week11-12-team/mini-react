@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 입력: `$ARGUMENTS`
 
-이 스킬은 직접 고치는 파일이 없어요. 각 단계 스킬이 정한 파일만 고쳐져요. (`docs/design/`, `src/**/*.test.ts`, 테스트가 아닌 `src/`, 사용자가 고르면 `docs/requirements/`) 실행 순서는 `.claude/skills/README.md`의 "쓰는 순서" 절과 같아요.
+이 스킬을 쓰면 요구사항 문서가 있는 Phase를 설계부터 최종 검증까지 한 번에 진행할 수 있어요. 직접 고치는 파일은 없고, 각 단계 스킬이 정한 파일만 고쳐져요. (`docs/design/`, `src/**/*.test.ts`, 테스트가 아닌 `src/`, 사용자가 고르면 `docs/requirements/`) 실행 순서는 `.claude/skills/README.md`의 "쓰는 순서" 절과 같아요.
 
 ## 0. 입력 확인
 
