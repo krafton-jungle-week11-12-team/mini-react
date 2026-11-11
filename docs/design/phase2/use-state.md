@@ -157,7 +157,7 @@ function useState<T>(initialValue: T): [T, SetState<T>];
 
 ## 정하지 않은 것
 
-- useState 지연 초기화(`useState(() => load())`): 이번 단계에서는 만들지 않아요(2026-11-11). [최종 웹 페이지 요구사항의 2차 추가 기능(FR-AX04)](../../requirements/app_requirement.md#59-2차-추가-기능)으로 미뤘어요.
+- useState 지연 초기화(`useState(() => load())`): 이번 단계에서는 만들지 않아요(2026-11-11). [FunctionComponent 요구사항의 2차 추가 기능(FR-SX01)](../../requirements/phase2/function-component_requirement.md#55-2차-추가-기능)으로 미뤘어요.
   - 지금 동작: 함수를 넘기면 함수 자체가 state 값으로 저장돼요. 예제 앱은 `useState(load())`처럼 값을 넘겨요.
   - 넣을 때: `useState`의 2단계에서 `initialValue`가 함수면 불러서 그 결과를 칸에 넣어요.
   - 근거: [useMemo 요구사항 7절](../../requirements/phase2/use-memo_requirement.md#7-추후-논의), [useEffect 요구사항 7절](../../requirements/phase2/use-effect_requirement.md#7-추후-논의)
