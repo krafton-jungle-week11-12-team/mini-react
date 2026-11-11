@@ -270,4 +270,4 @@ effect 실행 중에 setState가 update를 바로 부르면, 새 렌더링의 ef
 - 연속 update 횟수 제한: `useEffect(() => setCount(count + 1), [count])` 같은 무한 루프를 막을지. 실제 React는 연속 update가 50번을 넘으면 오류를 던진다. 차별점 후보다.
 - `unmount()` 추가: 루트를 떼어 내며 남은 cleanup을 모두 부르는 API를 둘지. 차별점 후보다.
 - effect나 cleanup이 오류를 던질 때: 지금은 그대로 전파되어 남은 effect가 실행되지 않고 "effect 실행 중" 표시가 켜진 채 남을 수 있다. `try`/`finally`로 표시를 끌지 정한다.
-- useState 지연 초기화: 저장된 값을 effect에서 불러오면(`useEffect(() => setTodos(load()), [])`) 첫 화면이 빈 목록으로 한 번 그려진다. 지연 초기화(`useState(() => load())`)를 FR-S에 넣을지 [use-memo 7절](use-memo_requirement.md#7-추후-논의)과 함께 정한다.
+- useState 지연 초기화: 저장된 값을 effect에서 불러오면(`useEffect(() => setTodos(load()), [])`) 첫 화면이 빈 목록으로 한 번 그려진다. 지연 초기화(`useState(() => load())`)를 FR-S에 넣을지 [use-memo 7절](use-memo_requirement.md#7-추후-논의)과 함께 정한다. 2차 구현으로 미뤘다(2026-11-11).
