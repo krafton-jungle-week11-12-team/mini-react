@@ -7,6 +7,9 @@ Vanilla TypeScript로 Virtual DOM + Diff + Patch(Phase 1)와 Component · State 
 
 ## 1. AI 협업 워크플로우
 
+- **Human in the loop**: 사람이 직접 쓰고 판단해야 다음 단계로 넘어가요. 무엇을 만들지 정하는 요구사항 단계예요.
+- **Human on the loop**: AI가 알아서 진행하고, 사람은 결과를 지켜보다가 문제가 있을 때 개입해요. 요구사항이 정해진 뒤의 설계, ADR, 테스트, 구현이 여기에 해당해요.
+
 ```mermaid
 flowchart LR
     subgraph HITL["Human in the loop"]
@@ -36,8 +39,6 @@ flowchart LR
 | Implementation           | AI가 테스트를 통과하도록 구현하고, 사람은 PR에서 검토해요.            | `src/`               |
 | Test (Green)             | AI가 모든 테스트 통과를 확인하고, 사람이 검토한 뒤 머지해요.          | `src/**/*.test.ts`   |
 
-- **Human in the loop**: 사람이 직접 쓰고 판단해야 다음 단계로 넘어가요. 무엇을 만들지 정하는 요구사항 단계예요.
-- **Human on the loop**: AI가 알아서 진행하고, 사람은 결과를 지켜보다가 문제가 있을 때 개입해요. 요구사항이 정해진 뒤의 설계, ADR, 테스트, 구현이 여기에 해당해요.
 
 ---
 
