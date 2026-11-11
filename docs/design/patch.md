@@ -88,7 +88,7 @@ function patch(parent: Node, patches: (Patch | null)[]): void;
 | 새 노드는 Virtual DOM → DOM 변환으로 만든다             | 렌더링 결과는 파싱한 DOM으로 만들고, 변환은 Patch에서만 써요                                           | [ADR-004](../adr/ADR-004.md) |
 | 실제 영역 DOM에 강조용 속성을 붙이지 않는다             | 강조 표시가 두 영역 비교(FR-W15)에 영향을 주지 않아야 해요                                             | [ADR-008](../adr/ADR-008.md) |
 | 적용 전에 자식 목록을 복사해 두고 그 목록으로 노드를 찾는다 | 앞 칸의 `REMOVE`가 뒤 칸의 인덱스를 당겨도 엉뚱한 노드를 고치지 않아요. 그래서 적용 순서를 따로 정하지 않아도 돼요 | -                            |
-| `CREATE`는 `appendChild`로 끝에 붙인다                  | Diff가 같은 인덱스끼리 비교해서 `CREATE`는 이전 자식 수보다 뒤 칸에만 나와요. 앞 칸부터 붙이면 위치가 맞아요 | -                            |
+| `CREATE`는 `appendChild`로 끝에 붙인다                  | Diff가 같은 인덱스끼리 비교해서 `CREATE`는 이전 자식 수보다 뒤 칸에만 나와요. 앞 칸부터 붙이면 위치가 맞아요. Phase 2에서 key로 짝지으면 `CREATE`가 중간에도 나오고 이동이 생겨, 새 순서대로 `insertBefore`로 배치하는 단계를 더해요 | [ADR-011](../adr/ADR-011.md) |
 | `TEXT`는 노드를 바꾸지 않고 `nodeValue`만 고친다        | 텍스트·주석 모두 같은 API로 고치고, 노드 객체가 유지돼요(FR-E04)                                       | -                            |
 | `UPDATE`는 요소를 그대로 두고 속성과 자식만 고친다      | 바뀌지 않은 요소가 같은 DOM 객체로 남아요(FR-E04)                                                      | -                            |
 
@@ -125,4 +125,5 @@ function patch(parent: Node, patches: (Patch | null)[]): void;
 
 - [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
 - [ADR-009](../adr/ADR-009.md): 트리 순회는 재귀로 한다
+- [ADR-011](../adr/ADR-011.md): Phase 2에서 순서가 바뀐 노드는 같은 노드를 `insertBefore`로 옮긴다
 - [Diff 설계](diff.md), [Virtual DOM 변환 설계](vdom.md), [변경 표시 설계](change-highlight.md)
