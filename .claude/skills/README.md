@@ -9,7 +9,7 @@
 | 명령어 | 하는 일 | 고치는 파일 | 읽고 보고만 하는 파일 |
 | ------ | ------- | ----------- | --------------------- |
 | `/design-doc <phase> [모듈 이름]` | 요구사항 문서가 완성됐는지 확인하고, 모듈별 설계 문서를 쓴 뒤 연결성을 검증해요. 사용자가 고르면 설계에서 바뀐 점을 요구사항에 반영해요. | `docs/design/`, `docs/requirements/<phase>/` (7단계에서 사용자가 고를 때만) | `docs/adr/`, `src/` |
-| `/doc-check <phase>` 또는 `/doc-check <문서 경로...>` | 요구사항, 설계, ADR, 테스트 케이스, 스킬을 포함한 모든 문서가 템플릿 형식을 지키는지와 문서끼리 맞는지 검증해요. 경로를 주면 그 문서만 검증해요. | 없음 | `docs/`, `.claude/skills/`, `src/` |
+| `/doc-check <phase>` 또는 `/doc-check <문서 경로...>` | 요구사항, 설계, ADR, 스킬을 포함한 모든 문서가 템플릿 형식을 지키는지와 문서끼리 맞는지 검증해요. 경로를 주면 그 문서만 검증해요. | 없음 | `docs/`, `.claude/skills/`, `src/` |
 | `/make-testcase <phase> [요구사항 문서 경로 또는 ID]` | 요구사항과 설계 문서를 확인해 vitest 테스트 코드를 바로 쓰고, 추가하면 좋을 케이스를 물어 반영해요. 테스트 문서는 만들지 않아요. Claude도 알아서 불러요. | `src/**/*.test.ts` | `docs/requirements/`, `docs/design/`, `docs/adr/`, 테스트가 아닌 `src/` |
 | `/implement-tc <phase> [테스트 파일 경로 또는 요구사항 ID]` | 실패하는 테스트를 테스트는 고치지 않고 구현 코드만 바꿔 하나씩 통과시켜요. (1차 구현) Claude도 알아서 불러요. | 테스트가 아닌 `src/` | `src/**/*.test.ts`, `docs/requirements/`, `docs/design/`, `docs/adr/` |
 | `/implement-design <phase> [설계 문서 경로]` | 통과한 테스트를 지키면서 ADR, 요구사항, 설계를 모두 확인해 구현을 최종 형태로 고치고, 마지막에 `test-final`을 자동으로 따라요. (2차 구현) Claude도 알아서 불러요. | 테스트가 아닌 `src/` | `src/**/*.test.ts`, `docs/requirements/`, `docs/design/`, `docs/adr/` |
