@@ -198,7 +198,6 @@ function getCurrentComponent(): FunctionComponent | null;
 | 배칭은 넣지 않고, effect 실행 중이 아니면 setState마다 `update()`를 바로 부른다                  | 요구사항 6.2 미정 항목이에요. 넣을 때는 `scheduleUpdate`만 고쳐요                                                             | -        |
 | mount 두 번, mount 전 update를 막지 않는다                                                     | 요구사항 6.1 결정이에요. FR-C09, C10은 삭제되고 FR-A12 앱 작성 규칙으로 옮겼어요                                               | -        |
 | FunctionComponent와 `getCurrentComponent`는 `src/component.ts`에 둔다                          | Hook 파일들이 이 파일만 import하면 돼요                                                                                       | -        |
-| 예제 앱(할 일 앱)의 진입점은 `phase2.html`과 `src/phase2/main.ts`로 둔다. Phase 1 검증 페이지는 `phase1.html`과 `src/phase1/main.ts`로 옮기고, `index.html`은 두 페이지로 가는 첫 화면으로 둔다 | Phase 1과 Phase 2 결과물을 함께 남겨 발표 때 둘 다 보여 줄 수 있어요. `vite.config.ts`에서 세 페이지를 함께 빌드해요 (2026-11-11 결정) | -        |
 
 ## 경계 케이스
 
@@ -224,6 +223,7 @@ function getCurrentComponent(): FunctionComponent | null;
 - 배칭(`queueMicrotask`로 모아 한 번 update): 요구사항 6.2. 정하면 `scheduleUpdate`만 고쳐요.
 - 렌더링 중 setState를 막을지: [useMemo 요구사항 7절](../../requirements/phase2/use-memo_requirement.md#7-추후-논의). 렌더링 중 표시를 두고 오류를 던질지 정해요.
 - 자식 컴포넌트의 Hook 호출을 감지할지: 요구사항 7절. h가 자식 컴포넌트를 실행하는 동안 표시를 두는 방법이 후보예요.
+- Phase 2 예제 앱의 진입점과 페이지 구성: FunctionComponent 설계에서 다루지 않아요. 최종 웹 페이지 설계(#93, `docs/design/app.md`)에서 다뤄요.
 
 ## 관련 문서
 
