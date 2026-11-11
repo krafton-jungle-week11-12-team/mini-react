@@ -32,7 +32,7 @@ Diff는 Virtual DOM 트리 두 개를 비교해 노드 추가, 삭제, 교체, �
 
 ## 자료구조
 
-Diff 결과는 Virtual DOM 트리와 같은 모양이에요. 자식 목록의 *i*번째 칸이 같은 부모의 *i*번째 자식에 대한 결과예요. 그래서 노드 위치를 경로로 따로 적지 않고, 결과 트리에서의 위치가 곧 노드 위치예요.
+Diff 결과는 Virtual DOM 트리와 같은 모양이에요. 같은 자리 비교(배열)에서는 자식 목록의 *i*번째 칸이 같은 부모의 *i*번째 자식에 대한 결과예요. 그래서 노드 위치를 경로로 따로 적지 않고, 결과 트리에서의 위치가 곧 노드 위치예요. key로 짝지은 자식 목록은 이 약속이 깨져서 `KEYED` 형식을 써요([ADR-011](../adr/ADR-011.md)).
 
 ```ts
 type Patch =
@@ -40,7 +40,22 @@ type Patch =
   | { type: 'REMOVE' }
   | { type: 'REPLACE'; vnode: VNode }
   | { type: 'TEXT'; text: string }
-  | { type: 'UPDATE'; props: PropsPatch; children: (Patch | null)[] };
+  | { type: 'UPDATE'; props: PropsPatch; children: ChildPatches };
+
+// 자식 목록 하나의 비교 결과. 배열은 같은 자리 비교, KEYED는 key 비교 결과예요
+type ChildPatches = (Patch | null)[] | KeyedPatches;
+
+type KeyedPatches = {
+  type: 'KEYED';
+  children: KeyedChild[]; // 새 목록 순서의 칸
+  removes: number[]; // 새 목록에 짝이 없어 지울 이전 노드의 인덱스
+};
+
+type KeyedChild = {
+  oldIndex: number | null; // 짝지은 이전 노드의 인덱스. null이면 새 노드
+  move: boolean; // 뒤로 돌아가 자리를 옮겨야 하는 노드인지
+  patch: Patch | null; // 내용 변경. 바뀌지 않았으면 null
+};
 
 type PropsPatch = {
   set: Record<string, string>;
@@ -61,17 +76,24 @@ type PropsPatch = {
 - `props: PropsPatch` — `UPDATE`에서 바뀐 속성. 속성이 그대로면 `set`은 `{}`, `remove`는 `[]`예요.
   - `set: Record<string, string>` — 새로 생기거나 값이 바뀐 속성의 새 값. (예: `{ class: 'b' }`)
   - `remove: string[]` — 없어진 속성 이름. (예: `['disabled']`)
-- `children: (Patch | null)[]` — `UPDATE`에서 자식 비교 결과. 길이는 이전·새 자식 수 중 긴 쪽이고, 바뀌지 않은 자리는 `null`이에요. (예: `[null, { type: 'TEXT', text: 'B' }]`)
+- `children: ChildPatches` — `UPDATE`에서 자식 비교 결과. 배열이면 길이는 이전·새 자식 수 중 긴 쪽이고, 바뀌지 않은 자리는 `null`이에요. (예: `[null, { type: 'TEXT', text: 'B' }]`) 자식을 key로 짝지었으면 `KeyedPatches`예요.
+- `KeyedPatches` — key로 짝지은 자식 목록의 결과. (예: `[A, B, C]` → `[C, A, B]`이면 `children`의 `oldIndex`가 `2, 0, 1`, `move`가 `false, true, true`)
+  - `children: KeyedChild[]` — 새 목록 순서의 칸. 길이는 새 자식 수예요.
+  - `removes: number[]` — 새 목록에 같은 key가 없어 지울 이전 노드의 인덱스. (예: `[1]`)
+- `KeyedChild` — key 비교 결과의 칸 하나.
+  - `oldIndex: number | null` — 짝지은 이전 노드의 인덱스. 이전 목록에 같은 key가 없으면 `null`이고, 이때 `patch`는 `CREATE`예요. (예: `2`)
+  - `move: boolean` — 이전 위치가 `lastPlacedIndex`보다 앞이라 자리를 옮겨야 하는지. 인덱스만 밀린 노드는 `false`예요. (예: `true`)
+  - `patch: Patch | null` — 짝지은 두 노드의 내용 변경. 이동과 함께 있을 수 있어요. 바뀌지 않았으면 `null`이에요. (예: `{ type: 'TEXT', text: 'B' }`)
 
 ## 인터페이스
 
 ```ts
-function diff(oldRoots: VNode[], newRoots: VNode[]): (Patch | null)[];
+function diff(oldRoots: VNode[], newRoots: VNode[]): ChildPatches;
 ```
 
 - `oldRoots: VNode[]` — 이전 트리의 루트 목록. 현재 위치 기록의 `vdom`을 넣어요. (예: `history[i].vdom`)
 - `newRoots: VNode[]` — 새 트리의 루트 목록. Patch 때 테스트 영역을 [`toVNode`](vdom.md)로 변환한 결과예요.
-- 반환값: 루트 목록의 비교 결과. 길이는 두 목록 중 긴 쪽이고, 바뀌지 않은 자리는 `null`이에요. 모든 칸이 `null`이면 바뀐 내용이 없어요. (예: 같은 트리 → `[null]`, 둘 다 빈 배열 → `[]`)
+- 반환값: 루트 목록의 비교 결과(`ChildPatches`). 루트가 모두 key를 가지면 `KeyedPatches`예요. 배열이면 길이는 두 목록 중 긴 쪽이고, 바뀌지 않은 자리는 `null`이에요. 모든 칸이 `null`이면 바뀐 내용이 없어요. (예: 같은 트리 → `[null]`, 둘 다 빈 배열 → `[]`)
 - 부수 효과: 없음. 두 트리를 읽기만 해요.
 
 ## 동작 방식
@@ -79,7 +101,8 @@ function diff(oldRoots: VNode[], newRoots: VNode[]): (Patch | null)[];
 `diff`는 재귀로 트리를 내려가요([ADR-009](../adr/ADR-009.md)). 내부 함수 세 개를 써요.
 
 - `pairChildren`: 자식 목록 두 개를 노드 쌍으로 짝지어요. Phase 2에서 key 기반 비교로 바꿀 때 짝짓는 기준은 이 함수에서만 바꿔요([ADR-002](../adr/ADR-002.md)). 다만 key로 짝지으면 순서가 바뀐 노드가 생겨, 결과의 "i번째 칸 = i번째 자식" 약속이 깨져요. 그래서 결과 형식도 함께 바뀌어요([ADR-011](../adr/ADR-011.md)).
-- `diffChildren`: 짝지은 쌍마다 `diffNode`를 불러 결과 배열을 만들어요.
+- `diffChildren`: key로 짝지을 수 있으면 `diffKeyed`, 아니면 짝지은 쌍마다 `diffNode`를 불러 결과 배열을 만들어요.
+- `diffKeyed`: key로 짝짓고 이동할 노드를 표시해요([ADR-011](../adr/ADR-011.md)).
 - `diffNode`: 노드 한 쌍을 비교해요. 둘 다 같은 요소면 `diffChildren`을 재귀로 불러 자식을 비교해요.
 
 ### `diff(oldRoots, newRoots)`
@@ -99,9 +122,40 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 
 ### `diffChildren(oldList, newList)`
 
+먼저 key로 짝지을 수 있는지 봐요. 아래를 모두 만족할 때만 `diffKeyed(oldList, newList)`의 결과를 돌려줘요.
+
+- 두 목록 중 하나라도 비어 있지 않아요.
+- 두 목록의 노드가 하나도 빠짐없이 key를 가져요. 텍스트·주석 노드는 key가 없어서, 하나라도 섞이면 key로 짝짓지 않아요.
+- 한 목록 안에서 key가 겹치지 않아요.
+
+하나라도 어기면 같은 자리 비교로 돌아가요. Phase 1 입력은 key가 없어서 항상 같은 자리 비교예요([ADR-002](../adr/ADR-002.md)).
+
 1. `pairChildren(oldList, newList)`로 쌍 목록을 받아요.
 2. 쌍마다 두 노드를 `diffNode`로 비교해 결과를 같은 인덱스에 담아요. 바뀌지 않은 자리는 `null`이에요. 쌍은 `for` 반복문으로 돌아요. `map` 같은 콜백으로 돌면 재귀 한 단계마다 호출이 더 쌓여 버틸 수 있는 깊이가 줄어요([ADR-009](../adr/ADR-009.md) 결정 5번).
 3. 결과 배열을 돌려줘요.
+
+### `diffKeyed(oldList, newList)`
+
+```ts
+function diffKeyed(oldList: VNode[], newList: VNode[]): KeyedPatches;
+```
+
+1. 이전 목록의 key → 인덱스 표(`Map`)를 만들어요.
+2. 새 목록을 왼쪽부터 돌아요. `lastPlacedIndex`는 0에서 시작해요.
+   - 표에 같은 key가 없으면 `{ oldIndex: null, move: false, patch: CREATE }`예요.
+   - 있으면 `oldIndex`를 찾고, `oldIndex < lastPlacedIndex`면 `move: true`예요. 아니면 `move: false`이고 `lastPlacedIndex`를 `oldIndex`로 바꿔요.
+   - 짝지은 두 노드는 `diffNode`로 비교해 `patch`에 담아요.
+3. 새 목록에서 짝을 찾지 못한 이전 인덱스를 `removes`에 담아요.
+
+예시 (`[A, B, C]` → `[C, A, B]`):
+
+| 새 칸 | key | `oldIndex` | `lastPlacedIndex` (판단 전) | `move` |
+| ----- | --- | ---------- | --------------------------- | ------ |
+| 0     | C   | 2          | 0                           | false  |
+| 1     | A   | 0          | 2                           | true   |
+| 2     | B   | 1          | 2                           | true   |
+
+C 하나만 옮기면 되지만 A, B가 이동으로 잡혀요. 화면 결과는 같고 이동 횟수만 늘어요([ADR-011](../adr/ADR-011.md) 선택지 C의 단점).
 
 ### `diffNode(oldNode, newNode)`
 
@@ -162,6 +216,8 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 | 자식은 같은 인덱스끼리 비교한다                              | key가 없는 Phase 1에서 가장 단순하고, 결과 위치가 곧 노드 위치가 돼요         | [ADR-002](../adr/ADR-002.md) |
 | `kind`나 `tag`가 다르면 교체로 본다                          | 다른 종류의 노드는 고쳐 쓸 수 없어요                                          | [ADR-002](../adr/ADR-002.md) |
 | 재귀로 내려가고, 자식 쌍은 `for` 반복문으로 돈다             | 함수가 돌아올 때 자식 결과로 `UPDATE`인지 `null`인지 바로 정해요. 파서가 깊이를 512단계로 제한해 콜 스택이 넘치지 않아요 | [ADR-009](../adr/ADR-009.md) |
+| 자식이 모두 key를 갖고 key가 겹치지 않을 때만 key로 짝짓는다 | key가 없는 노드를 섞어 짝지으려면 규칙이 더 필요해요. 하나라도 어기면 같은 자리 비교로 돌아가 결과가 틀리지 않아요 | [ADR-002](../adr/ADR-002.md) |
+| key 비교에서는 뒤로 돌아간 노드만 이동으로 표시한다          | 왼쪽부터 한 번만 훑고, 흔한 변경(끝에 추가, 중간 삭제)은 이동이 최소예요       | [ADR-011](../adr/ADR-011.md) |
 | 자식 목록을 짝짓는 부분을 `pairChildren`으로 나눈다          | Phase 2에서 key 기반 비교로 바꿀 때 짝짓는 기준은 이 함수만 바꿔요. 순서가 바뀐 노드를 표현하려고 결과 형식은 함께 바뀌어요([ADR-011](../adr/ADR-011.md)) | [ADR-002](../adr/ADR-002.md) |
 | 결과를 트리와 같은 모양으로 만든다                           | 경로를 따로 적지 않아도 Patch가 같은 모양으로 내려가며 위치를 찾아요          | -                            |
 | 텍스트와 주석의 내용 변경은 모두 `TEXT`로 본다               | 두 타입 모두 내용이 `text` 필드에 있어 같은 비교를 써요                       | -                            |
@@ -182,6 +238,11 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 | 공백만 변경             | `<li>A</li>` → `<li> A</li>`                    | `TEXT` 1개                                             | FR-W25        |
 | 순서 바뀜               | `<li>A</li><li>B</li>` → `<li>B</li><li>A</li>` | 인덱스끼리 비교해 두 `li` 안이 각각 `TEXT`             | FR-W13 ([ADR-002](../adr/ADR-002.md)) |
 | 앞에 노드 끼워 넣기     | `<li>A</li>` → `<li>Z</li><li>A</li>`           | 첫 칸 `TEXT`(A → Z), 두 번째 칸 `CREATE`(A)            | FR-W13 ([ADR-002](../adr/ADR-002.md)) |
+| key 순서 바뀜           | key A, B, C → C, A, B                           | `KEYED`, `oldIndex` `2, 0, 1`, `move` `false, true, true` | [ADR-011](../adr/ADR-011.md) |
+| key 끝에 추가           | key A, B → A, B, X                              | `KEYED`, X 칸만 `CREATE`, 이동 없음                    | [ADR-011](../adr/ADR-011.md) |
+| key 중간 삭제           | key A, B, C → A, C                              | `KEYED`, `removes`가 `[1]`, 이동 없음                  | [ADR-011](../adr/ADR-011.md) |
+| key와 key 없는 노드가 섞임 | key A, 텍스트, key B                         | 같은 자리 비교(배열)                                   | [ADR-002](../adr/ADR-002.md) |
+| key가 겹침              | key A, A                                        | 같은 자리 비교(배열)                                   | [ADR-002](../adr/ADR-002.md) |
 | 모두 삭제               | 샘플 HTML 코드 → 빈 문자열                      | 루트 칸이 모두 `REMOVE`                                | FR-E09        |
 | 빈 문자열 → 내용 추가   | 빈 문자열 → `<p>A</p>`                          | `[CREATE]`                                             | FR-E08        |
 | 바뀐 내용 없음          | 같은 트리                                       | 모든 칸이 `null`                                       | FR-W10, W28   |
@@ -202,7 +263,7 @@ function pairChildren(oldList: VNode[], newList: VNode[]): [VNode | undefined, V
 ## 관련 문서
 
 - [요구사항 명세서](../requirements/phase1/phase1_requirement.md)
-- [ADR-002](../adr/ADR-002.md): Diff는 Phase 1에서 같은 자리, Phase 2에서 key로 노드를 짝짓는다. key 규칙은 Phase 2 설계에서 정해요.
+- [ADR-002](../adr/ADR-002.md): Diff는 Phase 1에서 같은 자리, Phase 2에서 key로 노드를 짝짓는다. key 규칙은 이 문서의 `diffChildren`에 있어요.
 - [ADR-009](../adr/ADR-009.md): 트리 순회는 재귀로 한다
 - [ADR-011](../adr/ADR-011.md): key Diff는 뒤로 돌아간 노드만 이동으로 보고, Patch는 같은 노드를 insertBefore로 옮긴다
 - [Virtual DOM 변환 설계](vdom.md), [Patch 설계](patch.md), [변경 표시 설계](change-highlight.md)
