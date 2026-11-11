@@ -4,6 +4,13 @@ Vanilla TypeScript로 Virtual DOM + Diff + Patch(Phase 1)와 Component · State 
 
 이 문서를 읽으면 우리 팀이 사람과 AI가 어떻게 나눠 일하는지, 그리고 AI가 팀의 작업 흐름을 따라오도록 어떤 기록을 남기는지 알 수 있어요.
 
+## 브랜치
+
+- `main`: 머지된 최신 코드와 문서
+- `gh-pages`: [검증 페이지](https://krafton-jungle-week11-12-team.github.io/mini-react/) 배포용 빌드
+- `archive/stack-traversal`: 트리를 반복문과 스택으로 순회하던 때의 기록 ([ADR-003](docs/adr/ADR-003.md))
+- `archive/main-before-keyed`: key Diff([ADR-011](docs/adr/ADR-011.md))를 넣기 전의 `main`
+
 ## 목차
 
 1. [워크플로우](#1-워크플로우)
@@ -57,28 +64,6 @@ flowchart LR
 | ---- | ---- | ---- |
 | 엔진 (Virtual DOM, Diff, Patch, Hooks) | 함께 개발 | 모두가 핵심 로직을 이해해야 서비스 이해도가 높아지고, 서로의 코드를 리뷰할 수 있어요. |
 | 웹 페이지 | 분업 | 엔진 위에서 각자 맡은 화면을 만들어 결과물을 빨리 완성해요. |
-
-### 브랜치
-
-작업 브랜치는 `main`에서 따고, PR로 `main`에 머지한 뒤 지워요. 브랜치 이름은 `<종류>/<작업 내용>` 형식으로 써요. (예: `docs/design-phase-folders`)
-
-| 종류 | 쓰는 때 |
-| ---- | ------- |
-| `feat/` | 기능을 구현할 때 |
-| `fix/` | 버그를 고칠 때 |
-| `docs/` | 요구사항, 설계, ADR 같은 문서를 쓰거나 고칠 때 |
-| `chore/` | 스킬, 설정, 폴더 구조처럼 기능과 상관없는 것을 바꿀 때 |
-
-작업 브랜치 말고 계속 남겨 두는 브랜치는 아래 네 개예요.
-
-| 브랜치 | 하는 일 |
-| ------ | ------- |
-| `main` | 리뷰를 거쳐 머지된 최신 코드와 문서예요. |
-| `gh-pages` | [검증 페이지](https://krafton-jungle-week11-12-team.github.io/mini-react/) 배포용 빌드 결과예요. 직접 고치지 않아요. |
-| `archive/stack-traversal` | 트리 순회를 반복문과 명시적 스택으로 하던 때([ADR-003](docs/adr/ADR-003.md))의 기록이에요. 이후 재귀로 바꿨어요([ADR-009](docs/adr/ADR-009.md)). |
-| `archive/main-before-keyed` | key Diff([ADR-011](docs/adr/ADR-011.md))를 넣기 전의 `main`이에요. |
-
-`archive/`로 시작하는 브랜치는 이전 구현을 비교해 보려고 남겨 둔 기록이에요. 고치거나 머지하지 않아요.
 
 ---
 
