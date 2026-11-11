@@ -1,6 +1,6 @@
 ---
 name: skill-writing
-description: 스킬 작성 규칙과 템플릿대로 새 스킬을 만들거나 기존 스킬을 고치고, 스킬 목록을 갱신한 뒤 doc-check로 검수한다.
+description: 스킬 작성 규칙과 템플릿대로 새 스킬을 만들거나 기존 스킬을 고치고, 스킬 목록을 갱신한 뒤 참조와 형식을 검증한다.
 argument-hint: "[스킬 이름]"
 disable-model-invocation: true
 ---
@@ -74,7 +74,6 @@ disable-model-invocation: true
 
 - `.claude/rules/skill-writing.md`의 "쓸 때" 규칙을 모두 따라요.
 - Phase를 받는 스킬은 0절에 README "Phase 인자" 절을 가리키는 한 줄만 써요.
-- 결과를 주기 전 단계에 `doc-check` 검수를 넣어요. (규칙 "doc-check 검수")
 - `.claude/skills/README.md`의 "스킬" 표에 행을 더하거나 고쳐요. 쓰는 순서가 바뀌면 "쓰는 순서" 절도 고쳐요.
 
 ## 5. 검증
@@ -82,7 +81,6 @@ disable-model-invocation: true
 1. **남은 주석·자리표시자**: `.claude/rules/skill-writing.md`의 "다 쓴 뒤" 1번을 따라요.
 2. **참조**: "다 쓴 뒤" 2번을 따라요. 스킬 본문에 적은 경로가 실제로 있는지 `ls`로 확인해요.
 3. **README**: 스킬 표의 명령어, 하는 일, 고치는 파일이 SKILL.md와 같아요.
-4. **문서 검수**: `.claude/skills/doc-check/SKILL.md`를 읽고, 이번에 쓰거나 고친 SKILL.md 경로를 입력으로 그 절차대로 검수해요.
 
 검증 결과는 아래 형식으로 보고해요.
 
@@ -95,6 +93,6 @@ disable-model-invocation: true
 ## 6. 마지막 보고
 
 - 작성·수정한 파일 목록
-- 검증 결과 표 (doc-check 검수 결과 포함)
+- 검증 결과 표
 - 명령어와 실행 예시. 새 스킬은 새 세션을 열어야 목록에 보일 수 있다고 알려요.
 - 사용자가 정해야 할 것 (겹치는 스킬 정리, 다른 스킬에서 고칠 부분)

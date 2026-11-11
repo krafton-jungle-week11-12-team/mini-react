@@ -3,14 +3,14 @@
 // - toDOM:   VNode 하나 → 새 DOM 노드 (FR-E02). Patch가 새 노드를 만들 때만 써요 (ADR-004)
 // 두 함수 모두 재귀로 순회하고, 자식은 for 반복문으로 돌아요 (ADR-009)
 
-import { setProp } from '../../phase2/modules/props';
+import { setProp, type Props } from '../../phase2/modules/props';
 
 export type VNode = VElement | VText | VComment;
 
 export type VElement = {
   kind: 'element';
   tag: string;
-  props: Record<string, string>;
+  props: Props; // Phase 2에서 문자열 밖의 값까지 넓혔어요 (props 설계)
   children: VNode[];
   /** 형제 사이에서 이 노드를 가리키는 이름표. Diff가 짝을 찾을 때만 써요 (ADR-002, ADR-011). DOM 속성으로 만들지 않아요 */
   key?: string;
