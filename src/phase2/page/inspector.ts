@@ -5,6 +5,7 @@ import type { ChildPatches, Patch } from '../../phase1/modules/diff';
 import type { VNode } from '../../phase1/modules/vdom';
 import { fromDiffResult, type ChangeRecord } from '../../phase1/page/change-highlight';
 import type { CommitInfo, HookSlot } from '../modules/component';
+import type { Deps } from '../modules/deps';
 
 export type InspectorElements = {
   app: Element;
@@ -21,10 +22,19 @@ type Kind = 'change' | 'move';
 
 const MAX_LOG = 60;
 
+/** 칸 번호별 deps 이름이에요. deps는 실행 중에 값 배열로만 남아서 이름을 따로 받아요 (예: { 3: ['todos', 'filter'] }) */
+export type DepNames = Readonly<Record<number, readonly string[]>>;
+
 /** labels는 hooks 칸 번호 순서의 이름이에요 (예: App의 todos, text, …) */
-export function createInspector(els: InspectorElements, labels: readonly string[]): (info: CommitInfo) => void {
+export function createInspector(
+  els: InspectorElements,
+  labels: readonly string[],
+  depNames: DepNames = {},
+): (info: CommitInfo) => void {
   let prevSlots: readonly HookSlot[] = [];
   let prevValues: unknown[] = [];
+  // effect 칸은 deps를 제자리에서 바꿔요(use-effect.ts). 지난 렌더링의 deps 배열을 따로 기억해 둬요
+  let prevDeps: (Deps | undefined)[] = [];
 
   return (info) => {
     const first = info.oldVNode === null;
@@ -43,13 +53,15 @@ export function createInspector(els: InspectorElements, labels: readonly string[
           el('span', 'hook-index', [`[${i}]`]),
           el('span', `chip chip-${slot.kind}`, [slot.kind]),
           el('span', 'hook-name', [labels[i] ?? '']),
-          el('code', 'hook-value', [valueOf(slot)]),
+          el('code', 'hook-value', [slot.kind === 'effect' ? '' : short(slot.value)]),
           el('span', 'hook-result', [text]),
+          ...(slot.kind === 'state' ? [] : [depsLine(slot.deps, first ? undefined : prevDeps[i], depNames[i])]),
         ]),
       ),
     );
     prevSlots = [...info.hooks];
     prevValues = info.hooks.map((s) => (s.kind === 'state' ? s.value : undefined));
+    prevDeps = info.hooks.map((s) => (s.kind === 'state' ? undefined : s.deps));
 
     // ---- 실행 기록 (FR-AX03) ----
     const memos = rows.filter((r) => r.slot.kind === 'memo');
@@ -59,7 +71,7 @@ export function createInspector(els: InspectorElements, labels: readonly string[
     for (const old of Array.from(els.logView.children)) old.classList.remove('is-current');
     const lines = [...executed.reverse(), ...computed.reverse()].map((r) =>
       el('li', 'log-row is-current', [
-        el('span', 'log-count', [`#${info.count}`]),
+        el('span', 'log-count', [`R${info.count}`]),
         el('span', `chip chip-${r.slot.kind}`, [r.slot.kind]),
         `${labels[r.i] ?? `[${r.i}]`} ${r.text}`,
       ]),
@@ -67,7 +79,7 @@ export function createInspector(els: InspectorElements, labels: readonly string[
     els.logView.prepend(...lines);
     while (els.logView.children.length > MAX_LOG) els.logView.lastElementChild?.remove();
     els.logSummary.textContent =
-      `#${info.count} memo ${computed.length}/${memos.length} · effect ${executed.length}/${effects.length}`;
+      `R${info.count} memo ${computed.length}/${memos.length} · effect ${executed.length}/${effects.length}`;
 
     // ---- Diff와 강조 표시 (FR-AX02) ----
     clearHighlights(els.app);
@@ -114,9 +126,25 @@ function resultOf(
   return ran.has(i) ? { text: '실행', active: true } : { text: '건너뜀', active: false };
 }
 
-function valueOf(slot: HookSlot): string {
-  if (slot.kind === 'effect') return `deps ${short(slot.deps)}`;
-  return short(slot.value);
+/**
+ * memo·effect 칸 아래 줄. deps마다 이름과 값을 보여 주고, 지난 렌더링과 Object.is로 달라진 dep에 "바뀜"을 붙여요.
+ * 첫 렌더링(prev가 undefined)에는 "바뀜"을 붙이지 않아요
+ */
+function depsLine(deps: Deps | undefined, prev: Deps | undefined, names: readonly string[] | undefined): Element {
+  if (deps === undefined) return el('div', 'hook-deps', [el('span', 'hook-deps-label', ['deps']), '없음 (매번)']);
+  const items = deps.map((v, k) => {
+    const changed = prev !== undefined && !Object.is(v, prev[k]);
+    const name = names?.[k] ?? `[${k}]`;
+    return el('span', changed ? 'hook-dep is-changed' : 'hook-dep', [
+      `${name} `,
+      el('code', '', [short(v)]),
+      ...(changed ? [' 바뀜'] : []),
+    ]);
+  });
+  const parts: (Node | string)[] = [el('span', 'hook-deps-label', ['deps'])];
+  if (items.length === 0) parts.push('[] (처음 한 번만)');
+  items.forEach((item, k) => parts.push(...(k > 0 ? [' · ', item] : [item])));
+  return el('div', 'hook-deps', parts);
 }
 
 /** 패널 한 줄에 들어가게 줄인 값. 할 일 배열은 id만 보여 줘요 (예: [#1, #3]) */
