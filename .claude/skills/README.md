@@ -14,6 +14,7 @@
 | `/implement-tc <phase> [테스트 파일 경로 또는 요구사항 ID]` | 실패하는 테스트를 테스트는 고치지 않고 구현 코드만 바꿔 하나씩 통과시켜요. (1차 구현) Claude도 알아서 불러요. | 테스트가 아닌 `src/` | `src/**/*.test.ts`, `docs/requirements/`, `docs/design/`, `docs/adr/` |
 | `/implement-design <phase> [설계 문서 경로]` | 통과한 테스트를 지키면서 ADR, 요구사항, 설계를 모두 확인해 구현을 최종 형태로 고치고, 마지막에 `test-final`을 자동으로 따라요. (2차 구현) Claude도 알아서 불러요. | 테스트가 아닌 `src/` | `src/**/*.test.ts`, `docs/requirements/`, `docs/design/`, `docs/adr/` |
 | `/test-final <phase>` | 모든 구현이 끝난 Phase의 테스트·타입 검사·빌드, 요구사항 ID별 테스트·구현 연결, 설계·ADR 반영, 문서 정합성, 검증 페이지를 확인하고 최종 판정을 보고해요. 구현이 끝나지 않았으면 멈춰요. `/implement-design` 끝에 자동으로 실행되고, Claude도 알아서 불러요. | 없음 | `src/`, `docs/requirements/`, `docs/design/`, `docs/adr/` |
+| `/ddalkkak-guhyeon <phase>` | 요구사항 문서가 있는 Phase를 받아 `design-doc` → `doc-check` → `make-testcase` → `implement-tc` → `implement-design`(끝에 `test-final`)을 차례로 실행해요. 요구사항 문서가 없으면 실행하지 않아요. | 직접 고치는 파일 없음 (각 단계 스킬이 정한 파일) | 각 단계 스킬을 따라요 |
 | `/skill-writing <스킬 이름> [할 일]` | 스킬 작성 규칙과 템플릿대로 스킬을 만들거나 고치고, 이 표를 갱신한 뒤 doc-check로 검수해요. 호출 방식은 항상 사용자에게 물어요. | `.claude/skills/<스킬 이름>/SKILL.md`, `.claude/skills/README.md` | `.claude/rules/`, 다른 스킬, `docs/` 템플릿 |
 
 ## 쓰는 순서
@@ -30,6 +31,7 @@
 5. 최종 검증: 테스트를 다시 돌리고, 구현이 요구사항·설계와 맞는지 확인 → /test-final <phase> (4단계 끝에 자동 실행)
 ```
 
+- 요구사항 문서를 쓴 뒤 2~5단계를 한 번에 실행하려면 `/ddalkkak-guhyeon <phase>`를 써요.
 - 3·4단계 스킬은 테스트 파일을 고치지 않아요. 설계대로 고치면 테스트가 깨지는 곳은 멈추고 물어요. 테스트를 고쳐야 하면 요구사항이나 설계와 어긋난 곳을 먼저 확인하고 `/make-testcase`로 고쳐요.
 
 - `/doc-check`는 `/design-doc` 없이 사람이 직접 쓰거나 고친 문서를 검증할 때도 써요. ADR을 쓰거나 상태를 바꾼 뒤에는 `/doc-check docs/adr/ADR-<번호>.md`로 요구사항 비고와 맞는지 확인해요.
