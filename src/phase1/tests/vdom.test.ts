@@ -167,3 +167,24 @@ describe('toDOM (Virtual DOM → DOM)', () => {
     });
   });
 });
+
+// Phase 2에서 toDOM이 setProp을 부르게 바뀐 뒤에도 HTML의 boolean attribute가 유지되는지 확인해요
+describe('toDOM: HTML에서 읽은 checked·selected', () => {
+  it('checked=""인 체크박스를 왕복해도 체크된 채로 남아요', () => {
+    const container = document.createElement('div');
+    container.innerHTML = '<input type="checkbox" checked>';
+
+    const checkbox = toDOM(toVNode(container)[0]) as HTMLInputElement;
+
+    expect(checkbox.checked).toBe(true);
+  });
+
+  it('selected=""인 option을 왕복해도 선택된 채로 남아요', () => {
+    const container = document.createElement('div');
+    container.innerHTML = '<select><option>A</option><option selected>B</option></select>';
+
+    const select = toDOM(toVNode(container)[0]) as HTMLSelectElement;
+
+    expect(select.options[1].selected).toBe(true);
+  });
+});

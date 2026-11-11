@@ -20,7 +20,9 @@ export function setProp(el: Element, name: string, value: PropValue): void {
     return;
   }
   if (PROPERTY_PROPS.has(name)) {
-    (el as unknown as Record<string, unknown>)[name] = value ?? emptyValue(name);
+    // HTML에서 읽은 checked=""·selected=""처럼 문자열이면 켜진 것으로 봐요 (HTML boolean attribute)
+    const on = name !== 'value' && typeof value === 'string' ? true : value;
+    (el as unknown as Record<string, unknown>)[name] = on ?? emptyValue(name);
     return;
   }
   if (value === false || value === null || value === undefined) el.removeAttribute(name);
