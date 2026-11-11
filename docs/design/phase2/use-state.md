@@ -148,7 +148,7 @@ function useState<T>(initialValue: T): [T, SetState<T>];
 | state 변수를 직접 바꿈             | `count = 5`                                            | 화면이 바뀌지 않아요                                                                      | FR-T02         |
 | 초깃값이 `undefined`               | `useState(undefined)`                                  | 칸은 `{ kind: 'state', value: undefined }`라 리렌더링에서 칸이 있는 것으로 봐요            | FR-S01, S02    |
 | 두 state                           | `count`, `text`                                        | `hooks[0]`, `hooks[1]`을 따로 써서 한쪽을 바꿔도 다른 쪽이 그대로예요                       | FR-S03         |
-| 비싼 초깃값                        | `useState(loadFromStorage())`                          | 매 렌더링마다 `loadFromStorage()`가 실행되고 결과는 버려져요. 지연 초기화는 2차 구현으로 미뤘어요     | -              |
+| 비싼 초깃값                        | `useState(loadFromStorage())`                          | 매 렌더링마다 `loadFromStorage()`가 실행되고 결과는 버려져요. 지연 초기화는 이번 단계에서 만들지 않아요     | -              |
 
 ## 검증 방법
 
@@ -157,7 +157,10 @@ function useState<T>(initialValue: T): [T, SetState<T>];
 
 ## 정하지 않은 것
 
-- useState 지연 초기화(`useState(() => load())`): 2차 구현으로 미뤘어요(2026-11-11). 지금은 함수를 넘기면 함수 자체가 state 값으로 저장되니, 예제 앱은 `useState(load())`처럼 값을 넘겨요. 넣을 때는 `useState`의 2단계에서 `initialValue`가 함수면 불러서 그 결과를 칸에 넣어요. 근거: [useMemo 요구사항 7절](../../requirements/phase2/use-memo_requirement.md#7-추후-논의), [useEffect 요구사항 7절](../../requirements/phase2/use-effect_requirement.md#7-추후-논의)
+- useState 지연 초기화(`useState(() => load())`): 이번 단계에서는 만들지 않아요(2026-11-11). [최종 웹 페이지 요구사항의 2차 추가 기능(FR-AX04)](../../requirements/app_requirement.md#59-2차-추가-기능)으로 미뤘어요.
+  - 지금 동작: 함수를 넘기면 함수 자체가 state 값으로 저장돼요. 예제 앱은 `useState(load())`처럼 값을 넘겨요.
+  - 넣을 때: `useState`의 2단계에서 `initialValue`가 함수면 불러서 그 결과를 칸에 넣어요.
+  - 근거: [useMemo 요구사항 7절](../../requirements/phase2/use-memo_requirement.md#7-추후-논의), [useEffect 요구사항 7절](../../requirements/phase2/use-effect_requirement.md#7-추후-논의)
 - 렌더링 중 setState를 막을지: [FunctionComponent 설계](function-component.md)의 "정하지 않은 것"과 함께 정해요.
 
 ## 관련 문서

@@ -172,5 +172,5 @@ deps 배열 자체는 렌더링마다 새로 만들어지므로, 배열끼리가
 ## 7. 추후 논의
 
 - 렌더링 중 setState 막기: 계산 함수 안에서 setState를 부르면 렌더링 중에 다시 렌더링을 부른다. 렌더링 중 플래그를 두고 막을지 FunctionComponent · useState 문서의 설계에서 정한다.
-- useState 지연 초기화: `useState(loadFromStorage())`는 매 렌더링마다 `loadFromStorage()`를 실행하고 결과를 버린다. 실제 React처럼 `useState(() => loadFromStorage())`를 첫 렌더링에만 실행할지 정한다. 지금 FR-S에는 없다. 2차 구현으로 미뤘다(2026-11-11).
+- useState 지연 초기화: 이번 단계에서는 FR-S에 넣지 않기로 했다(2026-11-11). `useState(loadFromStorage())`는 매 렌더링마다 `loadFromStorage()`를 실행하고 결과를 버린다. 실제 React처럼 `useState(() => loadFromStorage())`를 첫 렌더링에만 실행하는 기능은 [최종 웹 페이지 요구사항의 2차 추가 기능(FR-AX04)](../app_requirement.md#59-2차-추가-기능)으로 미뤘다.
 - deps 길이가 바뀌었을 때 개발용 경고를 낼지: 길이 변경은 대부분 계산 함수가 읽는 값을 deps에서 빠뜨린 실수에서 나온다.
