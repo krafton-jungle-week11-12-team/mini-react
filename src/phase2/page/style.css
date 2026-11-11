@@ -126,19 +126,56 @@ input {
   gap: 16px;
 }
 
-/* Phase 1 기록 이동 묶음(.dd-history-nav) 모양 */
-.dd-render-count {
-  padding: 8px 16px;
+.dd-home {
+  font-weight: 700;
+}
+
+.dd-brand-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Phase 1 기록 이동 묶음(.dd-history-nav) 모양: 렌더링 횟수 | 처음부터 */
+.dd-render-nav {
+  display: flex;
+  align-items: stretch;
+  height: 44px;
   border: 1px solid var(--dd-card-line);
   border-radius: 12px;
-  background: var(--dd-off-bg);
+  overflow: hidden;
+  background: var(--dd-card);
+}
+
+.dd-render-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 18px;
   color: var(--dd-text-sub);
   font-size: 14px;
 }
 
 .dd-render-count strong {
   color: var(--dd-primary-text);
-  font-family: var(--dd-mono);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.btn-restart {
+  padding: 0 18px;
+  border: none;
+  border-left: 1px solid var(--dd-card-line);
+  background: var(--dd-primary-soft);
+  color: var(--dd-primary-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-restart:hover {
+  background: #e0d6ff;
 }
 
 .dd-main {
@@ -232,6 +269,13 @@ input {
 .chip-move {
   background: var(--dd-move-soft);
   color: var(--dd-move-text);
+}
+
+/* 칩 너비를 같게 해 글자를 가운데에 맞춰요 */
+.hook-row .chip,
+.log-row .chip {
+  width: 56px;
+  text-align: center;
 }
 
 .chip-diff {
@@ -420,24 +464,31 @@ input {
   list-style: none;
 }
 
+.todo-list__items {
+  border-top: 1px solid var(--dd-row-line);
+}
+
 .todo-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 44px;
+  gap: 4px;
+  min-height: 52px;
+  padding: 0 4px;
   border-bottom: 1px solid var(--dd-row-line);
 }
 
 .todo-item__check {
-  width: 18px;
-  height: 18px;
-  margin: 0;
+  width: 20px;
+  height: 20px;
+  margin: 0 10px 0 0;
   accent-color: var(--dd-primary);
+  cursor: pointer;
 }
 
 .todo-item__text {
   flex: 1;
   min-width: 0;
+  font-size: 15px;
   overflow-wrap: anywhere;
 }
 
@@ -448,32 +499,57 @@ input {
   text-decoration-color: var(--dd-off-text);
 }
 
+/* 아이콘 버튼: 글자(▲·▼·삭제)는 숨기고 currentColor로 아이콘을 그려요. 이름은 aria-label이에요 */
 .todo-item__move,
 .todo-item__remove {
+  flex: none;
+  width: 44px;
   height: 44px;
-  min-width: 36px;
-  padding: 0 10px;
+  padding: 0;
   border: none;
-  border-radius: 8px;
   background: transparent;
-  color: var(--dd-text-sub);
+  color: #3d4260;
+  font-size: 0;
   cursor: pointer;
 }
 
+.todo-item__move::before,
+.todo-item__remove::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: auto;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+.todo-item__move.is-up {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 7-7 7 7'/%3E%3Cpath d='M12 19V5'/%3E%3C/svg%3E");
+}
+
+.todo-item__move.is-down {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14'/%3E%3Cpath d='m19 12-7 7-7-7'/%3E%3C/svg%3E");
+}
+
+.todo-item__remove {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6'/%3E%3Cpath d='M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2'/%3E%3C/svg%3E");
+}
+
+/* 마우스를 올리면 아이콘 색만 바꿔요. 배경 칸은 그리지 않아요 */
 .todo-item__move:hover:not(:disabled) {
-  background: var(--dd-primary-soft);
   color: var(--dd-primary-text);
 }
 
-/* 꺼진 이동 버튼은 배경 없이 흐린 아이콘 (FR-AX06) */
+.todo-item__remove:hover {
+  color: #c92a2a;
+}
+
+/* 꺼진 이동 버튼은 흐린 아이콘 (FR-AX06) */
 .todo-item__move:disabled {
   color: #c9cdd9;
   cursor: default;
-}
-
-.todo-item__remove:hover {
-  background: #ffe3e3;
-  color: #c92a2a;
 }
 
 /* FR-FL05: 목록 자리 가운데 */

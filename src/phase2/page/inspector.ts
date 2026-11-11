@@ -195,11 +195,21 @@ function paint(app: Element, records: ChangeRecord[]): void {
   for (const r of records) {
     if (r.kind === 'remove') continue;
     const path = r.kind === 'text' ? r.parentNewPath : r.newPath;
-    const target = path ? elementAt(app, path) : null;
+    const target = bandTarget(path ? elementAt(app, path) : null);
     if (!target) continue;
     if (r.kind === 'move' || !kinds.has(target)) kinds.set(target, r.kind === 'move' ? 'move' : 'change');
   }
   for (const [target, kind] of kinds) highlight(target, kind);
+}
+
+/**
+ * 띠를 칠할 요소. 항목 안(체크박스, 이동 버튼의 disabled 등)이 바뀌면 그 항목 줄 전체를 칠해요.
+ * 항목 밖의 버튼(추가, 끝낸 일 지우기의 disabled)은 칠하지 않아요. 작은 네모 띠가 남아 보기 어려워요
+ */
+function bandTarget(target: Element | null): Element | null {
+  const item = target?.closest('li.todo-item');
+  if (item) return item;
+  return target?.tagName === 'BUTTON' ? null : target;
 }
 
 function elementAt(container: Element, path: number[]): Element | null {

@@ -17,14 +17,21 @@
       <header class="dd-header">
         <div class="dd-header-inner">
           <div class="dd-brand">
-            <img src="/dd-logo.svg" alt="" class="dd-logo" />
-            <span class="dd-name">Double D</span>
+            <!-- 로고를 눌러도 첫 화면으로 가요 -->
+            <a href="./index.html" class="dd-brand-link" aria-label="Double D 첫 화면으로">
+              <img src="/dd-logo.svg" alt="" class="dd-logo" />
+              <span class="dd-name">Double D</span>
+            </a>
             <span class="dd-tag">Phase 2 · 할 일 앱</span>
           </div>
           <div class="dd-actions">
             <!-- #app 바깥이라 mount 뒤에도 남아요 (FR-AP02) -->
             <a href="./index.html" class="dd-home">첫 화면으로</a>
-            <div class="dd-render-count">렌더링 <strong id="render-count">0</strong>회</div>
+            <div class="dd-render-nav">
+              <span class="dd-render-count">렌더링 <strong id="render-count">0</strong> 회</span>
+              <!-- 페이지를 다시 열어 mount부터 다시 봐요. 저장된 할 일은 그대로예요 -->
+              <button type="button" id="restart" class="btn-restart">처음부터</button>
+            </div>
           </div>
         </div>
       </header>

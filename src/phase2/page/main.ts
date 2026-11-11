@@ -32,3 +32,6 @@ const onCommit = createInspector(
 );
 
 new FunctionComponent(App, {}, app, { onCommit }).mount();
+
+// 처음부터: 페이지를 다시 열어 렌더링 1회(mount)부터 다시 봐요. 저장소는 지우지 않아요
+byId('restart').addEventListener('click', () => location.reload());

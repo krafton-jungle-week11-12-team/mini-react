@@ -32,7 +32,7 @@ export function TodoInput({ text, onInput, onAdd }: TodoInputProps): VNode {
     h('input', {
       type: 'text',
       class: 'todo-input__field',
-      placeholder: '할 일을 입력하세요',
+      placeholder: '할 일을 입력하고 Enter',
       'aria-label': '할 일',
       value: text, // 제어 입력. 값이 같으면 Patch가 건드리지 않아 커서가 그대로예요 (FR-AD01)
       onInput: (e) => onInput((e.target as HTMLInputElement).value),
@@ -104,18 +104,19 @@ export function TodoItem({ todo, onToggle, onRemove, onMove, isFirst, isLast }: 
       onChange: () => onToggle(todo.id), // FR-DN01
     }),
     h('span', { class: 'todo-item__text' }, todo.text),
-    onMove && moveButton('▲', `${todo.text} 위로 이동`, !!isFirst, () => onMove(todo.id, -1)), // FR-AX05, AX06
-    onMove && moveButton('▼', `${todo.text} 아래로 이동`, !!isLast, () => onMove(todo.id, 1)),
+    onMove && moveButton('▲', 'is-up', `${todo.text} 위로 이동`, !!isFirst, () => onMove(todo.id, -1)), // FR-AX05, AX06
+    onMove && moveButton('▼', 'is-down', `${todo.text} 아래로 이동`, !!isLast, () => onMove(todo.id, 1)),
     h(
       'button',
       { type: 'button', class: 'todo-item__remove', 'aria-label': `${todo.text} 삭제`, onClick: () => onRemove(todo.id) },
-      '✕',
+      '삭제', // 화면에는 휴지통 아이콘만 보여요 (style.css)
     ), // FR-RM01
   );
 }
 
-function moveButton(icon: string, label: string, disabled: boolean, onClick: () => void): VNode {
-  return h('button', { type: 'button', class: 'todo-item__move', 'aria-label': label, disabled, onClick }, icon);
+/** 글자 ▲·▼는 테스트가 버튼을 찾는 표시예요. 화면에는 style.css가 ↑·↓ 아이콘을 그려요 */
+function moveButton(text: string, dir: string, label: string, disabled: boolean, onClick: () => void): VNode {
+  return h('button', { type: 'button', class: `todo-item__move ${dir}`, 'aria-label': label, disabled, onClick }, text);
 }
 
 export function Footer({ remaining, hasDone, onClearDone }: FooterProps): VNode {
