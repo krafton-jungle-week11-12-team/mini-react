@@ -9,7 +9,7 @@
 | 명령어 | 하는 일 | 고치는 파일 | 읽고 보고만 하는 파일 |
 | ------ | ------- | ----------- | --------------------- |
 | `/design-doc <phase> [모듈 이름]` | 요구사항 문서가 완성됐는지 확인하고, 모듈별 설계 문서를 쓴 뒤 연결성을 검증해요. 사용자가 고르면 설계에서 바뀐 점을 요구사항에 반영해요. | `docs/design/`, `docs/requirements/<phase>/` (7단계에서 사용자가 고를 때만) | `docs/adr/`, `src/` |
-| `/doc-check <phase>` 또는 `/doc-check <문서 경로...>` | 요구사항, 설계, ADR, 테스트 케이스, 스킬을 포함한 모든 문서가 템플릿 형식을 지키는지와 문서끼리 맞는지 검증해요. 경로를 주면 그 문서만 검증해요. | 없음 | `docs/`, `.claude/skills/`, `src/` |
+| `/doc-check <phase>` 또는 `/doc-check <문서 경로...>` | 요구사항, 설계, ADR, 스킬을 포함한 모든 문서가 템플릿 형식을 지키는지와 문서끼리 맞는지 검증해요. 경로를 주면 그 문서만 검증해요. | 없음 | `docs/`, `.claude/skills/`, `src/` |
 | `/make-testcase <phase> [요구사항 문서 경로 또는 ID]` | 요구사항과 설계 문서를 확인해 vitest 테스트 코드를 바로 쓰고, 추가하면 좋을 케이스를 물어 반영해요. 테스트 문서는 만들지 않아요. Claude도 알아서 불러요. | `src/**/*.test.ts` | `docs/requirements/`, `docs/design/`, `docs/adr/`, 테스트가 아닌 `src/` |
 | `/skill-writing <스킬 이름> [할 일]` | 스킬 작성 규칙과 템플릿대로 스킬을 만들거나 고치고, 이 표를 갱신한 뒤 doc-check로 검수해요. 호출 방식은 항상 사용자에게 물어요. | `.claude/skills/<스킬 이름>/SKILL.md`, `.claude/skills/README.md` | `.claude/rules/`, 다른 스킬, `docs/` 템플릿 |
 
