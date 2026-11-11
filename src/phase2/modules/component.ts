@@ -4,16 +4,13 @@
 import { diff } from '../../phase1/modules/diff';
 import { patch } from '../../phase1/modules/patch';
 import { toDOM, type VNode } from '../../phase1/modules/vdom';
-import type { Deps } from './deps';
-import { runEffects, type PendingEffect } from './use-effect';
-
-export type Component<P> = (props: P) => VNode;
+import type { Component } from './h';
+import { runEffects, type EffectSlot, type PendingEffect } from './use-effect';
+import type { MemoSlot } from './use-memo';
+import type { StateSlot } from './use-state';
 
 /** hooks 배열의 칸 하나. 어느 Hook의 칸인지 kind로 구분해요 (요구사항 6.1) */
-export type HookSlot =
-  | { kind: 'state'; value: unknown }
-  | { kind: 'memo'; value: unknown; deps: Deps | undefined }
-  | { kind: 'effect'; deps: Deps | undefined; cleanup: (() => void) | undefined };
+export type HookSlot = StateSlot | MemoSlot | EffectSlot;
 
 // 지금 렌더링 중인 인스턴스. 렌더링 밖에서는 null이에요
 let currentComponent: FunctionComponent<any> | null = null;
@@ -22,7 +19,7 @@ export function getCurrentComponent(): FunctionComponent<any> | null {
   return currentComponent;
 }
 
-export class FunctionComponent<P> {
+export class FunctionComponent<P extends object = Record<string, unknown>> {
   hooks: HookSlot[] = [];
   hookIndex = 0;
   prevVNode: VNode | null = null;
