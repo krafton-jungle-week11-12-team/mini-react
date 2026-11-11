@@ -1,5 +1,5 @@
 // useState와 State 제약 단위 테스트 (docs/design/phase2/use-state.md)
-// 기준은 docs/requirements/phase2/function-component_requirement.md 5.2절 FR-S01~S08, 5.3절 FR-T01~T03의 확인 방법이에요.
+// 기준은 docs/requirements/phase2/function-component_requirement.md 5.2절 FR-S01~S08, 5.3절 FR-T01~T03, 5.5절 FR-SX01(2차)의 확인 방법이에요.
 // "버튼 클릭으로 setState"는 렌더링 때 받은 setState를 테스트에서 직접 불러 확인해요. 클릭 핸들러 등록은 h-props(FR-P01)에서 확인해요.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FunctionComponent } from '../modules/component';
@@ -251,5 +251,28 @@ describe('State 제약', () => {
     show = false; // 두 번째 렌더링에서 useState가 0번(memo) 칸을 꺼내요
 
     expect(() => app.update()).toThrow();
+  });
+});
+
+describe('useState: 지연 초기화 (2차)', () => {
+  it('초깃값으로 함수를 넘기면 첫 렌더링에서만 불러 결과를 칸에 넣어요 (FR-SX01)', () => {
+    let calls = 0;
+    const init = () => {
+      calls++;
+      return 3;
+    };
+    const App = () => {
+      const [n] = useState(init);
+      return div(text(String(n)));
+    };
+    const app = new FunctionComponent(App, {}, container);
+
+    app.mount();
+    app.update();
+    app.update();
+
+    expect(calls).toBe(1);
+    expect(app.hooks[0]).toEqual({ kind: 'state', value: 3 });
+    expect(container.textContent).toBe('3');
   });
 });

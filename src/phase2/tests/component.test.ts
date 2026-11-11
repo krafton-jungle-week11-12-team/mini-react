@@ -1,8 +1,10 @@
 // FunctionComponent 단위 테스트 (docs/design/phase2/function-component.md)
 // 기준은 docs/requirements/phase2/function-component_requirement.md 5.1절 FR-C01~C12의 확인 방법이에요.
+// 2차 관찰 지점 FR-SX02(5.5절)도 여기서 확인해요.
 // FR-C09, C10은 삭제된 요구사항이고, 5.4절 앱 작성 규칙(FR-A)은 코드 리뷰로 확인해서 여기서 다루지 않아요.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FunctionComponent, getCurrentComponent } from '../modules/component';
+import { FunctionComponent, getCurrentComponent, type CommitInfo } from '../modules/component';
+import { useEffect } from '../modules/use-effect';
 import { useState } from '../modules/use-state';
 import { toVNode, type VNode } from '../../phase1/modules/vdom';
 
@@ -202,5 +204,69 @@ describe('FunctionComponent: 추가 케이스', () => {
     expect(container.childNodes).toHaveLength(1);
     expect((container.firstChild as Element).tagName).toBe('SECTION');
     expect(container.querySelector('div')).toBeNull();
+  });
+});
+
+describe('FunctionComponent: 관찰 지점 onCommit (2차)', () => {
+  it('mount와 update가 끝날 때마다 렌더링 횟수와 Diff 결과를 넘겨 불러요. mount는 patches가 null이에요 (FR-SX02)', () => {
+    const infos: CommitInfo[] = [];
+    let set!: (v: string) => void;
+    const App = () => {
+      const [t, setT] = useState('a');
+      set = setT;
+      return el('p', {}, text(t));
+    };
+    const app = new FunctionComponent(App, {}, container, { onCommit: (info) => infos.push(info) });
+
+    app.mount();
+    set('b');
+
+    expect(infos.map((i) => i.count)).toEqual([1, 2]);
+    expect(infos[0].patches).toBeNull();
+    expect(infos[0].oldVNode).toBeNull();
+    expect(infos[1].patches).not.toBeNull();
+    expect(infos[1].oldVNode).toEqual(el('p', {}, text('a')));
+    expect(infos[1].newVNode).toEqual(el('p', {}, text('b')));
+    expect(infos[1].hooks).toBe(app.hooks);
+  });
+
+  it('실행한 effect의 칸 번호를 넘기고, effect 실행 뒤에 불러요 (FR-SX02)', () => {
+    const order: string[] = [];
+    let ran: readonly number[] = [];
+    const App = () => {
+      useState(0);
+      useEffect(() => {
+        order.push('effect');
+      }, []);
+      return el('div', {});
+    };
+    const app = new FunctionComponent(App, {}, container, {
+      onCommit: (info) => {
+        order.push('commit');
+        ran = info.effectsRan;
+      },
+    });
+
+    app.mount();
+    expect(order).toEqual(['effect', 'commit']);
+    expect(ran).toEqual([1]);
+
+    app.update();
+    expect(ran).toEqual([]);
+  });
+
+  it('effect에서 setState로 예약된 update는 onCommit을 따로 한 번 더 불러요 (FR-SX02)', () => {
+    const counts: number[] = [];
+    const App = () => {
+      const [n, setN] = useState(0);
+      useEffect(() => setN(1), []);
+      return el('p', {}, text(String(n)));
+    };
+    const app = new FunctionComponent(App, {}, container, { onCommit: (info) => counts.push(info.count) });
+
+    app.mount();
+
+    expect(counts).toEqual([1, 2]);
+    expect(container.textContent).toBe('1');
   });
 });
