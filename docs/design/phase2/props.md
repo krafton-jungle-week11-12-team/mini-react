@@ -17,8 +17,8 @@ props 반영은 요소 VNode의 props 하나를 실제 DOM 요소에 넣거나 �
 | FR-P03 | Patch할 때 이벤트 핸들러가 바뀌었으면 이전 핸들러를 지우고 새 핸들러를 등록해요                   | 동작 방식, 설계 결정  |
 | FR-P04 | Patch할 때 이벤트 props가 없어졌으면 이전 핸들러를 지워요                                         | 동작 방식             |
 | FR-P05 | Patch할 때 이벤트 props가 새로 생겼으면 그 핸들러를 등록해요                                      | 동작 방식             |
-| FR-P06 | `value`, `checked`, `selected`는 attribute가 아니라 property로 바꿔요                            | 동작 방식             |
-| FR-P07 | Patch할 때 `value`, `checked`, `selected`가 없어졌으면 property를 빈 값(`''`, `false`)으로 바꿔요 | 동작 방식             |
+| FR-P06 | `value`, `checked`, `selected`는 property로 바꾸고 attribute도 함께 맞춰요                        | 동작 방식             |
+| FR-P07 | Patch할 때 `value`, `checked`, `selected`가 없어졌으면 property를 빈 값(`''`, `false`)으로 바꾸고 attribute를 지워요 | 동작 방식             |
 | FR-P08 | 이벤트 props와 FR-P06의 props를 뺀 나머지는 Phase 1처럼 attribute로 반영해요                      | 동작 방식, 경계 케이스 |
 | FR-P09 | attribute로 반영하는 값이 `false`, `null`, `undefined`면 attribute를 지우고, `true`면 빈 문자열로 붙여요 | 동작 방식, 설계 결정  |
 | FR-P10 | `on`으로 시작하는 props는 값이 함수가 아니어도 attribute로 붙이지 않고 이전 핸들러만 지워요         | 동작 방식, 설계 결정  |
@@ -140,7 +140,7 @@ props 이름과 값으로 세 갈래 중 하나를 골라요.
 | props 값 타입을 `string \| number \| boolean \| EventHandler \| null \| undefined`로 넓힌다 (요구사항 6.1 VNode 타입 변경) | h에 넘기는 값(숫자, `checked: true`, 핸들러)을 그대로 담아요. 문자열은 그대로라 Phase 1 `toVNode` 결과도 이 타입에 맞아요                               | -        |
 | `VElement`를 새로 나누지 않고 Phase 1 타입의 `props`만 넓힌다                              | h가 만든 VNode와 `toVNode`가 만든 VNode를 Diff, Patch가 같은 코드로 다뤄요                                                                              | -        |
 | 이름이 `on`으로 시작하면 값이 함수가 아니어도 attribute로 만들지 않는다                    | `onClick: undefined`처럼 핸들러를 끈 경우 이전 핸들러만 지워야 해요. 문자열 `onclick` attribute는 인라인 스크립트라 만들지 않아요                         | -        |
-| `value`, `checked`, `selected`는 property와 attribute를 함께 맞추고, 문자열 `checked`·`selected`는 켜진 것으로 본다 | Phase 1은 attribute로 트리를 만들어, property만 바꾸면 `toVNode`로 다시 읽은 트리가 달라져요(FR-W15). HTML의 `checked=""`를 그대로 넣으면 꺼져요 | [ADR-015](../../adr/ADR-015.md) (제안됨) |
+| `value`, `checked`, `selected`는 property와 attribute를 함께 맞추고, 문자열 `checked`·`selected`는 켜진 것으로 본다 | Phase 1은 attribute로 트리를 만들어, property만 바꾸면 `toVNode`로 다시 읽은 트리가 달라져요(FR-W15). HTML의 `checked=""`를 그대로 넣으면 꺼져요 | [ADR-015](../../adr/ADR-015.md) |
 | attribute 갈래에서 `false`·`null`·`undefined`는 attribute를 지우고, `true`는 빈 문자열로 붙인다 | `disabled: false`를 `setAttribute('disabled', 'false')`로 붙이면 버튼이 비활성이 돼요. HTML의 boolean attribute는 있으면 켜진 것이에요               | -        |
 | 이벤트 이름은 `on` 뒤를 소문자로 바꾸는 규칙만 쓴다                                        | 요구사항 4.2의 규칙이에요. 예제 앱에 쓰는 `click`, `input`, `change`, `submit`, `keydown`은 모두 이 규칙으로 맞아요                                        | -        |
 | props 반영은 `src/phase2/modules/props.ts`에 두고 `toDOM`과 `patch`가 같이 부른다                         | 처음 만들 때와 Patch할 때 같은 규칙을 한 곳에서 지켜요                                                                                                  | -        |
