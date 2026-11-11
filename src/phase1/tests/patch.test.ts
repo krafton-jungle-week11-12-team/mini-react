@@ -1,4 +1,4 @@
-// Patch 단위 테스트 (docs/design/patch.md, 테스트 케이스 P1~P13)
+// Patch 단위 테스트 (docs/design/phase1/patch.md, 테스트 케이스 P1~P13)
 // 실제 흐름과 같이 이전 HTML을 파싱한 영역에 diff 결과를 적용하고, 새 HTML과 같아지는지 확인해요.
 import { beforeEach, describe, expect, it } from 'vitest';
 import { diff } from '../modules/diff';

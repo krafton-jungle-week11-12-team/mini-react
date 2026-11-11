@@ -65,4 +65,4 @@ Phase를 받는 스킬은 모두 아래처럼 읽어요. 각 스킬에 다시 �
 - 첫 단어가 Phase예요. `phase1`, `phase2`처럼 `docs/requirements/` 아래 폴더 이름으로 써요.
 - 숫자만 오면 `phase<숫자>`로 읽어요. (예: `2` → `phase2`)
 - Phase가 비어 있거나 `docs/requirements/<phase>/` 폴더가 없으면, `docs/requirements/` 아래 폴더 목록을 보여 주고 AskUserQuestion으로 어느 Phase인지 물어요. 추측해서 진행하지 않아요.
-- 설계 문서 위치는 Phase 1만 `docs/design/` 바로 아래이고, Phase 2부터는 `docs/design/<phase>/` 아래예요.
+- 설계 문서는 Phase마다 `docs/design/<phase>/` 아래에 둬요. (예: `docs/design/phase1/`, `docs/design/phase2/`)

@@ -47,7 +47,7 @@ setState → scheduleUpdate → update
 ```
 
 - 입력을 주는 곳: 앱의 `main.ts`(생성, `mount()`. FR-A03, A12), [useState](use-state.md)의 setState(`scheduleUpdate()`), 컴포넌트 함수가 돌려준 VNode([h 함수](h.md))
-- 출력을 받는 곳: 컨테이너의 실제 DOM([Virtual DOM 변환](../vdom.md)의 `toDOM`, [Diff](../diff.md)의 `diff`, [Patch](../patch.md)의 `patch`), [useEffect](use-effect.md)의 `runEffects`, 렌더링 중인 Hook([useState](use-state.md)의 `claimHook`이 `getCurrentComponent()`로 읽어요. [useState](use-state.md), [useMemo](use-memo.md), [useEffect](use-effect.md)가 `hooks` 칸을 써요)
+- 출력을 받는 곳: 컨테이너의 실제 DOM([Virtual DOM 변환](../phase1/vdom.md)의 `toDOM`, [Diff](../phase1/diff.md)의 `diff`, [Patch](../phase1/patch.md)의 `patch`), [useEffect](use-effect.md)의 `runEffects`, 렌더링 중인 Hook([useState](use-state.md)의 `claimHook`이 `getCurrentComponent()`로 읽어요. [useState](use-state.md), [useMemo](use-memo.md), [useEffect](use-effect.md)가 `hooks` 칸을 써요)
 
 ## 자료구조
 
@@ -229,4 +229,4 @@ function getCurrentComponent(): FunctionComponent | null;
 
 - [요구사항 명세서: FunctionComponent · useState · State 제약](../../requirements/phase2/function-component_requirement.md)
 - [h 함수 설계](h.md), [useState 설계](use-state.md), [useEffect 설계](use-effect.md)
-- [Virtual DOM 변환 설계 (Phase 1)](../vdom.md), [Diff 설계 (Phase 1)](../diff.md), [Patch 설계 (Phase 1)](../patch.md)
+- [Virtual DOM 변환 설계 (Phase 1)](../phase1/vdom.md), [Diff 설계 (Phase 1)](../phase1/diff.md), [Patch 설계 (Phase 1)](../phase1/patch.md)

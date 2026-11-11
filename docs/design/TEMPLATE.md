@@ -3,7 +3,7 @@
 <!--
 작성 규칙
 - 한 문서에는 모듈 하나만 다뤄요. (예: Virtual DOM 변환, Diff, Patch, State History, 검증 페이지 구조)
-- 파일 이름은 kebab-case로 써요. (예: docs/design/diff.md)
+- 파일 이름은 kebab-case로 써요. (예: docs/design/phase1/diff.md)
 - 문장은 해요체로 써요. 결정 문장만 ADR처럼 "~한다"로 써요.
 - 기준은 docs/technical-writing-principles.md를 따라요.
 - 이 주석 블록과 각 섹션의 안내 주석은 다 쓴 뒤 지워요.

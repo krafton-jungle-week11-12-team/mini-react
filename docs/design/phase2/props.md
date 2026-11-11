@@ -30,7 +30,7 @@ mount: VNode → toDOM → setProp → 새 DOM 요소
 update: diff(PropsPatch) → patch → setProp / removeProp → 기존 DOM 요소
 ```
 
-- 입력을 주는 곳: [Virtual DOM 변환](../vdom.md)의 `toDOM`(요소를 만들 때 props마다), [Patch](../patch.md)의 `UPDATE` 처리(`PropsPatch.set`, `PropsPatch.remove`마다). 반영할 props 값은 [h 함수](h.md)가 VNode에 담아요.
+- 입력을 주는 곳: [Virtual DOM 변환](../phase1/vdom.md)의 `toDOM`(요소를 만들 때 props마다), [Patch](../phase1/patch.md)의 `UPDATE` 처리(`PropsPatch.set`, `PropsPatch.remove`마다). 반영할 props 값은 [h 함수](h.md)가 VNode에 담아요.
 - 출력을 받는 곳: 실제 DOM 요소의 이벤트 리스너, property, attribute. 등록한 핸들러는 이 모듈의 핸들러 저장소에 남아 다음 Patch에서 꺼내 써요.
 
 ## 자료구조
@@ -135,7 +135,7 @@ props 이름과 값으로 세 갈래 중 하나를 골라요.
 
 | 결정                                                                                     | 이유                                                                                                                                                    | 관련 ADR |
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 이전 핸들러는 요소별 저장소(`WeakMap`)에 두고 Patch가 거기서 꺼낸다 (요구사항 6.1, B안) | `PropsPatch` 모양이 그대로라 Diff와 [변경 표시](../change-highlight.md)를 고치지 않아요. A안(`PropsPatch`에 이전 값 담기)은 Diff 결과 타입과 그 테스트를 모두 바꿔야 해요 | -        |
+| 이전 핸들러는 요소별 저장소(`WeakMap`)에 두고 Patch가 거기서 꺼낸다 (요구사항 6.1, B안) | `PropsPatch` 모양이 그대로라 Diff와 [변경 표시](../phase1/change-highlight.md)를 고치지 않아요. A안(`PropsPatch`에 이전 값 담기)은 Diff 결과 타입과 그 테스트를 모두 바꿔야 해요 | -        |
 | 저장소는 요소에 필드를 붙이지 않고 모듈 안의 `WeakMap`으로 둔다                           | DOM 객체에 임의 필드를 붙이지 않고, 요소가 지워지면 함께 치워져요. key Diff가 노드를 `insertBefore`로 옮겨도 키가 같은 요소 객체라 핸들러를 그대로 찾아요 | [ADR-011](../../adr/ADR-011.md) |
 | props 값 타입을 `string \| number \| boolean \| EventHandler \| null \| undefined`로 넓힌다 (요구사항 6.1 VNode 타입 변경) | h에 넘기는 값(숫자, `checked: true`, 핸들러)을 그대로 담아요. 문자열은 그대로라 Phase 1 `toVNode` 결과도 이 타입에 맞아요                               | -        |
 | `VElement`를 새로 나누지 않고 Phase 1 타입의 `props`만 넓힌다                              | h가 만든 VNode와 `toVNode`가 만든 VNode를 Diff, Patch가 같은 코드로 다뤄요                                                                              | -        |
@@ -171,11 +171,11 @@ props 이름과 값으로 세 갈래 중 하나를 골라요.
 ## 정하지 않은 것
 
 - 이벤트 이름 변환 규칙이 충분한지(`onDoubleClick` → `doubleclick`처럼 DOM 이름과 다른 경우): 요구사항 7절. 예제 앱에 필요한 이벤트가 생기면 정해요.
-- Phase 1 문서 갱신: [Virtual DOM 변환](../vdom.md), [Diff](../diff.md), [Patch](../patch.md) 설계의 `props` 타입과 `toDOM`·`UPDATE` 설명을 이 문서에 맞게 고칠지, 이 문서를 링크만 할지. 리뷰에서 정해요.
+- Phase 1 문서 갱신: [Virtual DOM 변환](../phase1/vdom.md), [Diff](../phase1/diff.md), [Patch](../phase1/patch.md) 설계의 `props` 타입과 `toDOM`·`UPDATE` 설명을 이 문서에 맞게 고칠지, 이 문서를 링크만 할지. 리뷰에서 정해요.
 
 ## 관련 문서
 
 - [요구사항 명세서: h 함수 · props 처리](../../requirements/phase2/h-props_requirement.md)
 - [h 함수 설계](h.md)
-- [Virtual DOM 변환 설계 (Phase 1)](../vdom.md), [Diff 설계 (Phase 1)](../diff.md), [Patch 설계 (Phase 1)](../patch.md), [변경 표시 설계 (Phase 1)](../change-highlight.md)
+- [Virtual DOM 변환 설계 (Phase 1)](../phase1/vdom.md), [Diff 설계 (Phase 1)](../phase1/diff.md), [Patch 설계 (Phase 1)](../phase1/patch.md), [변경 표시 설계 (Phase 1)](../phase1/change-highlight.md)
 - [ADR-011](../../adr/ADR-011.md): key Diff는 뒤로 돌아간 노드만 이동으로 보고, Patch는 같은 노드를 insertBefore로 옮긴다

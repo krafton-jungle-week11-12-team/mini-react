@@ -1,4 +1,4 @@
-// Patch (docs/design/patch.md)
+// Patch (docs/design/phase1/patch.md)
 // Diff 결과를 받아 실제 영역의 DOM에서 바뀐 노드만 고쳐요 (FR-E04, W14)
 // - Diff 결과의 i번째 칸 = 부모 DOM의 i번째 자식 노드로 위치를 맞춰요
 // - key로 짝지은 결과(KEYED)는 칸이 가리키는 이전 노드를 고친 뒤, 새 순서대로 insertBefore로 배치해요 (ADR-011)

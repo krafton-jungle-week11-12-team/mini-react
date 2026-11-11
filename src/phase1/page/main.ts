@@ -1,4 +1,4 @@
-// 모듈을 묶는 곳 (docs/design/page.md "모듈을 묶는 곳")
+// 모듈을 묶는 곳 (docs/design/phase1/page.md "모듈을 묶는 곳")
 // 엔진 모듈을 import하는 곳은 여기 하나예요. 모듈을 다른 구현으로 바꿀 때는 여기만 고쳐요
 
 import './style.css';
