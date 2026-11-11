@@ -38,6 +38,23 @@
 - 다른 스킬은 모두 결과를 주기 전에 쓰거나 고친 문서를 `doc-check` 절차로 검수해요.
 - `/doc-check`에서 문제가 나오면 고칠지 물어보고, 고친 뒤 다시 검수해요. 다른 스킬이 doc-check 절차를 빌려 쓸 때는 고치는 단계를 건너뛰고 그 스킬의 규칙을 따라요.
 
+## 폴더 구조
+
+Phase마다 구현과 테스트를 나눠 둬요. 스킬이 테스트나 구현 파일을 새로 만들 때도 이 자리에 만들어요.
+
+```
+src/
+  phase1/
+    impl/    구현 (vdom, diff, patch, history, change-highlight, page, main.ts, style.css)
+    tests/   테스트 (*.test.ts)
+  phase2/
+    impl/    구현 (component, h, props, deps, use-state, use-memo, use-effect)
+    tests/   테스트 (*.test.ts)
+```
+
+- 테스트는 `src/<phase>/tests/<모듈>.test.ts`, 구현은 `src/<phase>/impl/<모듈>.ts`에 둬요.
+- Phase 2는 Phase 1 엔진(`vdom`, `diff`, `patch`)을 `src/phase1/impl/`에서 가져다 써요.
+
 ## Phase 인자
 
 Phase를 받는 스킬은 모두 아래처럼 읽어요. 각 스킬에 다시 쓰지 않고 이 절을 가리켜요.

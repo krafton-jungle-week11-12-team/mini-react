@@ -2,9 +2,9 @@
 // Diff 결과 형식은 아직 정하지 않았어요. 그래서 diff 결과를 직접 비교하지 않고,
 // diff + patch를 적용한 뒤 DOM이 어떻게 바뀌었는지(결과, 노드 유지, 이동한 노드)로 확인해요.
 import { beforeEach, describe, expect, it } from 'vitest';
-import { diff } from './diff';
-import { patch } from './patch';
-import { toDOM, type VElement, type VNode } from './vdom';
+import { diff } from '../impl/diff';
+import { patch } from '../impl/patch';
+import { toDOM, type VElement, type VNode } from '../impl/vdom';
 
 // key가 있는 li VNode를 만들어요.
 function li(key: string, text = key.toUpperCase(), props: Record<string, string> = {}): VNode {

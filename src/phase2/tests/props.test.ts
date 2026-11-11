@@ -2,10 +2,10 @@
 // 기준은 docs/requirements/phase2/h-props_requirement.md 5.2~5.3절 FR-P01~P10의 확인 방법이에요.
 // 요구사항이 말하는 "DOM으로 만들 때"는 toDOM, "Patch할 때"는 diff + patch로 확인해요.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { diff } from '../diff';
-import { h } from './h';
-import { patch } from '../patch';
-import { toDOM, type VNode } from '../vdom';
+import { diff } from '../../phase1/impl/diff';
+import { h } from '../impl/h';
+import { patch } from '../../phase1/impl/patch';
+import { toDOM, type VNode } from '../../phase1/impl/vdom';
 
 let container: HTMLElement;
 

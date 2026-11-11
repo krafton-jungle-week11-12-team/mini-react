@@ -1,8 +1,8 @@
 // Diff 단위 테스트 (docs/design/diff.md, 테스트 케이스 F1~F25)
 // diff 구현(#14) 전에 작성한 테스트예요. 구현이 끝나면 모두 통과해야 해요.
 import { describe, expect, it } from 'vitest';
-import { diff, type Patch } from './diff';
-import { toVNode, type VElement, type VNode } from './vdom';
+import { diff, type Patch } from '../impl/diff';
+import { toVNode, type VElement, type VNode } from '../impl/vdom';
 
 // FR-W23 샘플 HTML 코드 (끝 줄바꿈 없음)
 const SAMPLE = `<div id="app">

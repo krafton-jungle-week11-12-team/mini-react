@@ -1,9 +1,9 @@
 // Patch 단위 테스트 (docs/design/patch.md, 테스트 케이스 P1~P13)
 // 실제 흐름과 같이 이전 HTML을 파싱한 영역에 diff 결과를 적용하고, 새 HTML과 같아지는지 확인해요.
 import { beforeEach, describe, expect, it } from 'vitest';
-import { diff } from './diff';
-import { patch } from './patch';
-import { toVNode, type VNode } from './vdom';
+import { diff } from '../impl/diff';
+import { patch } from '../impl/patch';
+import { toVNode, type VNode } from '../impl/vdom';
 
 // FR-W23 샘플 HTML 코드 (끝 줄바꿈 없음)
 const SAMPLE = `<div id="app">

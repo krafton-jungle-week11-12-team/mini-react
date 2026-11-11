@@ -6,10 +6,10 @@ import {
   summaryMessage,
   type ChangeRecord,
   type HighlightOptions,
-} from './change-highlight';
-import { diff, type Patch } from './diff';
-import { patch } from './patch';
-import { toVNode } from './vdom';
+} from '../impl/change-highlight';
+import { diff, type Patch } from '../impl/diff';
+import { patch } from '../impl/patch';
+import { toVNode } from '../impl/vdom';
 
 const SAMPLE = `<div id="app">
   <h1 class="title">할 일 목록</h1>

@@ -6,7 +6,7 @@
 
 ## 개요
 
-useState는 state를 컴포넌트 함수 바깥(FunctionComponent의 hooks 배열)에 보관해, 리렌더링 뒤에도 값이 유지되게 해요. setState는 그 칸을 바꾸고 update를 요청해요. 이 문서를 읽으면 Hook이 칸을 받고 칸의 `kind`를 확인하는 공통 규칙(`claimHook`)과, setState가 값을 정하고 update를 부르는 순서를 알고 `src/phase2/use-state.ts`를 구현할 수 있어요.
+useState는 state를 컴포넌트 함수 바깥(FunctionComponent의 hooks 배열)에 보관해, 리렌더링 뒤에도 값이 유지되게 해요. setState는 그 칸을 바꾸고 update를 요청해요. 이 문서를 읽으면 Hook이 칸을 받고 칸의 `kind`를 확인하는 공통 규칙(`claimHook`)과, setState가 값을 정하고 update를 부르는 순서를 알고 `src/phase2/impl/use-state.ts`를 구현할 수 있어요.
 
 ## 다루는 요구사항
 
@@ -131,7 +131,7 @@ function useState<T>(initialValue: T): [T, SetState<T>];
 | setState는 `update()`가 아니라 `scheduleUpdate()`를 부른다                         | 요구사항 6.1 update 예약 결정이에요. effect 실행 중 setState를 예약으로 돌려요                                              | -        |
 | 함수를 넘기면 항상 실행 결과를 새 값으로 쓴다                                       | 요구사항 4.2의 2단계예요. 그래서 함수 자체를 state로 저장할 수는 없어요                                                     | -        |
 | update는 setState 말고는 부르지 않는다                                             | state 변수를 직접 바꾸거나 배열에 `push`해도 시스템은 알 수 없어요(FR-T02). 관찰 장치를 두지 않아요                          | -        |
-| `claimHook`은 `src/phase2/use-state.ts`에 두고 useMemo, useEffect가 import한다             | 모든 Hook이 같은 함수로 칸을 받아요                                                                                         | -        |
+| `claimHook`은 `src/phase2/impl/use-state.ts`에 두고 useMemo, useEffect가 import한다             | 모든 Hook이 같은 함수로 칸을 받아요                                                                                         | -        |
 
 ## 경계 케이스
 
