@@ -60,7 +60,7 @@ type VComment = {
 - `children: VNode[]` — 자식 노드를 DOM 순서대로 담아요. 공백·줄바꿈 텍스트와 주석도 포함해요. 자식이 없으면 `[]`예요. (예: `[{ kind: 'text', text: '장보기' }]`)
 - `text: string` — 텍스트 노드나 주석 노드의 내용. DOM의 `nodeValue`를 공백까지 그대로 넣어요. 주석은 `<!--`와 `-->` 사이의 내용이에요. (예: `'\n  '`, `' 메모 '`)
 
-`VNode`에는 실제 DOM 노드 참조를 두지 않아요. 참조를 두면 Patch가 그 DOM을 고칠 때 State History의 옛날 기록도 함께 바뀌어요. `key` 같은 Phase 2 필드는 이번 범위에 넣지 않아요. Phase 2에서 Diff를 key 기반 비교로 바꿀 때 더해요([ADR-002](../adr/ADR-002.md)).
+`VNode`에는 실제 DOM 노드 참조를 두지 않아요. 참조를 두면 Patch가 그 DOM을 고칠 때 State History의 옛날 기록도 함께 바뀌어요. `key` 같은 Phase 2 필드는 이번 범위에 넣지 않아요. Phase 2에서 Diff를 key 기반 비교로 바꿀 때 더해요([ADR-002](../adr/ADR-002.md)). key는 Diff가 짝을 찾을 때만 쓰는 표시라 DOM 속성으로 만들지 않아요([#122](https://github.com/orgs/krafton-jungle-week11-12-team/discussions/122)).
 
 ## 인터페이스
 

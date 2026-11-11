@@ -126,6 +126,7 @@
 - 이전 핸들러를 Patch에 넘기는 방법: Phase 1의 `PropsPatch`에는 새 값(`set`)과 없어진 속성 이름(`remove`)만 담겨, Patch가 `removeEventListener`에 넘길 이전 핸들러를 알 수 없다.
   - A. `PropsPatch`에 이전 값도 담는다.
   - B. 요소에 지금 핸들러를 저장해 두고 Patch가 거기서 꺼낸다.
+- key props 처리: Phase 2 Diff는 자식 목록을 key로 짝짓는다([ADR-002](../../adr/ADR-002.md), [ADR-011](../../adr/ADR-011.md)). key는 Diff가 짝을 찾을 때만 쓰는 표시라 화면에 나오면 안 되지만, 지금 FR-P08대로면 `key`도 attribute로 붙는다. h가 props의 `key`를 VNode의 `key` 필드로 옮기고 attribute로 반영하지 않을지 정한다. ([#122](https://github.com/orgs/krafton-jungle-week11-12-team/discussions/122))
 
 ## 7. 추후 논의
 
