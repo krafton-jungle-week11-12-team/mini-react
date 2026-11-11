@@ -1,6 +1,6 @@
 ---
 name: ddalkkak-guhyeon
-description: 요구사항 문서가 있는 Phase를 받아 설계, 문서 검증, 테스트 작성, 1차 구현, 최종 구현, 최종 검증 스킬을 차례로 실행하고 단계별 결과를 모아 보고한다.
+description: 요구사항 문서가 있는 Phase를 받아 설계, 테스트 작성, 1차 구현, 최종 구현, 최종 검증 스킬을 차례로 실행하고 단계별 결과를 모아 보고한다.
 argument-hint: "[phase1 | phase2 | ...]"
 disable-model-invocation: true
 ---
@@ -40,10 +40,9 @@ disable-model-invocation: true
 | 순서 | 단계 | 스킬 | 고치는 파일 |
 | ---- | ---- | ---- | ----------- |
 | 1 | 설계 | `.claude/skills/design-doc/SKILL.md` | `docs/design/`, 사용자가 고르면 `docs/requirements/<phase>/` |
-| 2 | 문서 검증 | `.claude/skills/doc-check/SKILL.md` | 없음 |
-| 3 | 테스트 작성 | `.claude/skills/make-testcase/SKILL.md` | `src/**/*.test.ts` |
-| 4 | 1차 구현 | `.claude/skills/implement-tc/SKILL.md` | 테스트가 아닌 `src/` |
-| 5 | 최종 구현과 최종 검증 | `.claude/skills/implement-design/SKILL.md` (끝에 `test-final`을 따라요) | 테스트가 아닌 `src/` |
+| 2 | 테스트 작성 | `.claude/skills/make-testcase/SKILL.md` | `src/**/*.test.ts` |
+| 3 | 1차 구현 | `.claude/skills/implement-tc/SKILL.md` | 테스트가 아닌 `src/` |
+| 4 | 최종 구현과 최종 검증 | `.claude/skills/implement-design/SKILL.md` (끝에 `test-final`을 따라요) | 테스트가 아닌 `src/` |
 
 이 표를 보여 주고 바로 시작해요. 각 단계의 확인은 그 단계 스킬이 물어요.
 
@@ -53,21 +52,15 @@ disable-model-invocation: true
 
 - 각 단계 스킬의 확인 질문(계획 표 확인, 추가 테스트 케이스 확인, 충돌 질문 등)은 건너뛰지 않고 그대로 물어요.
 - 스킬이 멈추는 조건에 걸리거나 사용자가 "중단"을 고르면, 다음 번호로 넘어가지 않고 "6. 마지막 보고"로 가요.
-- 표 2번 `doc-check`에서 고칠 곳이 "설계"인 문제가 나오면, 표 3번으로 넘어가기 전에 AskUserQuestion으로 물어요.
-  - **설계 문서를 고치고 계속** (추천): 그 문제를 고친 뒤 `doc-check`를 다시 따르고, 문제가 없으면 표 3번으로 가요.
-  - **그대로 계속**: 문제를 보고에 남기고 표 3번으로 가요.
-  - **중단**: "6. 마지막 보고"로 가요.
-- 표 4번에서 대상 테스트가 처음부터 모두 통과하면, 구현할 것이 없다고 적고 표 5번으로 넘어가요.
+- 표 3번에서 대상 테스트가 처음부터 모두 통과하면, 구현할 것이 없다고 적고 표 4번으로 넘어가요.
 
 ### 진행 알림
 
-표의 번호가 끝날 때마다 한 줄로 알려요. 앞의 숫자는 표 번호와 전체 개수예요. (예: "3/5 테스트 작성 끝: 테스트 24개 추가, 다음은 표 4번 1차 구현이에요.")
+표의 번호가 끝날 때마다 한 줄로 알려요. 앞의 숫자는 표 번호와 전체 개수예요. (예: "2/4 테스트 작성 끝: 테스트 24개 추가, 다음은 표 3번 1차 구현이에요.")
 
 ## 5. 검증
 
-이 스킬이 따로 검증하는 것은 없어요. 각 스킬의 검증과, 표 5번 끝의 `test-final`이 최종 검증이에요.
-
-- **문서 검수**: 표 1번 `design-doc`이 쓴 문서는 그 스킬이 `doc-check`로 검수해요. 이 스킬은 직접 쓴 문서가 없어서 보고에 "검수할 문서 없음"이라고 적어요.
+이 스킬이 따로 검증하는 것은 없어요. 각 스킬의 검증과, 표 4번 끝의 `test-final`이 최종 검증이에요. 문서 형식까지 보려면 끝난 뒤 사용자에게 `/doc-check <phase>`를 안내해요.
 
 ## 6. 마지막 보고
 
@@ -78,6 +71,6 @@ disable-model-invocation: true
 
 표 아래에 아래를 적어요.
 
-- `test-final` 최종 판정 (표 5번까지 갔을 때)
+- `test-final` 최종 판정 (표 4번까지 갔을 때)
 - 멈췄다면 멈춘 표 번호, 이유, 다시 시작할 명령어 (예: `/implement-tc phase2`)
 - 사용자가 정해야 할 것: 각 단계 보고에서 나온 결정 사항을 모아서 적어요.
