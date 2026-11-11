@@ -5,12 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Double D · 할 일</title>
     <link rel="icon" href="/dd-logo.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap"
+    />
   </head>
   <body>
-    <!-- Phase 2 할 일 앱이 들어갈 자리예요. 앱을 구현하면 src/phase2/page/main.ts에서 #app에 mount하고 아래에 스크립트를 붙여요 -->
-    <div id="app">
-      <p>할 일 앱을 준비하고 있어요.</p>
+    <div class="dd">
+      <header class="dd-header">
+        <div class="dd-header-inner">
+          <div class="dd-brand">
+            <!-- 로고를 눌러도 첫 화면으로 가요 -->
+            <a href="./index.html" class="dd-brand-link" aria-label="Double D 첫 화면으로">
+              <img src="/dd-logo.svg" alt="" class="dd-logo" />
+              <span class="dd-name">Double D</span>
+            </a>
+            <span class="dd-tag">Phase 2 · 할 일 앱</span>
+          </div>
+          <div class="dd-actions">
+            <!-- #app 바깥이라 mount 뒤에도 남아요 (FR-AP02) -->
+            <a href="./index.html" class="dd-home">첫 화면으로</a>
+            <div class="dd-render-nav">
+              <span class="dd-render-count">렌더링 <strong id="render-count">0</strong> 회</span>
+              <!-- 페이지를 다시 열어 mount부터 다시 봐요. 저장된 할 일은 그대로예요 -->
+              <button type="button" id="restart" class="btn-restart">처음부터</button>
+            </div>
+          </div>
+        </div>
+      </header>
+      <main class="dd-main">
+        <section class="panel panel-app" aria-labelledby="app-panel-title">
+          <div class="panel-head">
+            <h2 id="app-panel-title" class="panel-title">할 일 앱</h2>
+            <span id="app-tab-title" class="panel-sub"></span>
+          </div>
+          <div class="render-frame">
+            <!-- mount가 이 안을 모두 바꿔요 -->
+            <div id="app" class="render-root">
+              <p>할 일 앱을 준비하고 있어요.</p>
+            </div>
+          </div>
+        </section>
+        <section class="panel" aria-labelledby="hooks-title">
+          <div class="panel-head">
+            <h2 id="hooks-title" class="panel-title">hooks 배열</h2>
+            <span class="panel-sub">이번 렌더링의 칸</span>
+          </div>
+          <ol id="hooks-view" class="panel-list"></ol>
+        </section>
+        <section class="panel" aria-labelledby="diff-title">
+          <div class="panel-head">
+            <h2 id="diff-title" class="panel-title">Diff</h2>
+            <p id="diff-message" class="message"></p>
+          </div>
+          <ul id="diff-view" class="panel-list"></ul>
+        </section>
+        <section class="panel" aria-labelledby="log-title">
+          <div class="panel-head">
+            <h2 id="log-title" class="panel-title">실행 기록</h2>
+            <p id="log-summary" class="message"></p>
+          </div>
+          <ol id="log-view" class="panel-list"></ol>
+        </section>
+      </main>
     </div>
-    <p><a href="./index.html">처음으로</a></p>
+    <script type="module" src="/src/phase2/page/main.ts"></script>
   </body>
 </html>

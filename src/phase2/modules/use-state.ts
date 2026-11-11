@@ -28,9 +28,13 @@ export function claimHook<K extends HookSlot['kind']>(kind: K): ClaimedHook<K> {
   return { component, i, slot: slot as Extract<HookSlot, { kind: K }> | undefined };
 }
 
-export function useState<T>(initialValue: T): [T, SetState<T>] {
+export function useState<T>(initialValue: T | (() => T)): [T, SetState<T>] {
   const { component, i, slot } = claimHook('state');
-  if (!slot) component.hooks[i] = { kind: 'state', value: initialValue };
+  if (!slot) {
+    // 함수면 첫 렌더링에서만 불러 결과를 넣어요 (지연 초기화, FR-SX01)
+    const value = typeof initialValue === 'function' ? (initialValue as () => T)() : initialValue;
+    component.hooks[i] = { kind: 'state', value };
+  }
 
   // 인스턴스와 칸 번호를 클로저로 기억해, 렌더링이 끝난 뒤에 불려도 자기 칸을 바꿔요 (FR-S07)
   const setState: SetState<T> = (action) => {

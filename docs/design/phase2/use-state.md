@@ -23,6 +23,7 @@ useState는 state를 컴포넌트 함수 바깥(FunctionComponent의 hooks 배�
 | FR-T01 | 렌더링 밖(`currentComponent`가 `null`인 때)에서 Hook이 호출되면 오류를 던져요                                       | 인터페이스 (`claimHook`) |
 | FR-T02 | setState가 호출될 때만 update를 실행해요                                                                          | 설계 결정                |
 | FR-T03 | Hook이 자기 칸에서 다른 Hook의 `kind`를 가진 칸을 꺼내면 오류를 던져요                                             | 인터페이스 (`claimHook`) |
+| FR-SX01 | (2차) 초깃값으로 함수를 받으면 첫 렌더링에서만 그 함수를 실행해 결과를 칸에 넣어요                                 | 인터페이스, 동작 방식, 설계 결정 |
 
 ## 위치와 흐름
 
@@ -65,7 +66,7 @@ type ClaimedHook<K extends HookSlot['kind']> = {
 
 ```ts
 function claimHook<K extends HookSlot['kind']>(kind: K): ClaimedHook<K>;
-function useState<T>(initialValue: T): [T, SetState<T>];
+function useState<T>(initialValue: T | (() => T)): [T, SetState<T>];
 ```
 
 `claimHook`
@@ -76,9 +77,9 @@ function useState<T>(initialValue: T): [T, SetState<T>];
 
 `useState`
 
-- `initialValue: T` — 첫 렌더링에서 칸에 넣을 값. 리렌더링에서는 무시해요. (예: `0`, `[]`, `''`)
+- `initialValue: T | (() => T)` — 첫 렌더링에서 칸에 넣을 값. 함수면 첫 렌더링에서만 불러 그 결과를 넣어요(지연 초기화, FR-SX01). 리렌더링에서는 무시하고 함수도 부르지 않아요. (예: `0`, `[]`, `loadTodos`)
 - 반환값: `[지금 값, setState]`. setState는 같은 칸에 대해 렌더링마다 새로 만들지만 하는 일은 같아요. (예: `[0, setCount]`)
-- 부수 효과: 첫 렌더링이면 `hooks[i]`에 `{ kind: 'state', value: initialValue }`를 넣어요. setState를 부르면 `hooks[i].value`를 바꾸고 `scheduleUpdate()`를 불러요.
+- 부수 효과: 첫 렌더링이면 `hooks[i]`에 `{ kind: 'state', value }`를 넣어요. `value`는 `initialValue`가 함수면 그 결과, 아니면 `initialValue`예요. setState를 부르면 `hooks[i].value`를 바꾸고 `scheduleUpdate()`를 불러요.
 
 ## 동작 방식
 
@@ -92,7 +93,7 @@ function useState<T>(initialValue: T): [T, SetState<T>];
 ### `useState(initialValue)`
 
 1. `{ component, i, slot } = claimHook('state')`
-2. `slot`이 없으면 `hooks[i] = { kind: 'state', value: initialValue }`로 칸을 만들어요. (FR-S01)
+2. `slot`이 없으면 칸을 만들어요. `initialValue`가 함수면 불러서 그 결과를, 아니면 `initialValue`를 `hooks[i] = { kind: 'state', value }`로 넣어요. (FR-S01, SX01)
 3. `setState`를 만들어요. `component`와 `i`를 클로저로 기억해요. (FR-S07)
 4. `[hooks[i].value, setState]`를 돌려줘요. (FR-S01, S02)
 
@@ -130,6 +131,7 @@ function useState<T>(initialValue: T): [T, SetState<T>];
 | setState는 칸 객체를 갈아 끼우지 않고 `value`만 바꾼다                             | 칸 객체는 `kind`를 담은 채 그대로 두고, 바뀌는 건 값뿐이에요                                                                | -        |
 | setState는 `update()`가 아니라 `scheduleUpdate()`를 부른다                         | 요구사항 6.1 update 예약 결정이에요. effect 실행 중 setState를 예약으로 돌려요                                              | -        |
 | 함수를 넘기면 항상 실행 결과를 새 값으로 쓴다                                       | 요구사항 4.2의 2단계예요. 그래서 함수 자체를 state로 저장할 수는 없어요                                                     | -        |
+| (2차) 초깃값이 함수면 첫 렌더링에서만 불러 결과를 쓴다 (FR-SX01)                     | 비싼 초깃값(`loadTodos`)을 렌더링마다 계산하지 않아요. setState와 같은 규칙이라, 초깃값으로도 함수 자체를 state로 넣을 수 없어요 | -        |
 | update는 setState 말고는 부르지 않는다                                             | state 변수를 직접 바꾸거나 배열에 `push`해도 시스템은 알 수 없어요(FR-T02). 관찰 장치를 두지 않아요                          | -        |
 | `claimHook`은 `src/phase2/modules/use-state.ts`에 두고 useMemo, useEffect가 import한다             | 모든 Hook이 같은 함수로 칸을 받아요                                                                                         | -        |
 
@@ -148,7 +150,8 @@ function useState<T>(initialValue: T): [T, SetState<T>];
 | state 변수를 직접 바꿈             | `count = 5`                                            | 화면이 바뀌지 않아요                                                                      | FR-T02         |
 | 초깃값이 `undefined`               | `useState(undefined)`                                  | 칸은 `{ kind: 'state', value: undefined }`라 리렌더링에서 칸이 있는 것으로 봐요            | FR-S01, S02    |
 | 두 state                           | `count`, `text`                                        | `hooks[0]`, `hooks[1]`을 따로 써서 한쪽을 바꿔도 다른 쪽이 그대로예요                       | FR-S03         |
-| 비싼 초깃값                        | `useState(loadFromStorage())`                          | 매 렌더링마다 `loadFromStorage()`가 실행되고 결과는 버려져요. 지연 초기화는 이번 단계에서 만들지 않아요     | -              |
+| 비싼 초깃값                        | `useState(loadFromStorage())`                          | 매 렌더링마다 `loadFromStorage()`가 실행되고 결과는 버려져요. 함수로 넘기면(`useState(loadFromStorage)`) 첫 렌더링에서만 실행돼요 | FR-SX01        |
+| 지연 초기화 (2차)                  | `useState(() => 3)` 뒤 update 두 번                    | 함수는 한 번만 불리고 칸은 `{ kind: 'state', value: 3 }`이에요                              | FR-SX01        |
 
 ## 검증 방법
 
@@ -157,10 +160,6 @@ function useState<T>(initialValue: T): [T, SetState<T>];
 
 ## 정하지 않은 것
 
-- useState 지연 초기화(`useState(() => load())`): 이번 단계에서는 만들지 않아요(2026-11-11). [FunctionComponent 요구사항의 2차 추가 기능(FR-SX01)](../../requirements/phase2/function-component_requirement.md#55-2차-추가-기능)으로 미뤘어요.
-  - 지금 동작: 함수를 넘기면 함수 자체가 state 값으로 저장돼요. 예제 앱은 `useState(load())`처럼 값을 넘겨요.
-  - 넣을 때: `useState`의 2단계에서 `initialValue`가 함수면 불러서 그 결과를 칸에 넣어요.
-  - 근거: [useMemo 요구사항 7절](../../requirements/phase2/use-memo_requirement.md#7-추후-논의), [useEffect 요구사항 7절](../../requirements/phase2/use-effect_requirement.md#7-추후-논의)
 - 렌더링 중 setState를 막을지: [FunctionComponent 설계](function-component.md)의 "정하지 않은 것"과 함께 정해요.
 
 ## 관련 문서
