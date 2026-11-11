@@ -4,7 +4,7 @@
 | --------- | ------------------------------------------------------------------------------------------------------- |
 | 문서 상태 | 초안 v0.1                                                                                               |
 | 작성일    | 2026-11-11                                                                                              |
-| 수정일    | -                                                                                                       |
+| 수정일    | 2026-11-11 (hooks 칸 kind 반영, 설계 반영: 실행 대기 목록 위치 · cleanup 저장 규칙)                      |
 | 작성자    | 오동환                                                                                                  |
 | 근거      | Discussions #118 (useEffect 개념 정리)                                                                  |
 | 선행 문서 | [function-component_requirement.md](function-component_requirement.md), [use-memo_requirement.md](use-memo_requirement.md) (의존성 비교) |
@@ -253,14 +253,17 @@ effect 실행 중에 setState가 update를 바로 부르면, 새 렌더링의 ef
   }
   ```
 
-  - 위 코드는 effect가 함수가 아닌 값을 돌려주면 그 값을 그대로 저장한다. FR-L02에 맞게 함수일 때만 저장하도록 설계에서 정한다.
+  - 위 코드는 effect가 함수가 아닌 값을 돌려주면 그 값을 그대로 저장한다. 설계에서는 함수일 때만 저장하고, 아니면 `undefined`로 비운다(FR-L02). cleanup을 부른 직후에도 칸의 cleanup을 비워, effect가 오류를 던져도 이미 부른 cleanup을 다시 부르지 않는다. ([useEffect 설계](../../design/phase2/use-effect.md))
 - 의존성 비교는 useMemo 문서의 `depsChanged`를 그대로 호출한다. ([use-memo 6.1](use-memo_requirement.md#61-결정된-항목))
 
 - hooks 칸의 타입: 모든 칸을 `kind`로 구분하는 유니언으로 둔다. effect 칸은 `{ kind: 'effect', deps, cleanup }`이다. 타입 정의와 근거는 [FunctionComponent 6.1](function-component_requirement.md#61-결정된-항목)에 둔다.
+- 실행 대기 목록(`pendingEffects`), "effect 실행 중" 표시(`isRunningEffects`), update 예약(`needsUpdate`)은 FunctionComponent의 인스턴스 필드로 둔다. ([FunctionComponent 설계](../../design/phase2/function-component.md))
+  - 근거: hooks처럼 인스턴스마다 따로라, 테스트에서 인스턴스를 여러 개 만들어도 서로 섞이지 않는다.
+  - 표시를 켜고 끄는 일과 예약된 update 실행은 FunctionComponent가 하고, `runEffects`는 cleanup과 effect 실행만 한다.
 
 ### 6.2 미정 항목
 
-- 실행 대기 목록과 "effect 실행 중" 표시를 둘 위치: 인스턴스 필드로 둘지, `currentComponent`처럼 모듈 변수로 둘지 정한다.
+없음.
 
 ## 7. 추후 논의
 
